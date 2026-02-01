@@ -7,6 +7,7 @@ set -e
 VIDEO_DIR="$1"
 STYLE="$2"
 SCRIPT_DIR="$(dirname "$0")"
+OUTPUT_BASE="${SCRIPT_DIR}/Generated_Data"
 
 # Validate arguments
 if [[ -z "$VIDEO_DIR" || -z "$STYLE" ]]; then
@@ -41,16 +42,46 @@ if [[ -z "$CLEAN_TEXT" ]]; then
     exit 1
 fi
 
-# Extract title from filename
+# Extract title from filename and directory name
 TITLE=$(basename "$CLEAN_TEXT" _clean_text.txt)
-OUTPUT="${VIDEO_DIR}/${TITLE}_${STYLE}.md"
+VIDEO_DIR_NAME=$(basename "$VIDEO_DIR")
+
+# Create output directory structure
+OUTPUT_DIR="${OUTPUT_BASE}/${VIDEO_DIR_NAME}"
+mkdir -p "$OUTPUT_DIR"
+
+OUTPUT="${OUTPUT_DIR}/${TITLE}_${STYLE}.md"
+TODAY=$(date +%Y-%m-%d)
 
 echo "Transforming transcript..."
 echo "  Input: $CLEAN_TEXT"
 echo "  Style: $STYLE"
 echo "  Output: $OUTPUT"
 
-# Combine style guide with transcript and pipe to Claude
+# Generate front matter
+FRONT_MATTER="---
+type: tutorial
+category: development
+domain:
+  - youtube-transcript
+  - ${STYLE}
+source: youtube-transcript-transform
+created: ${TODAY}
+status: inbox-triage
+tags:
+  - tutorial
+  - ${STYLE}
+  - transformed-transcript
+summary: Transformed YouTube transcript using ${STYLE} style guide.
+enriched_at: \"\"
+---
+
+"
+
+# Write front matter first
+echo -n "$FRONT_MATTER" > "$OUTPUT"
+
+# Combine style guide with transcript and pipe to Claude, append to output
 # (--system-prompt doesn't work well with --print, so we concatenate instead)
 {
     cat "$STYLE_FILE"
@@ -60,8 +91,7 @@ echo "  Output: $OUTPUT"
     echo "# Transcript to Transform"
     echo ""
     cat "$CLEAN_TEXT"
-} | claude --print "Transform the above transcript according to the style guide. Output ONLY the transformed document, no commentary or meta-discussion." \
-    > "$OUTPUT"
+} | claude --print "Transform the above transcript according to the style guide. Output ONLY the transformed document, no commentary or meta-discussion." >> "$OUTPUT"
 
 echo ""
 echo "Created: $OUTPUT"
