@@ -342,24 +342,28 @@ def download_transcript(video_id, output_dir, title=None):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python download_transcript.py <youtube-url-or-id>")
+        print("Usage: python download_transcript.py <youtube-url-or-id> [style]")
+        print("  If style is provided, transcript is saved under Generated_Data and transformed with that style.")
         print("Examples:")
         print("  python download_transcript.py KE39P4qBjDk")
-        print("  python download_transcript.py https://youtu.be/KE39P4qBjDk")
-        print("  python download_transcript.py 'https://www.youtube.com/watch?v=KE39P4qBjDk'")
+        print("  python download_transcript.py 'https://www.youtube.com/watch?v=KE39P4qBjDk' coding_agent")
         sys.exit(1)
 
     video_id = extract_video_id(sys.argv[1])
+    style = sys.argv[2] if len(sys.argv) >= 3 else None
     print(f"Video ID: {video_id}")
+    if style:
+        print(f"Style: {style}")
 
     project_root = os.path.dirname(os.path.abspath(__file__))
+    output_base = os.path.join(project_root, "Generated_Data")
 
-    # 1. Get Title and Create Directory
+    # 1. Get Title and Create Directory (always under Generated_Data)
     title = get_safe_title(video_id)
-    output_dir = os.path.join(project_root, title)
+    output_dir = os.path.join(output_base, title)
 
     if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+        os.makedirs(output_dir, exist_ok=True)
         print(f"Created directory: {output_dir}")
     else:
         print(f"Directory already exists: {output_dir}")
@@ -368,8 +372,31 @@ if __name__ == "__main__":
     print(f"Processing: {title}...")
     transcript = download_transcript(video_id, output_dir, title=title)
 
-    if transcript:
-        print(f"Successfully saved files to: {output_dir}")
-    else:
+    if not transcript:
         print("Failed to process transcript.")
         sys.exit(1)
+
+    print(f"Successfully saved files to: {output_dir}")
+
+    # 3. If style provided, run transform
+    if style:
+        style_file = os.path.join(project_root, "styles", f"{style}.md")
+        if not os.path.isfile(style_file):
+            print(f"Warning: Style guide not found: {style_file}")
+            print("Skipping transform. Available styles:")
+            styles_dir = os.path.join(project_root, "styles")
+            if os.path.isdir(styles_dir):
+                for f in sorted(os.listdir(styles_dir)):
+                    if f.endswith(".md"):
+                        print(f"  {f[:-3]}")
+        else:
+            transform_script = os.path.join(project_root, "transform_transcript.sh")
+            if os.path.isfile(transform_script):
+                result = subprocess.run(
+                    [transform_script, output_dir, style],
+                    cwd=project_root,
+                )
+                if result.returncode != 0:
+                    sys.exit(result.returncode)
+            else:
+                print(f"Warning: transform_transcript.sh not found at {transform_script}")
