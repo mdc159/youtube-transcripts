@@ -18,11 +18,11 @@ try:
 except ImportError:
     pass
 
-import requests
+from openai import APIError, OpenAI
 
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL = "openrouter/free"
+OPENROUTER_BASE = "https://openrouter.ai/api/v1"
+MODEL = "google/gemini-3-flash-preview"
 
 
 def get_api_key():
@@ -45,20 +45,19 @@ def transform_with_openrouter(style_content: str, transcript_content: str, api_k
         "Transform the above transcript according to the style guide. "
         "Output ONLY the transformed document, no commentary or meta-discussion."
     )
-    payload = {
-        "model": MODEL,
-        "messages": [{"role": "user", "content": user_content}],
-        "reasoning": {"enabled": True},
-    }
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-    resp = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=120)
-    resp.raise_for_status()
-    data = resp.json()
-    message = data["choices"][0]["message"]
-    return (message.get("content") or "").strip()
+    client = OpenAI(base_url=OPENROUTER_BASE, api_key=api_key)
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": user_content}],
+        extra_body={"reasoning": {"enabled": True}},
+    )
+    message = response.choices[0].message
+    content = (message.content or "").strip()
+    if not content:
+        raise ValueError(
+            "OpenRouter returned empty content. Check model availability and response."
+        )
+    return content
 
 
 def main() -> int:
@@ -97,9 +96,14 @@ def main() -> int:
     api_key = get_api_key()
     if not api_key:
         print(
-            "Error: OPENROUTER_API_KEY not set. Set it in the environment or in .env.",
+            "Error: OPENROUTER_API_KEY not set.",
             file=sys.stderr,
         )
+        print(
+            "On WSL, Windows system/env vars are not visible. Create a .env file in this project with:",
+            file=sys.stderr,
+        )
+        print("  OPENROUTER_API_KEY=your_key_here", file=sys.stderr)
         return 1
 
     title = clean_text_path.stem.replace("_clean_text", "")
@@ -119,10 +123,8 @@ def main() -> int:
 
     try:
         body = transform_with_openrouter(style_content, transcript_content, api_key)
-    except requests.RequestException as e:
+    except (ValueError, APIError) as e:
         print(f"Error: OpenRouter request failed: {e}", file=sys.stderr)
-        if hasattr(e, "response") and e.response is not None and hasattr(e.response, "text"):
-            print(e.response.text[:500], file=sys.stderr)
         return 1
 
     front_matter = f"""---
