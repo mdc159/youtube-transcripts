@@ -1,6 +1,7 @@
 # tests/test_manifest.py
+import json
 import pytest
-from manifest import derive_source_id
+from manifest import derive_source_id, Manifest, MANIFEST_FILENAME
 
 
 def test_youtube_url_to_source_id():
@@ -25,3 +26,40 @@ def test_other_url_uses_sha1():
     sid = derive_source_id("https://example.com/some/path?x=1")
     assert sid.startswith("web:")
     assert len(sid) == len("web:") + 12
+
+
+def test_manifest_init_defaults(tmp_path):
+    m = Manifest.load_or_create(tmp_path, source_id="yt:abc", source_url="https://x", title="T", duration_seconds=10.0)
+    assert m.data["schema_version"] == 1
+    assert m.data["source_id"] == "yt:abc"
+    assert m.data["distill_runs"] == []
+    assert m.data["extract"] is None
+
+
+def test_manifest_persistence(tmp_path):
+    m1 = Manifest.load_or_create(tmp_path, source_id="yt:abc", source_url="u", title="t", duration_seconds=1.0)
+    m1.set_extract({"transcript_source": "captions", "transcript_quality": "high", "frame_budget_used": 30, "files": {}})
+    m1.save()
+
+    m2 = Manifest.load_or_create(tmp_path, source_id="yt:abc", source_url="u", title="t", duration_seconds=1.0)
+    assert m2.data["extract"]["transcript_source"] == "captions"
+
+
+def test_manifest_add_distill_run(tmp_path):
+    m = Manifest.load_or_create(tmp_path, source_id="yt:abc", source_url="u", title="t", duration_seconds=1.0)
+    m.add_distill_run({"style": "coding_agent", "model_profile": "gemini-3-flash", "prompt_contract_version": 1, "files": {}, "token_usage": {}})
+    m.save()
+    raw = json.loads((tmp_path / MANIFEST_FILENAME).read_text())
+    assert len(raw["distill_runs"]) == 1
+    assert raw["distill_runs"][0]["style"] == "coding_agent"
+
+
+def test_manifest_corruption_detection(tmp_path):
+    m = Manifest.load_or_create(tmp_path, source_id="yt:abc", source_url="u", title="t", duration_seconds=1.0)
+    f = tmp_path / "frames" / "x.jpg"
+    f.parent.mkdir()
+    f.write_bytes(b"hello")
+    m.record_file("extract", "frames_dir", f)
+    m.save()
+    f.write_bytes(b"changed")  # corrupt
+    assert m.file_intact("extract", "frames_dir") is False

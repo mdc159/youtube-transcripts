@@ -51,3 +51,87 @@ def derive_source_id(source: str, start: Optional[float] = None, end: Optional[f
         e_str = "" if end is None else str(int(end))
         sid += f"#{s_str}-{e_str}"
     return sid
+
+
+import datetime
+import json
+from dataclasses import dataclass
+
+MANIFEST_FILENAME = "artifact_manifest.json"
+
+
+def _sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+@dataclass
+class Manifest:
+    """Wraps Generated_Data/<title>/artifact_manifest.json."""
+    out_dir: Path
+    data: dict
+
+    @classmethod
+    def load_or_create(cls, out_dir: Path, *, source_id: str, source_url: str, title: str, duration_seconds: float) -> "Manifest":
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        path = out_dir / MANIFEST_FILENAME
+        if path.exists():
+            data = json.loads(path.read_text())
+            if data.get("source_id") != source_id:
+                raise ValueError(f"manifest source_id mismatch: stored {data.get('source_id')!r} != {source_id!r}")
+            return cls(out_dir, data)
+        data = {
+            "schema_version": 1,
+            "source_id": source_id,
+            "source_url": source_url,
+            "title": title,
+            "duration_seconds": duration_seconds,
+            "clip_range": None,
+            "extract": None,
+            "distill_runs": [],
+        }
+        return cls(out_dir, data)
+
+    def save(self) -> None:
+        path = self.out_dir / MANIFEST_FILENAME
+        path.write_text(json.dumps(self.data, indent=2, sort_keys=True))
+
+    def set_extract(self, payload: dict) -> None:
+        payload = dict(payload)
+        payload.setdefault("completed_at", datetime.datetime.utcnow().isoformat() + "Z")
+        self.data["extract"] = payload
+
+    def add_distill_run(self, payload: dict) -> None:
+        payload = dict(payload)
+        payload.setdefault("completed_at", datetime.datetime.utcnow().isoformat() + "Z")
+        self.data["distill_runs"].append(payload)
+
+    def record_file(self, section: str, key: str, path: Path) -> None:
+        path = Path(path)
+        rel = path.relative_to(self.out_dir) if path.is_absolute() and self.out_dir in path.parents else path
+        entry = {"path": str(rel), "sha256": _sha256(path) if path.is_file() else None}
+        if path.is_dir():
+            entry["frame_count"] = sum(1 for _ in path.iterdir() if _.is_file())
+        if section == "extract":
+            if self.data["extract"] is None:
+                self.data["extract"] = {}
+            self.data["extract"].setdefault("files", {})[key] = entry
+        else:
+            raise ValueError(f"unknown section {section!r}")
+
+    def file_intact(self, section: str, key: str) -> bool:
+        entry = (self.data.get(section) or {}).get("files", {}).get(key)
+        if not entry:
+            return False
+        full = self.out_dir / entry["path"]
+        if not full.exists():
+            return False
+        if full.is_file():
+            return entry.get("sha256") == _sha256(full)
+        if full.is_dir():
+            return entry.get("frame_count") == sum(1 for _ in full.iterdir() if _.is_file())
+        return False
