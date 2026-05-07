@@ -1,0 +1,3 @@
+# Ignored Claims
+# Claims listed here will be skipped during extraction.
+ignored_claims: []
