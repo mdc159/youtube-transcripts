@@ -141,7 +141,7 @@ def _normalize(text: str) -> str:
     return s
 
 
-def dedup_code_frames(frames: list[FrameRecord], similarity: float = 0.9) -> list[FrameRecord]:
+def dedup_code_frames(frames: list[FrameRecord], similarity: float = 0.85) -> list[FrameRecord]:
     """Cluster CODE-class frames by normalized OCR text (rapidfuzz token-set ratio)."""
     next_id = 0
     cluster_reps: list[tuple[str, str]] = []  # (cluster_id, normalized_text)

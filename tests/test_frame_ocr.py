@@ -82,8 +82,8 @@ def test_dedup_clusters_identical_code():
 
 def test_dedup_keeps_distinct_code():
     frames = [
-        _rec(1, 1, "def a(): return 1", FrameClass.CODE),
-        _rec(2, 5, "def b(): return 2", FrameClass.CODE),
+        _rec(1, 1, "def add(a, b):\n    return a + b", FrameClass.CODE),
+        _rec(2, 5, "class User:\n    def __init__(self): pass", FrameClass.CODE),
     ]
     out = dedup_code_frames(frames)
     assert len({f.cluster_id for f in out}) == 2
