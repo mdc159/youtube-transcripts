@@ -55,3 +55,67 @@ hey everyone welcome back today we're going to talk about...
 ## Extracting Video ID
 
 From URL `https://www.youtube.com/watch?v=CL0vkl8Sxvs`, the video ID is `CL0vkl8Sxvs`.
+
+## What's new (May 2026)
+
+This repo now combines the YouTube transcript pipeline with frame extraction
+and OCR-aware distillation. See
+`docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md`
+for the full design.
+
+### Quick start
+
+```bash
+# One-shot: download, extract frames, OCR, and distill with a style guide
+uv run python run.py "https://www.youtube.com/watch?v=KE39P4qBjDk" coding_agent
+
+# Two-phase (re-stylable):
+uv run python extract.py "https://youtu.be/KE39P4qBjDk"
+uv run python distill.py KE39P4qBjDk_Title coding_agent --model gemini-3-flash
+
+# Validate a model profile
+uv run python models.py doctor --profile gemini-3-flash
+
+# Storage cleanup (dry-run by default)
+uv run python clean.py --delete-video --older-than 30d --apply
+```
+
+### Configuring models
+
+Edit `models.yaml`. Adding a new vision-capable model = one entry. Run
+`models.py doctor` to verify.
+
+## Legal & authentication policy
+
+- You are responsible for having the right to access and process the media you
+  pass to this tool.
+- This tool does NOT bypass DRM, paywalls, or authentication.
+- Cookie-based access via `yt-dlp` is supported with `--cookies-from-browser firefox`
+  (or `chrome`). Cookies stay local; this tool does not transmit them.
+- Downloaded media should not be redistributed unless you have rights to do so.
+- `yt-dlp`'s extractor list is best-effort; an extractor working today may break
+  tomorrow. If a download fails, run `pip install -U yt-dlp` first.
+
+## Architecture
+
+Two-phase pipeline:
+
+- `extract.py` — download → 4-tier transcript chain → frames → OCR + 5-class
+  classification → dedup → quality grades → `Generated_Data/<title>/`.
+- `distill.py` — load artifacts → enrich transcript with OCR/citations →
+  scene-change-aware frame selection → multimodal LLM call → citation-validated
+  markdown + structured `distill_result.json`.
+
+See the spec for full details on the citation contract, idempotency model,
+caching, and definition of done.
+
+## Definition of Done
+
+Before declaring this implementation complete, run:
+
+```bash
+bash scripts/dod_check.sh
+```
+
+It exercises every condition in spec §9 (test suite, extract+distill on the
+fixture video, resumability, legacy compat, no `TODO`s in shipped source).
