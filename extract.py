@@ -74,6 +74,24 @@ def main(argv: list[str] | None = None) -> int:
         _do_frames(args, out_dir, manifest)
         # OCR + classification wired in Task 6.3.
 
+    # Compute and write quality grades
+    if (out_dir / "ocr.json").exists():
+        from frame_ocr import read_ocr_json, FrameClass
+        recs = read_ocr_json(out_dir / "ocr.json")
+        mean_conf = (sum(r.ocr_confidence for r in recs) / len(recs)) if recs else None
+        non_code = sum(1 for r in recs if r.frame_class != FrameClass.CODE)
+    else:
+        mean_conf = None
+        non_code = 0
+    _write_extract_meta(out_dir, manifest, mean_conf, non_code)
+
+    # Drop the cached video unless --keep-video
+    if not args.keep_video:
+        media_cache = Path("media_cache") / out_dir.name
+        if media_cache.exists():
+            for f in media_cache.glob("video.*"):
+                f.unlink(missing_ok=True)
+
     manifest.save()
     return 0
 
@@ -375,6 +393,40 @@ def _ytdlp_error_message(stderr: str) -> str:
     if "429" in lower or "too many requests" in lower:
         return "yt-dlp: rate-limited (429). Retry later."
     return f"yt-dlp failed:\n{s}"
+
+
+def _grade_ocr(mean_conf: float | None) -> str:
+    if mean_conf is None:
+        return "none"
+    if mean_conf >= 0.85:
+        return "high"
+    if mean_conf >= 0.65:
+        return "medium"
+    return "low"
+
+
+def _grade_frame_coverage(non_code_frames: int, *, duration_seconds: float) -> str:
+    minutes = max(0.5, duration_seconds / 60.0)
+    rate = non_code_frames / minutes
+    if rate >= 4:
+        return "high"
+    if rate >= 1:
+        return "medium"
+    return "low"
+
+
+def _write_extract_meta(out_dir: Path, manifest: Manifest, mean_ocr_conf: float | None, non_code_count: int) -> None:
+    meta = {
+        "source_id": manifest.data["source_id"],
+        "source_url": manifest.data["source_url"],
+        "duration_seconds": manifest.data["duration_seconds"],
+        "transcript_source": (manifest.data["extract"] or {}).get("transcript_source"),
+        "transcript_quality": (manifest.data["extract"] or {}).get("transcript_quality"),
+        "ocr_quality": _grade_ocr(mean_ocr_conf),
+        "vision_frame_coverage": _grade_frame_coverage(non_code_count, duration_seconds=manifest.data["duration_seconds"]),
+        "frame_budget_used": (manifest.data["extract"] or {}).get("frame_budget_used"),
+    }
+    (out_dir / "extract_meta.json").write_text(_json.dumps(meta, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":
