@@ -54,12 +54,24 @@ def test_manifest_add_distill_run(tmp_path):
     assert raw["distill_runs"][0]["style"] == "coding_agent"
 
 
-def test_manifest_corruption_detection(tmp_path):
+def test_manifest_corruption_detection_for_file(tmp_path):
     m = Manifest.load_or_create(tmp_path, source_id="yt:abc", source_url="u", title="t", duration_seconds=1.0)
-    f = tmp_path / "frames" / "x.jpg"
-    f.parent.mkdir()
-    f.write_bytes(b"hello")
-    m.record_file("extract", "frames_dir", f)
+    transcript = tmp_path / "transcript.txt"
+    transcript.write_bytes(b"hello")
+    m.record_file("extract", "formatted_transcript", transcript)
     m.save()
-    f.write_bytes(b"changed")  # corrupt
+    transcript.write_bytes(b"changed")  # corrupt
+    assert m.file_intact("extract", "formatted_transcript") is False
+
+
+def test_manifest_intact_for_directory(tmp_path):
+    m = Manifest.load_or_create(tmp_path, source_id="yt:abc", source_url="u", title="t", duration_seconds=1.0)
+    frames_dir = tmp_path / "frames"
+    frames_dir.mkdir()
+    (frames_dir / "f1.jpg").write_bytes(b"a")
+    (frames_dir / "f2.jpg").write_bytes(b"b")
+    m.record_file("extract", "frames_dir", frames_dir)
+    m.save()
+    assert m.file_intact("extract", "frames_dir") is True
+    (frames_dir / "f3.jpg").write_bytes(b"c")  # frame count drift
     assert m.file_intact("extract", "frames_dir") is False

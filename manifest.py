@@ -102,12 +102,12 @@ class Manifest:
 
     def set_extract(self, payload: dict) -> None:
         payload = dict(payload)
-        payload.setdefault("completed_at", datetime.datetime.utcnow().isoformat() + "Z")
+        payload.setdefault("completed_at", datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
         self.data["extract"] = payload
 
     def add_distill_run(self, payload: dict) -> None:
         payload = dict(payload)
-        payload.setdefault("completed_at", datetime.datetime.utcnow().isoformat() + "Z")
+        payload.setdefault("completed_at", datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
         self.data["distill_runs"].append(payload)
 
     def record_file(self, section: str, key: str, path: Path) -> None:
