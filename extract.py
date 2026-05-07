@@ -210,6 +210,8 @@ def _do_frames(args, out_dir: Path, manifest: Manifest) -> None:
     records: list[FrameRecord] = []
     for fp in paths:
         ts = _extract_ts(Path(fp).name)
+        # ocr.json stores paths relative to out_dir for portability (spec §7.2).
+        rel_path = str(Path(fp).relative_to(out_dir))
         try:
             ocr_res = ocr_frame(fp)
             cls, conf = classify_frame(ocr_res)
@@ -217,7 +219,7 @@ def _do_frames(args, out_dir: Path, manifest: Manifest) -> None:
                 cls = FrameClass.OTHER
             records.append(
                 FrameRecord(
-                    path=fp,
+                    path=rel_path,
                     timestamp_seconds=ts,
                     ocr_text=ocr_res.text,
                     ocr_confidence=ocr_res.mean_confidence,
@@ -228,7 +230,7 @@ def _do_frames(args, out_dir: Path, manifest: Manifest) -> None:
         except Exception as exc:  # noqa: BLE001 - per-frame isolation
             records.append(
                 FrameRecord(
-                    path=fp,
+                    path=rel_path,
                     timestamp_seconds=ts,
                     ocr_text="",
                     ocr_confidence=0.0,
@@ -342,11 +344,11 @@ def _download_video(url: str, out_dir: Path, cookies_browser: str | None) -> str
 
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode != 0:
-        raise SystemExit(_ytdlp_error_message(r.stderr))
+        raise RuntimeError(_ytdlp_error_message(r.stderr))
 
     candidates = sorted(cache_dir.glob("video.*"))
     if not candidates:
-        raise SystemExit(f"yt-dlp produced no output in {cache_dir}")
+        raise RuntimeError("yt-dlp: no video file produced")
     return str(candidates[0].resolve())
 
 
