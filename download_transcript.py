@@ -187,6 +187,14 @@ if __name__ == "__main__":
     project_root = os.path.dirname(os.path.abspath(__file__))
     output_base = os.path.join(project_root, "Generated_Data")
 
+    if style:
+        # Delegate to run.py (extract → distill) for the new pipeline
+        run_script = os.path.join(project_root, "run.py")
+        if os.path.isfile(run_script):
+            print(f"[download_transcript] delegating to run.py for style={style!r}")
+            r = subprocess.run(["uv", "run", "python", run_script, sys.argv[1], style], cwd=project_root)
+            sys.exit(r.returncode)
+
     # 1. Get Title and Create Directory (always under Generated_Data)
     title = get_safe_title(video_id)
     output_dir = os.path.join(output_base, title)
