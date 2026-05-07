@@ -296,14 +296,25 @@ def _extract_frames_adapter(
         end_seconds=end,
     )
 
+    if len(raw) > 999:
+        raise RuntimeError(
+            f"frame count {len(raw)} exceeds 3-digit serial cap; "
+            "lower --max-frames or extend the filename format"
+        )
+
     # Rename: frame_0001.jpg -> frame_001_t-MM-SS.jpg (3-digit, MM-SS).
     renamed: list[tuple[float, str]] = []
     for i, item in enumerate(raw, start=1):
         ts = float(item["timestamp_seconds"])
         old = Path(item["path"])
-        serial = str(min(i, 999)).zfill(3)
+        serial = str(i).zfill(3)
         mm = int(ts) // 60
         ss = int(ts) % 60
+        if mm > 99:
+            raise RuntimeError(
+                f"timestamp {ts}s exceeds MM-SS filename format; "
+                "videos longer than 99 minutes need a wider format"
+            )
         new_name = f"frame_{serial}_t-{mm:02d}-{ss:02d}.jpg"
         new_path = old.parent / new_name
         if old.resolve() != new_path.resolve():

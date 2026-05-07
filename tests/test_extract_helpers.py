@@ -17,11 +17,8 @@ def test_safe_title_collapses_whitespace_and_dashes():
 
 
 def test_safe_title_empty_after_sanitization_returns_video():
-    """Pathological all-punctuation input must not produce empty title."""
-    result = extract._safe_title("!!!")
-    assert result != ""
-    # Acceptable fallbacks: "video" or any non-empty placeholder
-    assert len(result) > 0
+    """Pathological all-punctuation input must fall back to the documented placeholder."""
+    assert extract._safe_title("!!!") == "video"
 
 
 def test_grade_transcript_known_sources():
