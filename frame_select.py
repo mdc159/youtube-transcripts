@@ -48,3 +48,90 @@ def detect_scene_changes(paths: Sequence[Path | str], threshold_factor: float = 
     else:
         threshold = median + threshold_factor * mad
     return [ChangePoint(index=i + 1, distance=d) for i, d in enumerate(distances) if d > threshold]
+
+
+from frame_ocr import FrameRecord, FrameClass  # noqa: E402  (after class def)
+
+
+@dataclass
+class Selected:
+    path: str
+    timestamp_seconds: float
+    frame_class: FrameClass
+    reason: str  # e.g. "scene_change@t=01:23" or "even_spacing@t=03:45"
+
+
+@dataclass
+class SelectionResult:
+    selected: list[Selected]
+
+
+def _fmt_t(ts: float) -> str:
+    m, s = divmod(int(ts), 60)
+    return f"{m:02d}:{s:02d}"
+
+
+def select_frames(
+    frames: list[FrameRecord],
+    *,
+    change_points: list[ChangePoint],
+    max_frames: int,
+    token_budget: int | None,
+    est_image_tokens: int = 5000,
+) -> SelectionResult:
+    """Select non-code frames for the vision payload.
+
+    Order of operations (spec §4.4):
+      1. Drop CODE-class frames.
+      2. Take frames just after each change_point index.
+      3. Fill remaining budget with even-spacing across the surviving frames.
+      4. Cap by min(max_frames, token_budget // est_image_tokens) if budget given.
+    """
+    eligible = [f for f in frames if f.frame_class != FrameClass.CODE]
+    if not eligible:
+        return SelectionResult(selected=[])
+
+    cap = max_frames
+    if token_budget is not None:
+        cap = min(cap, max(0, token_budget // max(1, est_image_tokens)))
+    if cap == 0:
+        return SelectionResult(selected=[])
+
+    # Index `change_points` are positions in the *original* `frames` list.
+    chosen_idx: list[tuple[int, str]] = []  # (index in eligible, reason)
+    eligible_index_map = {id(f): i for i, f in enumerate(eligible)}
+    for cp in change_points:
+        if 0 <= cp.index < len(frames):
+            f = frames[cp.index]
+            if f.frame_class != FrameClass.CODE and id(f) in eligible_index_map:
+                idx = eligible_index_map[id(f)]
+                if not any(i == idx for i, _ in chosen_idx):
+                    chosen_idx.append((idx, f"scene_change@t={_fmt_t(f.timestamp_seconds)}"))
+                    if len(chosen_idx) >= cap:
+                        break
+
+    if len(chosen_idx) < cap:
+        remaining = cap - len(chosen_idx)
+        already = {i for i, _ in chosen_idx}
+        # Even spacing across eligible
+        if eligible:
+            step = max(1, len(eligible) // remaining)
+            for i in range(0, len(eligible), step):
+                if i in already:
+                    continue
+                f = eligible[i]
+                chosen_idx.append((i, f"even_spacing@t={_fmt_t(f.timestamp_seconds)}"))
+                if len(chosen_idx) >= cap:
+                    break
+
+    chosen_idx.sort(key=lambda x: x[0])
+    sel = [
+        Selected(
+            path=eligible[i].path,
+            timestamp_seconds=eligible[i].timestamp_seconds,
+            frame_class=eligible[i].frame_class,
+            reason=reason,
+        )
+        for i, reason in chosen_idx
+    ]
+    return SelectionResult(selected=sel)
