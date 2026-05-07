@@ -5,7 +5,10 @@ import argparse
 import json
 import os
 import sys
+from datetime import date
 from pathlib import Path
+
+from openai import OpenAI
 
 from manifest import Manifest, MANIFEST_FILENAME
 from models import resolve, doctor, Profile
@@ -108,9 +111,94 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[distill] dry-run payload written to {out_dir / 'payload.json'}")
         return 0
 
-    # API call + rendering = Task 9.3
-    print("[distill] live distillation not yet implemented — see Task 9.3")
+    # Live distillation
+    api_key = os.environ.get(profile.api_key_env, "")
+    if not api_key:
+        print(f"missing API key {profile.api_key_env}", file=sys.stderr)
+        return 1
+    client = OpenAI(base_url=profile.base_url, api_key=api_key)
+    create_kwargs = dict(model=profile.model, messages=[{"role": "user", "content": content}])
+    if profile.reasoning:
+        create_kwargs["extra_body"] = {"reasoning": {"enabled": True}}
+    response = client.chat.completions.create(**create_kwargs)
+
+    msg = response.choices[0].message.content or ""
+    if not msg.strip():
+        raise ValueError("provider returned empty content")
+
+    # The contract instructs the model to return a *markdown* note. We re-derive
+    # distill_result.json from the markdown's structure for downstream tooling.
+    # In v1 we accept either:
+    #   - a JSON object the model produced (preferred), or
+    #   - the markdown directly, which we wrap.
+    parsed = _try_parse_json_object(msg)
+    manifest_data = json.loads(manifest_path.read_text())
+    manifest = Manifest(out_dir=out_dir, data=manifest_data)
+    cit_ctx = ResolutionContext(
+        segment_ids={s.seg_id for s in segments},
+        frame_ids={Path(f.path).stem for f in frames},
+        cluster_ids={f.cluster_id for f in frames if f.cluster_id},
+    )
+    val = validate_citations(msg, cit_ctx)
+    parsed_full = {
+        "schema_version": 1,
+        "source_id": manifest.data["source_id"],
+        "title": manifest.data["title"],
+        "model_profile": profile.name,
+        "prompt_contract_version": 1,
+        **(parsed or {"summary": msg}),
+        "quality": {
+            "transcript": (manifest.data.get("extract") or {}).get("transcript_quality", "unknown"),
+            "ocr": "unknown",
+            "frame_coverage": "unknown",
+            "distillation_confidence": _confidence_from(val.unresolved, manifest),
+        },
+        "warnings": parsed.get("warnings", []) if parsed else [],
+        "token_usage": {
+            "prompt": getattr(response.usage, "prompt_tokens", None),
+            "completion": getattr(response.usage, "completion_tokens", None),
+            "image_count": sum(1 for c in content if c["type"] == "image_url"),
+        },
+        "citations": {
+            "segments_referenced": sum(1 for c in val.citations if c.kind == "segment"),
+            "frames_referenced": sum(1 for c in val.citations if c.kind == "frame"),
+            "unresolved": len(val.unresolved),
+        },
+    }
+
+    style_name = args.style
+    today_iso = date.today().isoformat()
+    md = render_markdown(parsed_full, style_name=style_name, today_iso=today_iso)
+    (out_dir / f"{out_dir.name}_{style_name}.md").write_text(md)
+    (out_dir / f"{out_dir.name}_{style_name}.distill_result.json").write_text(json.dumps(parsed_full, indent=2))
+
+    # Citation validator gate
+    if val.unresolved:
+        print(
+            f"[distill] WARNING: {len(val.unresolved)} unresolved citations: "
+            f"{[c.raw for c in val.unresolved]}",
+            file=sys.stderr,
+        )
+        return 1
     return 0
+
+
+def _try_parse_json_object(text: str) -> dict | None:
+    text = text.strip()
+    if not text.startswith("{"):
+        return None
+    try:
+        return json.loads(text)
+    except Exception:
+        return None
+
+
+def _confidence_from(unresolved: list, manifest: Manifest) -> str:
+    if unresolved:
+        return "low"
+    if (manifest.data.get("extract") or {}).get("transcript_quality") == "high":
+        return "high"
+    return "medium"
 
 
 def _resolve_out_dir(title_or_path: str) -> Path:
