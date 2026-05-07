@@ -1,121 +1,190 @@
 # YouTube Transcripts
 
-Download YouTube video transcripts with timestamps. Output is saved under `Generated_Data/` in directories named after video titles.
+Turn a YouTube URL or local video into a citation-grounded, multimodal study note. The pipeline pulls a transcript, extracts and OCRs frames, classifies what's on screen (code / slide / UI / diagram), then sends an enriched payload to a vision-capable LLM that emits a structured note where every claim cites a transcript segment, frame, or timestamp.
 
-## Installation
+## How it works
 
-Requires Python 3.10+ and [uv](https://docs.astral.sh/uv/).
+Two phases, written so you can re-style without re-downloading:
+
+```
+extract.py  ─►  Generated_Data/<title>/  ─►  distill.py
+   │           transcript + frames +          │
+   │           ocr.json + manifest            ▼
+   │                                     <title>_<style>.md
+   ▼                                     <title>_<style>.distill_result.json
+download → 4-tier transcript chain
+       → ffmpeg frame extraction
+       → RapidOCR + 5-class classifier
+       → near-duplicate code-frame clustering
+       → quality grades + extract_meta.json
+```
+
+`extract.py` is idempotent — re-running skips work whose outputs are still intact. `distill.py` runs scene-change-aware frame selection, builds a multimodal payload, validates the model can actually do what its profile claims (`doctor`), then calls the LLM and validates every citation in the response. `run.py` chains both for one-shot use.
+
+## Install
+
+Requires Python 3.11–3.12 (the lower bound is forced by `rapidocr-onnxruntime` wheels), [uv](https://docs.astral.sh/uv/), and `ffmpeg`/`ffprobe` on PATH.
 
 ```bash
 uv sync
 ```
 
+Set an API key for whichever model profile you want to use. The default profile (`gemini-3-flash`) reads `OPENROUTER_API_KEY`:
+
+```bash
+export OPENROUTER_API_KEY=sk-or-...
+# or put it in .env
+```
+
 ## Usage
 
-```bash
-uv run python download_transcript.py <youtube-url-or-id> [style]
-```
-
-- **URL or ID** (required): Full URL or 11-character video ID (e.g. `https://www.youtube.com/watch?v=CL0vkl8Sxvs` or `CL0vkl8Sxvs`).
-- **style** (optional): If provided, after downloading the transcript is transformed using that style guide (from `styles/<style>.md`) via OpenRouter (`openrouter/free`). Without it, only the transcript is downloaded.
-
-All output is written under `Generated_Data/<video_title>/`.
-
-**Transform step (when using a style):** The API key is read from the `OPENROUTER_API_KEY` environment variable or from a `.env` file in the project root. Create `.env` with `OPENROUTER_API_KEY=your_key` or export it in your shell.
-
-The script creates (in that directory):
-
-| File | Description |
-|------|-------------|
-| `formatted_transcript.txt` | Timestamped format: `<seconds>\|<text>` per line |
-| `clean_text.txt` | Plain text without timestamps |
-
-## Example
-
-For a video titled "I Was Wrong About Best Practices":
-
-```
-Generated_Data/I_Was_Wrong_About_Best_Practices/
-├── I_Was_Wrong_About_Best_Practices_formatted_transcript.txt
-├── I_Was_Wrong_About_Best_Practices_clean_text.txt
-└── (if style given) I_Was_Wrong_About_Best_Practices_<style>.md
-```
-
-**formatted_transcript.txt:**
-```
-0.0|hey everyone welcome back
-3.5|today we're going to talk about
-```
-
-**clean_text.txt:**
-```
-hey everyone welcome back today we're going to talk about...
-```
-
-## Extracting Video ID
-
-From URL `https://www.youtube.com/watch?v=CL0vkl8Sxvs`, the video ID is `CL0vkl8Sxvs`.
-
-## What's new (May 2026)
-
-This repo now combines the YouTube transcript pipeline with frame extraction
-and OCR-aware distillation. See
-`docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md`
-for the full design.
-
-### Quick start
+### One-shot
 
 ```bash
-# One-shot: download, extract frames, OCR, and distill with a style guide
 uv run python run.py "https://www.youtube.com/watch?v=KE39P4qBjDk" coding_agent
-
-# Two-phase (re-stylable):
-uv run python extract.py "https://youtu.be/KE39P4qBjDk"
-uv run python distill.py KE39P4qBjDk_Title coding_agent --model gemini-3-flash
-
-# Validate a model profile
-uv run python models.py doctor --profile gemini-3-flash
-
-# Storage cleanup (dry-run by default)
-uv run python clean.py --delete-video --older-than 30d --apply
 ```
 
-### Configuring models
+Downloads, extracts frames + OCR, and distills with the `coding_agent` style guide. Available styles: `coding_agent`, `diy_project`, `knowledge_base` (in `styles/`). Drop new ones in as plain markdown.
 
-Edit `models.yaml`. Adding a new vision-capable model = one entry. Run
-`models.py doctor` to verify.
+### Two-phase (re-stylable)
 
-## Legal & authentication policy
-
-- You are responsible for having the right to access and process the media you
-  pass to this tool.
-- This tool does NOT bypass DRM, paywalls, or authentication.
-- Cookie-based access via `yt-dlp` is supported with `--cookies-from-browser firefox`
-  (or `chrome`). Cookies stay local; this tool does not transmit them.
-- Downloaded media should not be redistributed unless you have rights to do so.
-- `yt-dlp`'s extractor list is best-effort; an extractor working today may break
-  tomorrow. If a download fails, run `pip install -U yt-dlp` first.
-
-## Architecture
-
-Two-phase pipeline:
-
-- `extract.py` — download → 4-tier transcript chain → frames → OCR + 5-class
-  classification → dedup → quality grades → `Generated_Data/<title>/`.
-- `distill.py` — load artifacts → enrich transcript with OCR/citations →
-  scene-change-aware frame selection → multimodal LLM call → citation-validated
-  markdown + structured `distill_result.json`.
-
-See the spec for full details on the citation contract, idempotency model,
-caching, and definition of done.
-
-## Definition of Done
-
-Before declaring this implementation complete, run:
+Phase 1 — extract once:
 
 ```bash
-bash scripts/dod_check.sh
+uv run python extract.py "https://youtu.be/KE39P4qBjDk"
 ```
 
-It exercises every condition in spec §9 (test suite, extract+distill on the
-fixture video, resumability, legacy compat, no `TODO`s in shipped source).
+Phase 2 — distill with any style; re-run with a different style to get a new note over the same artifacts:
+
+```bash
+uv run python distill.py KE39P4qBjDk_Title coding_agent
+uv run python distill.py KE39P4qBjDk_Title knowledge_base --model claude-sonnet-4-6
+```
+
+### Local files
+
+```bash
+uv run python extract.py /path/to/lecture.mp4 --start 60 --end 600 --max-frames 80
+```
+
+`--start`/`--end` (seconds) clip a window; absolute timestamps are preserved through the pipeline so citations like `t=05:23` still mean what you'd expect.
+
+### Useful flags
+
+| Flag | Where | Purpose |
+|---|---|---|
+| `--max-frames N` | `extract.py`, `run.py` | Cap frames extracted from the video |
+| `--start`, `--end` | `extract.py`, `run.py` | Clip a sub-range; timestamps stay absolute |
+| `--no-frames` | `extract.py` | Transcript-only run |
+| `--keep-video` | `extract.py` | Preserve the cached download for inspection |
+| `--force` / `--force-ocr` | `extract.py` | Bypass idempotency for the whole pipeline / OCR only |
+| `--cookies-from-browser firefox` | `extract.py`, `run.py` | Use browser cookies for age-restricted videos |
+| `--model NAME` | `distill.py`, `run.py` | Override the model profile (CLI > `DISTILL_MODEL` env > `models.yaml` default) |
+| `--max-vision-frames N` | `distill.py`, `run.py` | Cap frames sent to the LLM (default 16) |
+| `--token-budget N` | `distill.py` | Cap by token budget; trims frames to `min(max_vision_frames, budget // est_image_tokens)` |
+| `--dry-run-payload` | `distill.py`, `run.py` | Write `payload.json` (image bytes elided) and exit before calling the LLM |
+
+## Output
+
+Each video gets a directory under `Generated_Data/`:
+
+```
+Generated_Data/<title>/
+├── artifact_manifest.json              # source_id, file integrity, distill run log
+├── extract_meta.json                   # transcript/OCR/coverage quality grades
+├── <title>_formatted_transcript.txt    # `start_seconds|text` per line
+├── <title>_clean_text.txt              # transcript without timestamps
+├── <title>_enriched_transcript.md      # transcript + inline OCR/slide/UI blocks
+├── ocr.json                            # per-frame OCR + class + cluster
+├── selected_frames.json                # which frames went to the LLM and why
+├── frames/                             # frame_NNN_t-MM-SS.jpg
+├── <title>_<style>.md                  # final note (Obsidian-ready frontmatter)
+└── <title>_<style>.distill_result.json # structured form: summary, key_points, code_blocks, citations…
+```
+
+The final markdown has [Obsidian-style](https://obsidian.md/) YAML frontmatter with citation counts, quality grades, model profile, and prompt-contract version.
+
+### Citation contract
+
+The model is constrained to cite at least one of these for every technical claim:
+
+- `seg#NNN` — transcript segment
+- `frame_NNN_t-MM-SS` (or short form `frame_NNN`) — specific frame
+- `cluster_id=cN` — a deduplicated code-frame cluster
+- `t=MM:SS` or `t=MM:SS–MM:SS` — bare timestamp
+
+Unresolved citations (referencing a frame or segment that doesn't exist) cause `distill.py` to exit non-zero with a warning banner in the markdown. The full contract is `prompts/distill_contract_v1.md`.
+
+## Models
+
+`models.yaml` defines profiles. Built-in:
+
+| Profile | Provider | Vision | Reasoning |
+|---|---|---|---|
+| `gemini-3-flash` (default) | OpenRouter (`google/gemini-3-flash-preview`) | yes | yes |
+| `gemini-3-pro` | OpenRouter (`google/gemini-3-pro-preview`) | yes | yes |
+| `claude-sonnet-4-6` | OpenRouter (`anthropic/claude-sonnet-4.6`) | yes | no |
+| `gpt-4o` | OpenRouter (`openai/gpt-4o`) | yes | no |
+
+Add a new profile with one YAML entry — no code changes. Verify it works:
+
+```bash
+uv run python models.py doctor --profile gemini-3-pro
+```
+
+`doctor` runs real text/image/reasoning probes against the live API and caches the result for an hour. `distill.py` calls it before each run and falls back to text-only mode if the vision probe fails.
+
+## Cleanup
+
+Dry-run by default; `--apply` to actually delete:
+
+```bash
+uv run python clean.py --delete-video --older-than 30d
+uv run python clean.py --delete-video --delete-frames --older-than 30d --apply
+```
+
+OCR (`ocr.json`) is preserved unless explicitly removed — the cheap-to-keep, expensive-to-recompute artifact.
+
+## Tests
+
+```bash
+uv run pytest                         # unit + fast integration
+uv run pytest -m integration          # only the slow ones (real ffmpeg, real OCR)
+bash scripts/dod_check.sh             # full end-to-end gate (spec §9)
+```
+
+The DoD script runs the test suite, extracts + distills the committed fixture video, exercises resumability, runs the legacy CLI, and greps the shipped sources for `TODO`/`XXX`.
+
+## Legal & auth
+
+- You are responsible for having the right to access and process whatever media you pass in.
+- This tool does **not** bypass DRM, paywalls, or auth. For age-restricted videos use `--cookies-from-browser firefox` (or `chrome`); cookies stay local.
+- Downloaded media should not be redistributed unless you have the right to do so.
+- `yt-dlp` extractors break — if a download fails, `uv pip install -U yt-dlp` first.
+
+## Layout
+
+```
+extract.py                      Phase 1 orchestrator
+distill.py                      Phase 2 orchestrator
+run.py                          extract → distill convenience wrapper
+clean.py                        storage management
+download_transcript.py          legacy entry point; delegates to run.py when a style is given
+models.py                       profile resolution + doctor
+manifest.py                     artifact_manifest.json read/write + integrity
+transcript.py                   4-tier transcript chain (yt-api → pytube → yt-dlp → whisper)
+frame_ocr.py                    RapidOCR + 5-class classifier + rapidfuzz dedup
+frame_select.py                 perceptual-hash scene change + anchored even-spacing
+enrichment.py                   splice OCR into transcript at frame timestamps
+payload.py                      multimodal LLM payload builder
+citation.py                     citation token extract + validate
+distill_render.py               distill_result.json → Obsidian markdown
+models.yaml                     model profile config
+prompts/distill_contract_v1.md  the citation contract sent to every LLM call
+styles/                         user-editable style guides
+vendor/claude_video/            vendored ffmpeg/whisper helpers (see UPSTREAM.md)
+```
+
+## Spec
+
+Full design and rationale: `docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md`.
