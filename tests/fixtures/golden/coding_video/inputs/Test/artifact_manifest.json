@@ -1,0 +1,12 @@
+{
+  "clip_range": null,
+  "distill_runs": [],
+  "duration_seconds": 10.0,
+  "extract": {
+    "transcript_quality": "high"
+  },
+  "schema_version": 1,
+  "source_id": "yt:coding_video",
+  "source_url": "u",
+  "title": "Test"
+}

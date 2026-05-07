@@ -1,0 +1,18 @@
+{
+  "video": {
+    "title": "Test",
+    "duration_seconds": 10
+  },
+  "frames": [
+    {
+      "path": "frames/frame_000_t-00-01.jpg",
+      "timestamp_seconds": 1.0,
+      "ocr_text": "Settings\nSave\nCancel",
+      "ocr_confidence": 0.85,
+      "frame_class": "ui",
+      "class_confidence": 0.65,
+      "cluster_id": null,
+      "ocr_error": null
+    }
+  ]
+}
