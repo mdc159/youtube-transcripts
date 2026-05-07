@@ -53,7 +53,63 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[distill] doctor FAIL: {dr.failure_reason}; falling back to text-only")
         profile = Profile(**{**profile.__dict__, "vision": False})
 
-    # Implementation continues in Task 9.2-9.5
+    # Load artifacts
+    formatted_path = out_dir / f"{out_dir.name}_formatted_transcript.txt"
+    if not formatted_path.is_file():
+        print(f"missing transcript: {formatted_path}", file=sys.stderr)
+        return 1
+    segments = parse_formatted_transcript(formatted_path)
+    ocr_path = out_dir / "ocr.json"
+    frames = read_ocr_json(ocr_path) if ocr_path.is_file() else []
+
+    # Enrich
+    enriched = enrich_transcript(segments, frames)
+    enriched_path = out_dir / f"{out_dir.name}_enriched_transcript.md"
+    write_enriched_transcript(enriched_path, enriched)
+
+    # Frame selection
+    frame_paths = [out_dir / f.path for f in frames]
+    cps = detect_scene_changes(frame_paths) if frame_paths else []
+    sel = select_frames(
+        frames,
+        change_points=cps,
+        max_frames=args.max_vision_frames,
+        token_budget=args.token_budget,
+    )
+    write_selected_frames_json(out_dir / "selected_frames.json", sel)
+
+    # Build payload
+    contract = (Path(__file__).resolve().parent / "prompts" / "distill_contract_v1.md").read_text()
+    style = style_path.read_text()
+    try:
+        content = build_payload(
+            profile=profile,
+            system_prompt=contract,
+            style=style,
+            enriched_transcript=enriched,
+            selected=sel.selected,
+            frames_root=out_dir,
+        )
+    except PayloadBuildError as e:
+        print(f"[distill] payload build failed: {e}", file=sys.stderr)
+        return 1
+
+    if args.dry_run_payload:
+        # Write payload with image bytes elided to file refs for inspection
+        elided = []
+        img_idx = 0
+        for c in content:
+            if c["type"] == "image_url":
+                elided.append({"type": "image_url", "image_url": {"url": f"<elided:image_{img_idx}>"}})
+                img_idx += 1
+            else:
+                elided.append(c)
+        (out_dir / "payload.json").write_text(json.dumps(elided, indent=2))
+        print(f"[distill] dry-run payload written to {out_dir / 'payload.json'}")
+        return 0
+
+    # API call + rendering = Task 9.3
+    print("[distill] live distillation not yet implemented — see Task 9.3")
     return 0
 
 
