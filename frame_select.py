@@ -87,7 +87,12 @@ def select_frames(
       3. Fill remaining budget with even-spacing across the surviving frames.
       4. Cap by min(max_frames, token_budget // est_image_tokens) if budget given.
     """
-    eligible = [f for f in frames if f.frame_class != FrameClass.CODE]
+    eligible: list[FrameRecord] = []
+    original_to_eligible: dict[int, int] = {}
+    for orig_idx, f in enumerate(frames):
+        if f.frame_class != FrameClass.CODE:
+            original_to_eligible[orig_idx] = len(eligible)
+            eligible.append(f)
     if not eligible:
         return SelectionResult(selected=[])
 
@@ -99,30 +104,53 @@ def select_frames(
 
     # Index `change_points` are positions in the *original* `frames` list.
     chosen_idx: list[tuple[int, str]] = []  # (index in eligible, reason)
-    eligible_index_map = {id(f): i for i, f in enumerate(eligible)}
     for cp in change_points:
-        if 0 <= cp.index < len(frames):
-            f = frames[cp.index]
-            if f.frame_class != FrameClass.CODE and id(f) in eligible_index_map:
-                idx = eligible_index_map[id(f)]
-                if not any(i == idx for i, _ in chosen_idx):
-                    chosen_idx.append((idx, f"scene_change@t={_fmt_t(f.timestamp_seconds)}"))
-                    if len(chosen_idx) >= cap:
-                        break
+        if cp.index in original_to_eligible:
+            idx = original_to_eligible[cp.index]
+            f = eligible[idx]
+            if not any(i == idx for i, _ in chosen_idx):
+                chosen_idx.append((idx, f"scene_change@t={_fmt_t(f.timestamp_seconds)}"))
+                if len(chosen_idx) >= cap:
+                    break
 
     if len(chosen_idx) < cap:
-        remaining = cap - len(chosen_idx)
         already = {i for i, _ in chosen_idx}
-        # Even spacing across eligible
-        if eligible:
-            step = max(1, len(eligible) // remaining)
-            for i in range(0, len(eligible), step):
+        n = len(eligible)
+        if n > 0:
+            # First pass: anchored even spacing across [0, n-1]. With remaining=k
+            # slots, we ideally want indices i*(n-1)/(k-1) for i in 0..k-1. Use
+            # this as the preferred order; skip already-chosen indices.
+            remaining = cap - len(chosen_idx)
+            if remaining >= n:
+                # Fewer than `remaining` eligible — just take everything not yet chosen.
+                preferred = list(range(n))
+            elif remaining == 1:
+                preferred = [n // 2]  # midpoint when only one slot
+            else:
+                preferred = sorted({(i * (n - 1)) // (remaining - 1) for i in range(remaining)})
+
+            # Second pass: walk preferred, then fill any gaps from remaining indices.
+            for i in preferred:
                 if i in already:
                     continue
                 f = eligible[i]
                 chosen_idx.append((i, f"even_spacing@t={_fmt_t(f.timestamp_seconds)}"))
+                already.add(i)
                 if len(chosen_idx) >= cap:
                     break
+
+            # If we still haven't reached cap (because preferred collided with
+            # already-chosen indices), walk all indices in order and grab the
+            # next un-chosen ones.
+            if len(chosen_idx) < cap:
+                for i in range(n):
+                    if i in already:
+                        continue
+                    f = eligible[i]
+                    chosen_idx.append((i, f"even_spacing@t={_fmt_t(f.timestamp_seconds)}"))
+                    already.add(i)
+                    if len(chosen_idx) >= cap:
+                        break
 
     chosen_idx.sort(key=lambda x: x[0])
     sel = [
@@ -135,3 +163,19 @@ def select_frames(
         for i, reason in chosen_idx
     ]
     return SelectionResult(selected=sel)
+
+
+def write_selected_frames_json(path: Path | str, sel: SelectionResult) -> None:
+    import json
+    data = {
+        "selected": [
+            {
+                "path": s.path,
+                "timestamp_seconds": s.timestamp_seconds,
+                "frame_class": s.frame_class.value,
+                "reason": s.reason,
+            }
+            for s in sel.selected
+        ],
+    }
+    Path(path).write_text(json.dumps(data, indent=2, sort_keys=True))
