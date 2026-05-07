@@ -135,9 +135,9 @@ class FrameRecord:
 
 
 def _normalize(text: str) -> str:
-    s = re.sub(r"\s+", " ", text).strip()
-    s = re.sub(r"[#].*$", "", s, flags=re.MULTILINE)  # strip line comments
-    s = re.sub(r"//.*$", "", s, flags=re.MULTILINE)
+    s = re.sub(r"[#].*$", "", text, flags=re.MULTILINE)  # strip # line comments
+    s = re.sub(r"//.*$", "", s, flags=re.MULTILINE)      # strip // line comments
+    s = re.sub(r"\s+", " ", s).strip()                   # collapse whitespace
     return s
 
 

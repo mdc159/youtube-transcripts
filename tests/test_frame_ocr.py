@@ -96,3 +96,14 @@ def test_dedup_ignores_non_code():
     ]
     out = dedup_code_frames(frames)
     assert all(f.cluster_id is None for f in out)
+
+
+def test_dedup_normalizes_comments_and_whitespace():
+    """Same code with different comments + whitespace must cluster together."""
+    a = "def f():\n    return 1  # implementation"
+    b = "def   f():\n  return 1   # different comment"
+    out = dedup_code_frames([
+        _rec(1, 1, a, FrameClass.CODE),
+        _rec(2, 5, b, FrameClass.CODE),
+    ])
+    assert len({f.cluster_id for f in out}) == 1
