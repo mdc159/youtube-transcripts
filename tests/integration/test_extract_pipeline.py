@@ -54,3 +54,32 @@ def test_extract_local_video_with_frames(tmp_path, fixtures_dir, monkeypatch):
     assert (out / "frames").is_dir()
     assert (out / "ocr.json").is_file()
     assert (out / "artifact_manifest.json").is_file()
+
+
+@pytest.mark.integration
+def test_extract_resumes_after_partial(tmp_path, fixtures_dir, monkeypatch):
+    src = fixtures_dir / "test_video.mp4"
+    monkeypatch.setenv("YT_GENERATED_DATA_DIR", str(tmp_path))
+    extract.main([str(src), "--max-frames", "4"])
+    out = next(tmp_path.iterdir())
+    # Delete one frame to simulate corruption
+    f = next((out / "frames").iterdir())
+    f.unlink()
+    # Re-run without --force; only the missing artifact should rebuild
+    rc = extract.main([str(src), "--max-frames", "4"])
+    assert rc == 0
+    assert f.exists()  # rebuilt
+
+
+@pytest.mark.integration
+def test_extract_clip_range_preserves_absolute_timestamps(tmp_path, fixtures_dir, monkeypatch):
+    src = fixtures_dir / "test_video.mp4"
+    monkeypatch.setenv("YT_GENERATED_DATA_DIR", str(tmp_path))
+    rc = extract.main([str(src), "--start", "5", "--end", "15", "--max-frames", "4"])
+    assert rc == 0
+    out = next(tmp_path.iterdir())
+    import json
+    ocr = json.loads((out / "ocr.json").read_text())
+    # All frames should have timestamps in [5, 15], not [0, 10]
+    for f in ocr["frames"]:
+        assert 5 <= f["timestamp_seconds"] <= 15
