@@ -108,3 +108,14 @@ Two-phase pipeline:
 
 See the spec for full details on the citation contract, idempotency model,
 caching, and definition of done.
+
+## Definition of Done
+
+Before declaring this implementation complete, run:
+
+```bash
+bash scripts/dod_check.sh
+```
+
+It exercises every condition in spec §9 (test suite, extract+distill on the
+fixture video, resumability, legacy compat, no `TODO`s in shipped source).

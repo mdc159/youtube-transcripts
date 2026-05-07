@@ -154,7 +154,7 @@ def _ffprobe_duration(path: str) -> float:
 
 
 def _do_transcript(args, out_dir: Path, manifest: Manifest) -> None:
-    """Run the 4-tier chain. Whisper requires audio extraction (TODO Task 6.4)."""
+    """Run the 4-tier chain. Whisper tier is gated off (audio extraction not yet wired)."""
     res = fetch_transcript(args.source, allow_whisper=False)
     base = out_dir / out_dir.name
     formatted = Path(str(base) + "_formatted_transcript.txt")
