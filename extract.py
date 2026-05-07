@@ -14,6 +14,15 @@ from pathlib import Path
 
 from manifest import derive_source_id, Manifest
 from transcript import fetch_transcript
+from frame_ocr import (
+    FrameClass,
+    FrameRecord,
+    classify_frame,
+    dedup_code_frames,
+    ocr_frame,
+    write_ocr_json,
+)
+from vendor.claude_video.scripts import frames as cv_frames
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -91,7 +100,7 @@ def _probe_source(source: str) -> tuple[str, float, str]:
         text=True,
     )
     if r.returncode != 0:
-        raise SystemExit(f"yt-dlp probe failed: {r.stderr}")
+        raise RuntimeError(f"yt-dlp probe failed: {r.stderr}")
     info = _json.loads(r.stdout)
     return (
         _safe_title(info.get("title") or info.get("id") or "video"),
@@ -102,7 +111,8 @@ def _probe_source(source: str) -> tuple[str, float, str]:
 
 def _safe_title(t: str) -> str:
     safe = re.sub(r"[^\w\s-]", "", t).strip()
-    return re.sub(r"[-\s]+", "_", safe)
+    safe = re.sub(r"[-\s]+", "_", safe)
+    return safe or "video"
 
 
 def _ffprobe_duration(path: str) -> float:
@@ -119,8 +129,9 @@ def _ffprobe_duration(path: str) -> float:
         ],
         capture_output=True,
         text=True,
-        check=True,
     )
+    if r.returncode != 0:
+        raise RuntimeError(f"ffprobe failed for {path}: {r.stderr}")
     return float(r.stdout.strip() or 0.0)
 
 
@@ -164,8 +175,193 @@ def _grade_transcript(source: str) -> str:
 
 
 def _do_frames(args, out_dir: Path, manifest: Manifest) -> None:
-    """Wired in Task 6.3."""
-    pass
+    """Extract frames + OCR + classification + dedup. Writes ocr.json + manifest entries."""
+    frames_dir = out_dir / "frames"
+    ocr_json_path = out_dir / "ocr.json"
+
+    # Idempotency: skip if frames_dir intact, ocr.json present, and not forced.
+    if (
+        not args.force
+        and not args.force_ocr
+        and ocr_json_path.exists()
+        and manifest.file_intact("extract", "frames_dir")
+    ):
+        print("[extract] frames+ocr: skipping (already complete)")
+        return
+
+    # Resolve video path: use local file directly, otherwise download.
+    if Path(args.source).exists():
+        video_path = str(Path(args.source).resolve())
+    else:
+        video_path = _download_video(args.source, out_dir, args.cookies_from_browser)
+
+    duration = float(manifest.data.get("duration_seconds") or 0.0)
+    print(f"[extract] frames: extracting (duration={duration:.1f}s, max={args.max_frames})")
+    paths = _extract_frames_adapter(
+        video_path=video_path,
+        frames_dir=frames_dir,
+        duration=duration,
+        max_frames=args.max_frames,
+        start=args.start,
+        end=args.end,
+    )
+    print(f"[extract] frames: extracted {len(paths)} frames")
+
+    records: list[FrameRecord] = []
+    for fp in paths:
+        ts = _extract_ts(Path(fp).name)
+        try:
+            ocr_res = ocr_frame(fp)
+            cls, conf = classify_frame(ocr_res)
+            if conf < 0.6:
+                cls = FrameClass.OTHER
+            records.append(
+                FrameRecord(
+                    path=fp,
+                    timestamp_seconds=ts,
+                    ocr_text=ocr_res.text,
+                    ocr_confidence=ocr_res.mean_confidence,
+                    frame_class=cls,
+                    class_confidence=conf,
+                )
+            )
+        except Exception as exc:  # noqa: BLE001 - per-frame isolation
+            records.append(
+                FrameRecord(
+                    path=fp,
+                    timestamp_seconds=ts,
+                    ocr_text="",
+                    ocr_confidence=0.0,
+                    frame_class=FrameClass.OTHER,
+                    class_confidence=0.0,
+                    ocr_error=str(exc),
+                )
+            )
+
+    records = dedup_code_frames(records)
+    write_ocr_json(
+        ocr_json_path,
+        video_title=out_dir.name,
+        duration_seconds=duration,
+        frames=records,
+    )
+
+    if manifest.data.get("extract") is None:
+        manifest.data["extract"] = {}
+    manifest.record_file("extract", "frames_dir", frames_dir)
+    manifest.record_file("extract", "ocr_json", ocr_json_path)
+    manifest.data["extract"]["frame_budget_used"] = len(records)
+    manifest.data["extract"]["ocr_version"] = "rapidocr-1.4"
+    manifest.data["extract"]["dedup_version"] = 1
+
+
+def _extract_frames_adapter(
+    *,
+    video_path: str,
+    frames_dir: Path,
+    duration: float,
+    max_frames: int | None,
+    start: float | None,
+    end: float | None,
+) -> list[str]:
+    """Run vendored frames.extract, then rename outputs to spec format.
+
+    Spec citation regex expects ``frame_NNN_t-MM-SS.jpg`` (3-digit serial,
+    MM-SS timestamp). Vendored extract emits ``frame_%04d.jpg`` with no
+    timestamp encoded in the filename, so we rename in place after extraction.
+    """
+    frames_dir = Path(frames_dir)
+    frames_dir.mkdir(parents=True, exist_ok=True)
+
+    # Compute effective duration for fps targeting.
+    effective_start = start if start is not None else 0.0
+    effective_end = end if end is not None else duration
+    effective_duration = max(0.0, effective_end - effective_start) if duration > 0 else duration
+
+    budget = max_frames if max_frames is not None else 100
+    focused = (start is not None) or (end is not None)
+    if focused:
+        fps, _target = cv_frames.auto_fps_focus(effective_duration, max_frames=budget)
+    else:
+        fps, _target = cv_frames.auto_fps(effective_duration, max_frames=budget)
+
+    raw = cv_frames.extract(
+        video_path,
+        frames_dir,
+        fps=fps,
+        max_frames=budget,
+        start_seconds=start,
+        end_seconds=end,
+    )
+
+    # Rename: frame_0001.jpg -> frame_001_t-MM-SS.jpg (3-digit, MM-SS).
+    renamed: list[tuple[float, str]] = []
+    for i, item in enumerate(raw, start=1):
+        ts = float(item["timestamp_seconds"])
+        old = Path(item["path"])
+        serial = str(min(i, 999)).zfill(3)
+        mm = int(ts) // 60
+        ss = int(ts) % 60
+        new_name = f"frame_{serial}_t-{mm:02d}-{ss:02d}.jpg"
+        new_path = old.parent / new_name
+        if old.resolve() != new_path.resolve():
+            old.rename(new_path)
+        renamed.append((ts, str(new_path.resolve())))
+
+    renamed.sort(key=lambda x: x[0])
+    return [p for _, p in renamed]
+
+
+_TS_RE = re.compile(r"frame_\d{3}_t-(\d{2})-(\d{2})\.jpg$")
+
+
+def _extract_ts(filename: str) -> float:
+    m = _TS_RE.search(filename)
+    if not m:
+        return 0.0
+    return float(int(m.group(1)) * 60 + int(m.group(2)))
+
+
+def _download_video(url: str, out_dir: Path, cookies_browser: str | None) -> str:
+    """Download a video to media_cache/<title>/video.<ext>. Returns absolute path."""
+    title = out_dir.name
+    cache_dir = Path("media_cache") / title
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    output_template = str(cache_dir / "video.%(ext)s")
+
+    cmd = [
+        "yt-dlp",
+        "-f",
+        "best[ext=mp4]",
+        "-o",
+        output_template,
+        url,
+    ]
+    if cookies_browser:
+        cmd += ["--cookies-from-browser", cookies_browser]
+
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode != 0:
+        raise SystemExit(_ytdlp_error_message(r.stderr))
+
+    candidates = sorted(cache_dir.glob("video.*"))
+    if not candidates:
+        raise SystemExit(f"yt-dlp produced no output in {cache_dir}")
+    return str(candidates[0].resolve())
+
+
+def _ytdlp_error_message(stderr: str) -> str:
+    s = stderr or ""
+    lower = s.lower()
+    if "sign in" in lower or "age" in lower or "login required" in lower or "cookies" in lower:
+        return "yt-dlp: source requires authentication / cookies. Pass --cookies-from-browser firefox (or chrome)."
+    if "geo" in lower or "not available in your country" in lower:
+        return "yt-dlp: source is geo-blocked in your region."
+    if "playlist" in lower:
+        return "yt-dlp: URL points to a playlist; pass a single-video URL."
+    if "429" in lower or "too many requests" in lower:
+        return "yt-dlp: rate-limited (429). Retry later."
+    return f"yt-dlp failed:\n{s}"
 
 
 if __name__ == "__main__":

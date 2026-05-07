@@ -42,3 +42,15 @@ def test_extract_local_video(tmp_path, fixtures_dir, monkeypatch):
     # extract section must exist (even if transcript was unavailable)
     assert data["extract"] is not None
     assert "transcript_source" in data["extract"]
+
+
+@pytest.mark.integration
+def test_extract_local_video_with_frames(tmp_path, fixtures_dir, monkeypatch):
+    src = fixtures_dir / "test_video.mp4"
+    monkeypatch.setenv("YT_GENERATED_DATA_DIR", str(tmp_path))
+    rc = extract.main([str(src), "--max-frames", "8"])
+    assert rc == 0
+    out = next(tmp_path.iterdir())
+    assert (out / "frames").is_dir()
+    assert (out / "ocr.json").is_file()
+    assert (out / "artifact_manifest.json").is_file()
