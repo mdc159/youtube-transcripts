@@ -117,3 +117,48 @@ def classify_frame(res: OcrResult) -> tuple[FrameClass, float]:
 
 
 # Caller convention: if class_confidence < 0.6, treat as OTHER (spec §4.3).
+
+
+from rapidfuzz import fuzz
+
+
+@dataclass
+class FrameRecord:
+    path: str
+    timestamp_seconds: float
+    ocr_text: str
+    ocr_confidence: float
+    frame_class: FrameClass
+    class_confidence: float
+    cluster_id: Optional[str] = None
+    ocr_error: Optional[str] = None
+
+
+def _normalize(text: str) -> str:
+    s = re.sub(r"\s+", " ", text).strip()
+    s = re.sub(r"[#].*$", "", s, flags=re.MULTILINE)  # strip line comments
+    s = re.sub(r"//.*$", "", s, flags=re.MULTILINE)
+    return s
+
+
+def dedup_code_frames(frames: list[FrameRecord], similarity: float = 0.9) -> list[FrameRecord]:
+    """Cluster CODE-class frames by normalized OCR text (rapidfuzz token-set ratio)."""
+    next_id = 0
+    cluster_reps: list[tuple[str, str]] = []  # (cluster_id, normalized_text)
+    out = []
+    for f in frames:
+        if f.frame_class != FrameClass.CODE:
+            out.append(f)
+            continue
+        norm = _normalize(f.ocr_text)
+        match_id: Optional[str] = None
+        for cid, rep in cluster_reps:
+            if fuzz.token_set_ratio(norm, rep) / 100.0 >= similarity:
+                match_id = cid
+                break
+        if match_id is None:
+            match_id = f"c{next_id}"
+            next_id += 1
+            cluster_reps.append((match_id, norm))
+        out.append(FrameRecord(**{**f.__dict__, "cluster_id": match_id}))
+    return out
