@@ -1,0 +1,38 @@
+default: gemini-3-flash
+
+profiles:
+  gemini-3-flash:
+    base_url: https://openrouter.io/api/v1
+    model: google/gemini-3-flash-preview
+    vision: true
+    reasoning: true
+    api_key_env: OPENROUTER_API_KEY
+    max_images: 16
+    max_image_bytes: 5242880
+
+  gemini-3-pro:
+    base_url: https://openrouter.io/api/v1
+    model: google/gemini-3-pro
+    vision: true
+    reasoning: true
+    api_key_env: OPENROUTER_API_KEY
+    max_images: 32
+    max_image_bytes: 5242880
+
+  claude-sonnet-4-6:
+    base_url: https://openrouter.io/api/v1
+    model: anthropic/claude-sonnet-4-6
+    vision: true
+    reasoning: false
+    api_key_env: OPENROUTER_API_KEY
+    max_images: 20
+    max_image_bytes: 5242880
+
+  gpt-4o:
+    base_url: https://api.openai.com/v1
+    model: gpt-4o
+    vision: true
+    reasoning: false
+    api_key_env: OPENAI_API_KEY
+    max_images: 10
+    max_image_bytes: 20971520
