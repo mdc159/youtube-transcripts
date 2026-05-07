@@ -23,3 +23,10 @@ dev = [
     "pytest>=8.0",
     "pytest-mock>=3.12",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+markers = [
+    "integration: end-to-end tests that may hit external resources",
+]
