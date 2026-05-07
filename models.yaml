@@ -2,7 +2,7 @@ default: gemini-3-flash
 
 profiles:
   gemini-3-flash:
-    base_url: https://openrouter.io/api/v1
+    base_url: https://openrouter.ai/api/v1
     model: google/gemini-3-flash-preview
     vision: true
     reasoning: true
@@ -11,7 +11,7 @@ profiles:
     max_image_bytes: 5242880
 
   gemini-3-pro:
-    base_url: https://openrouter.io/api/v1
+    base_url: https://openrouter.ai/api/v1
     model: google/gemini-3-pro
     vision: true
     reasoning: true
@@ -20,7 +20,7 @@ profiles:
     max_image_bytes: 5242880
 
   claude-sonnet-4-6:
-    base_url: https://openrouter.io/api/v1
+    base_url: https://openrouter.ai/api/v1
     model: anthropic/claude-sonnet-4-6
     vision: true
     reasoning: false
