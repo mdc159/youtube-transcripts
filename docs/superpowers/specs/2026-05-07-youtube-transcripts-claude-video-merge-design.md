@@ -78,11 +78,11 @@ clean.py [--delete-video] [--delete-frames] [--keep-ocr] [--older-than 30d] [--d
 
 | Path | Status | Role |
 |------|--------|------|
-| `vendor/claude-video/scripts/download.py` | new (vendored) | yt-dlp wrapper |
-| `vendor/claude-video/scripts/frames.py` | new (vendored) | ffmpeg + auto-fps |
-| `vendor/claude-video/scripts/transcribe.py` | new (vendored) | caption parsing + Whisper orchestration |
-| `vendor/claude-video/scripts/whisper.py` | new (vendored) | Groq / OpenAI clients |
-| `vendor/claude-video/scripts/setup.py` | new (vendored) | ffmpeg/yt-dlp preflight |
+| `vendor/claude_video/scripts/download.py` | new (vendored) | yt-dlp wrapper |
+| `vendor/claude_video/scripts/frames.py` | new (vendored) | ffmpeg + auto-fps |
+| `vendor/claude_video/scripts/transcribe.py` | new (vendored) | caption parsing + Whisper orchestration |
+| `vendor/claude_video/scripts/whisper.py` | new (vendored) | Groq / OpenAI clients |
+| `vendor/claude_video/scripts/setup.py` | new (vendored) | ffmpeg/yt-dlp preflight |
 | `extract.py` | new | Phase 1 orchestrator (idempotent) |
 | `frame_ocr.py` | new | RapidOCR + 5-class classifier + dedup |
 | `frame_select.py` | new | Scene-change detector (perceptual hash) + even-spacing fallback |
@@ -574,9 +574,9 @@ This log captures every brainstorming question, the options presented, the optio
 
 ### A.2 — How `claude-video` physically lives in the repo
 
-**Options:** vendor at `vendor/claude-video/`; submodule; fork; install as Claude skill.
+**Options:** vendor at `vendor/claude_video/`; submodule; fork; install as Claude skill.
 
-**Chosen.** Vendor at `vendor/claude-video/`.
+**Chosen.** Vendor at `vendor/claude_video/`.
 
 **Why.** Easiest to modify when adapting (programmatic calls instead of skill harness). Submodule rejected (Python imports across submodule boundary are awkward). Fork rejected (no real gain over vendor). Skill installation rejected (user wanted in-repo).
 
