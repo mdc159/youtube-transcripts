@@ -1,0 +1,2672 @@
+claims:
+- source_line: 3
+  claim_type: concrete
+  subtype: status
+  claim_text: Spec status is approved with revisions and awaiting post-revision review.
+  expected_value: approved with revisions
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0001
+- source_line: 4
+  claim_type: concrete
+  subtype: date
+  claim_text: The spec date is 2026-05-07 and was revised the same day.
+  expected_value: '2026-05-07'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0002
+- source_line: 5
+  claim_type: concrete
+  subtype: author
+  claim_text: The document author is mdc159 (with Claude).
+  expected_value: mdc159
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0003
+- source_line: 11
+  claim_type: concrete
+  subtype: fallback_chain
+  claim_text: 'youtube-transcripts uses a 3-method transcript fallback chain: youtube-transcript-api,
+    pytube, then yt-dlp captions.'
+  expected_value:
+  - youtube-transcript-api
+  - pytube
+  - yt-dlp captions
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0004
+- source_line: 12
+  claim_type: concrete
+  subtype: repository_url
+  claim_text: claude-video repository URL is https://github.com/bradautomates/claude-video.
+  expected_value: https://github.com/bradautomates/claude-video
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0005
+- source_line: 12
+  claim_type: concrete
+  subtype: frame_limit
+  claim_text: claude-video frame extraction is constrained to at most 100 frames.
+  expected_value: 100
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0006
+- source_line: 12
+  claim_type: concrete
+  subtype: fps_limit
+  claim_text: claude-video frame extraction is constrained to at most 2 fps.
+  expected_value: 2
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0007
+- source_line: 26
+  claim_type: behavioral
+  subtype: traceability_rule
+  claim_text: Every output claim must be traceable to a transcript segment ID, frame
+    ID, or t=MM:SS timestamp.
+  expected_value: all claims have at least one traceable evidence token
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run python distill.py <title-or-dir> <style> && grep -Eo 'seg#|frame_[0-9]{3}|t=[0-9]{2}:[0-9]{2}'
+    "Generated_Data/<title>/<title>_<style>.md"
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0008
+- source_line: 27
+  claim_type: behavioral
+  subtype: idempotency
+  claim_text: Re-running on the same source skips completed work unless --force is
+    used.
+  expected_value: completed steps are skipped without --force
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run python extract.py <url-or-path> && uv run python extract.py <url-or-path>
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0009
+- source_line: 28
+  claim_type: concrete
+  subtype: source_support
+  claim_text: The pipeline is intended to support YouTube, yt-dlp-supported platforms,
+    and local files.
+  expected_value:
+  - YouTube
+  - yt-dlp sources
+  - local video files
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0010
+- source_line: 35
+  claim_type: concrete
+  subtype: fallback_tier
+  claim_text: Whisper is a fourth transcript tier used only if the first three methods
+    fail.
+  expected_value: 4th tier
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0011
+- source_line: 42
+  claim_type: concrete
+  subtype: command_name
+  claim_text: extract.py is a top-level CLI command in the architecture.
+  expected_value: extract.py
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0012
+- source_line: 44
+  claim_type: concrete
+  subtype: cli_flag
+  claim_text: extract.py accepts --cookies-from-browser.
+  expected_value: --cookies-from-browser
+  verifiable_by:
+  - code
+  - doc
+  probe: uv run python extract.py --help
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0013
+- source_line: 46
+  claim_type: behavioral
+  subtype: manifest_skip
+  claim_text: extract.py checks artifact_manifest.json and skips completed steps unless
+    --force.
+  expected_value: manifest-driven step skipping
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run python extract.py <url-or-path> && uv run python extract.py <url-or-path>
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0014
+- source_line: 48
+  claim_type: concrete
+  subtype: transcript_chain
+  claim_text: extract.py transcript chain is yt-transcript-api -> pytube -> yt-dlp
+    captions -> Whisper.
+  expected_value:
+  - yt-transcript-api
+  - pytube
+  - yt-dlp captions
+  - Whisper
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0015
+- source_line: 49
+  claim_type: concrete
+  subtype: cache_path
+  claim_text: Downloaded video path is media_cache/<source_id>/video.<ext>.
+  expected_value: media_cache/<source_id>/video.<ext>
+  verifiable_by:
+  - code
+  - vps
+  probe: ls media_cache
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0016
+- source_line: 52
+  claim_type: concrete
+  subtype: enum
+  claim_text: Frame classifier labels are code, slide_text, ui, diagram, and other.
+  expected_value:
+  - code
+  - slide_text
+  - ui
+  - diagram
+  - other
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0017
+- source_line: 58
+  claim_type: concrete
+  subtype: command_name
+  claim_text: distill.py is a top-level CLI command in the architecture.
+  expected_value: distill.py
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0018
+- source_line: 66
+  claim_type: behavioral
+  subtype: dry_run_behavior
+  claim_text: With --dry-run-payload, distill.py writes payload.json and exits before
+    calling the provider.
+  expected_value: payload written and no API call
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run python distill.py <title-or-dir> <style> --dry-run-payload
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0019
+- source_line: 71
+  claim_type: concrete
+  subtype: command_name
+  claim_text: run.py is a convenience command that runs extract then distill.
+  expected_value: extract -> distill
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0020
+- source_line: 73
+  claim_type: concrete
+  subtype: subcommand
+  claim_text: models.py provides a doctor subcommand with --profile.
+  expected_value: doctor --profile <name>
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run python models.py --help
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0021
+- source_line: 81
+  claim_type: concrete
+  subtype: file_path
+  claim_text: vendor/claude_video/scripts/download.py is listed as a new vendored
+    file.
+  expected_value: vendor/claude_video/scripts/download.py
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0022
+- source_line: 97
+  claim_type: behavioral
+  subtype: default_delete_behavior
+  claim_text: Downloaded video is deleted after extraction unless --keep-video is
+    used.
+  expected_value: delete cached video by default
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run python extract.py <url-or-path> && ls media_cache
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0023
+- source_line: 101
+  claim_type: concrete
+  subtype: output_file
+  claim_text: distillation structured sidecar file is <title>_<style>.distill_result.json
+    under Generated_Data/<title>/.
+  expected_value: <title>_<style>.distill_result.json
+  verifiable_by:
+  - code
+  - vps
+  probe: ls "Generated_Data/<title>"
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0024
+- source_line: 103
+  claim_type: concrete
+  subtype: frame_filename_pattern
+  claim_text: Frame images are named frame_NNN_t-MM-SS.jpg.
+  expected_value: frame_NNN_t-MM-SS.jpg
+  verifiable_by:
+  - code
+  - vps
+  probe: ls "Generated_Data/<title>/frames"
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0025
+- source_line: 104
+  claim_type: concrete
+  subtype: output_file
+  claim_text: OCR output is stored in Generated_Data/<title>/ocr.json.
+  expected_value: ocr.json
+  verifiable_by:
+  - code
+  - vps
+  probe: ls "Generated_Data/<title>"
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0026
+- source_line: 113
+  claim_type: concrete
+  subtype: dependency
+  claim_text: OCR library is rapidocr-onnxruntime.
+  expected_value: rapidocr-onnxruntime
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0027
+- source_line: 121
+  claim_type: behavioral
+  subtype: confidence_gate
+  claim_text: OCR lines with confidence below 0.5 are excluded from high-confidence
+    classification/injection text.
+  expected_value: 0.5
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0028
+- source_line: 128
+  claim_type: concrete
+  subtype: field_replacement
+  claim_text: is_code_heavy is replaced by class and class_confidence fields.
+  expected_value:
+  - class
+  - class_confidence
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0029
+- source_line: 140
+  claim_type: behavioral
+  subtype: classification_fallback
+  claim_text: Frames with class_confidence below 0.6 are treated as other.
+  expected_value: 0.6
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0030
+- source_line: 148
+  claim_type: concrete
+  subtype: algorithm_component
+  claim_text: frame_select.py uses imagehash.phash for perceptual hashing.
+  expected_value: imagehash.phash
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0031
+- source_line: 150
+  claim_type: concrete
+  subtype: threshold_formula
+  claim_text: "Scene-change threshold default is median + 1.5\xD7MAD of consecutive-frame\
+    \ hash distances."
+  expected_value: "median + 1.5\xD7MAD"
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0032
+- source_line: 153
+  claim_type: behavioral
+  subtype: selection_rule
+  claim_text: Code-class frames are always excluded from vision payload selection.
+  expected_value: exclude code-class frames
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0033
+- source_line: 154
+  claim_type: concrete
+  subtype: default_value
+  claim_text: Default --max-vision-frames is 16.
+  expected_value: 16
+  verifiable_by:
+  - code
+  - doc
+  probe: uv run python distill.py --help
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0034
+- source_line: 163
+  claim_type: concrete
+  subtype: similarity_threshold
+  claim_text: OCR dedup clusters use fingerprint similarity threshold >= 0.85 via
+    rapidfuzz token-set ratio.
+  expected_value: 0.85
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0035
+- source_line: 173
+  claim_type: behavioral
+  subtype: insertion_rule
+  claim_text: Frame OCR/note is inserted immediately after the transcript segment
+    whose [start,end] contains frame.timestamp_seconds.
+  expected_value: insert after containing segment
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0036
+- source_line: 183
+  claim_type: concrete
+  subtype: config_file
+  claim_text: Model profiles are configured in models.yaml at repo root.
+  expected_value: models.yaml
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0037
+- source_line: 186
+  claim_type: concrete
+  subtype: default_profile
+  claim_text: Default model profile is gemini-3-flash.
+  expected_value: gemini-3-flash
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0038
+- source_line: 191
+  claim_type: concrete
+  subtype: model_id
+  claim_text: Profile gemini-3-flash maps to model google/gemini-3-flash-preview.
+  expected_value: google/gemini-3-flash-preview
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0039
+- source_line: 195
+  claim_type: concrete
+  subtype: max_images
+  claim_text: Profile gemini-3-flash sets max_images to 16.
+  expected_value: 16
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0040
+- source_line: 196
+  claim_type: concrete
+  subtype: max_image_bytes
+  claim_text: Profile gemini-3-flash sets max_image_bytes to 5242880.
+  expected_value: 5242880
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0041
+- source_line: 219
+  claim_type: concrete
+  subtype: env_var
+  claim_text: Profile gpt-4o uses OPENAI_API_KEY via api_key_env.
+  expected_value: OPENAI_API_KEY
+  verifiable_by:
+  - code
+  - vps
+  probe: env | grep OPENAI_API_KEY
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0042
+- source_line: 223
+  claim_type: concrete
+  subtype: resolution_order
+  claim_text: Model profile resolution order is CLI flag, then DISTILL_MODEL env var,
+    then models.yaml default.
+  expected_value:
+  - CLI
+  - DISTILL_MODEL
+  - models.yaml default
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0043
+- source_line: 229
+  claim_type: behavioral
+  subtype: doctor_check
+  claim_text: models.py doctor verifies api_key_env is set in env or .env.
+  expected_value: api_key_env must be set
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run python models.py doctor --profile gemini-3-flash
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0044
+- source_line: 230
+  claim_type: behavioral
+  subtype: doctor_probe
+  claim_text: models.py doctor sends a 5-token text request and requires non-empty
+    response.
+  expected_value: non-empty response from 5-token text probe
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run python models.py doctor --profile gemini-3-flash
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0045
+- source_line: 231
+  claim_type: behavioral
+  subtype: vision_probe
+  claim_text: For vision=true profiles, doctor sends a probe with one 32x32 fixture
+    image and requires non-empty response without schema error.
+  expected_value: 32x32 image probe passes
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run python models.py doctor --profile gemini-3-flash
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0046
+- source_line: 235
+  claim_type: concrete
+  subtype: cache_path
+  claim_text: Doctor cache files are stored under ~/.cache/youtube-transcripts/model_doctor_<profile>_<hash>.json.
+  expected_value: ~/.cache/youtube-transcripts/model_doctor_<profile>_<hash>.json
+  verifiable_by:
+  - code
+  - vps
+  probe: ls ~/.cache/youtube-transcripts
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0047
+- source_line: 235
+  claim_type: behavioral
+  subtype: fallback_behavior
+  claim_text: If doctor validation fails in distill.py, processing falls back to text-only
+    path and records a warning in distill_result.json.
+  expected_value: text-only fallback with warning
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0048
+- source_line: 286
+  claim_type: concrete
+  subtype: canonical_output
+  claim_text: distill_result.json is the canonical output and markdown is rendered
+    from it.
+  expected_value: distill_result.json
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0049
+- source_line: 290
+  claim_type: concrete
+  subtype: schema_version
+  claim_text: distill_result.json example uses schema_version 1.
+  expected_value: 1
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0050
+- source_line: 320
+  claim_type: concrete
+  subtype: citation_token
+  claim_text: seg#NNN is a valid citation token for transcript segment ID.
+  expected_value: seg#NNN
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0051
+- source_line: 322
+  claim_type: concrete
+  subtype: citation_token
+  claim_text: frame_NNN_t-MM-SS is a valid fully-qualified frame citation token.
+  expected_value: frame_NNN_t-MM-SS
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0052
+- source_line: 326
+  claim_type: behavioral
+  subtype: citation_validation
+  claim_text: Unresolved citations cause distill to fail with a structured error listing
+    each unresolved citation.
+  expected_value: distill fails on unresolved citations
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0053
+- source_line: 334
+  claim_type: concrete
+  subtype: frontmatter_field
+  claim_text: Output frontmatter includes citations.unresolved.
+  expected_value: citations.unresolved
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0054
+- source_line: 344
+  claim_type: behavioral
+  subtype: banner_condition
+  claim_text: If unresolved citations are greater than zero, output markdown gets
+    a top banner noting the issue.
+  expected_value: banner added when unresolved > 0
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0055
+- source_line: 354
+  claim_type: concrete
+  subtype: source_id_format
+  claim_text: YouTube source_id format is yt:<video_id>.
+  expected_value: yt:<video_id>
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0056
+- source_line: 357
+  claim_type: concrete
+  subtype: source_id_format
+  claim_text: Local file source_id format is local:<sha1(absolute_path)[:12]>.
+  expected_value: local:<sha1(absolute_path)[:12]>
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0057
+- source_line: 359
+  claim_type: behavioral
+  subtype: clip_suffix
+  claim_text: Using --start/--end suffixes source_id with clip range like yt:abc123#15-45.
+  expected_value: 'source_id includes #start-end suffix'
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0058
+- source_line: 367
+  claim_type: concrete
+  subtype: manifest_schema
+  claim_text: artifact_manifest.json example uses schema_version 1.
+  expected_value: 1
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0059
+- source_line: 408
+  claim_type: behavioral
+  subtype: force_semantics
+  claim_text: Video download step is skipped when cached video exists and manifest
+    args match; --force reruns it.
+  expected_value: skip download unless --force
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0060
+- source_line: 411
+  claim_type: behavioral
+  subtype: force_semantics
+  claim_text: OCR step reruns with extract.py --force-ocr even when same ocr_version
+    is already recorded for the frame set.
+  expected_value: --force-ocr reruns OCR
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0061
+- source_line: 414
+  claim_type: behavioral
+  subtype: corruption_recovery
+  claim_text: If an artifact is missing or hash-mismatched, the corresponding step
+    reruns without requiring --force.
+  expected_value: auto rebuild on missing/corrupt artifact
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0062
+- source_line: 431
+  claim_type: behavioral
+  subtype: safe_delete
+  claim_text: clean.py defaults to dry-run listing and requires --apply for actual
+    deletion.
+  expected_value: no deletion without --apply
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run python clean.py --delete-video
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0063
+- source_line: 448
+  claim_type: behavioral
+  subtype: error_handling
+  claim_text: When yt-dlp is rate-limited (429), the tool reports rate-limited, does
+    not auto-retry, and exits 1.
+  expected_value: exit code 1 and no auto-retry on 429
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0064
+- source_line: 451
+  claim_type: behavioral
+  subtype: error_handling
+  claim_text: If ffmpeg or yt-dlp is missing, setup.py --check runs and process exits
+    with code 2.
+  expected_value: 2
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0065
+- source_line: 459
+  claim_type: behavioral
+  subtype: error_handling
+  claim_text: If citation validation fails, distill.py exits 1 and output files are
+    still written but flagged.
+  expected_value: exit 1 with flagged outputs
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0066
+- source_line: 465
+  claim_type: concrete
+  subtype: dependency_range
+  claim_text: rapidocr-onnxruntime is pinned to >=1.4,<2.0.
+  expected_value: '>=1.4,<2.0'
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0067
+- source_line: 471
+  claim_type: concrete
+  subtype: python_version_range
+  claim_text: Python version is pinned to >=3.10,<3.13.
+  expected_value: '>=3.10,<3.13'
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0068
+- source_line: 477
+  claim_type: concrete
+  subtype: env_var
+  claim_text: OPENROUTER_API_KEY is required for the default profile.
+  expected_value: OPENROUTER_API_KEY
+  verifiable_by:
+  - code
+  - vps
+  probe: env | grep OPENROUTER_API_KEY
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0069
+- source_line: 478
+  claim_type: concrete
+  subtype: env_var
+  claim_text: Whisper fallback requires GROQ_API_KEY or OPENAI_API_KEY.
+  expected_value:
+  - GROQ_API_KEY
+  - OPENAI_API_KEY
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0070
+- source_line: 485
+  claim_type: concrete
+  subtype: enum
+  claim_text: transcript_quality values are high, medium, low, none.
+  expected_value:
+  - high
+  - medium
+  - low
+  - none
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0071
+- source_line: 491
+  claim_type: concrete
+  subtype: thresholds
+  claim_text: ocr_quality thresholds are >=0.85 high, 0.65-0.85 medium, and <0.65
+    low.
+  expected_value:
+    high: '>=0.85'
+    medium: 0.65-0.85
+    low: <0.65
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0072
+- source_line: 500
+  claim_type: concrete
+  subtype: test_fixture_count
+  claim_text: Unit classifier fixture set contains 15 frames (3 each for code, slides,
+    UI, diagrams, mixed/other).
+  expected_value: 15
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0073
+- source_line: 510
+  claim_type: concrete
+  subtype: test_fixture_path
+  claim_text: Integration test video fixture path is tests/fixtures/test_video.mp4
+    and duration is 30 seconds.
+  expected_value: tests/fixtures/test_video.mp4
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0074
+- source_line: 523
+  claim_type: behavioral
+  subtype: golden_test
+  claim_text: Golden tests require --dry-run-payload output to be byte-identical modulo
+    timestamps.
+  expected_value: byte-identical payload except timestamps
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0075
+- source_line: 527
+  claim_type: behavioral
+  subtype: legacy_behavior
+  claim_text: download_transcript.py <url> keeps transcript-only behavior and internally
+    calls extract.py --no-frames.
+  expected_value: legacy no-style path delegates to extract.py --no-frames
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0076
+- source_line: 528
+  claim_type: behavioral
+  subtype: delegation
+  claim_text: download_transcript.py <url> <style> delegates to run.py.
+  expected_value: delegates to run.py
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0077
+- source_line: 537
+  claim_type: concrete
+  subtype: policy
+  claim_text: The tool does not bypass DRM, paywalls, or authentication.
+  expected_value: false
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0078
+- source_line: 538
+  claim_type: concrete
+  subtype: cli_flag
+  claim_text: Cookie-based access uses yt-dlp --cookies-from-browser and cookies stay
+    local.
+  expected_value: --cookies-from-browser
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0079
+- source_line: 548
+  claim_type: behavioral
+  subtype: dod_condition
+  claim_text: Definition of done requires uv run pytest to pass including four golden-output
+    fixtures.
+  expected_value: pytest pass with four golden fixtures
+  verifiable_by:
+  - code
+  - vps
+  probe: uv run pytest
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0080
+- source_line: 552
+  claim_type: behavioral
+  subtype: doctor_manual_check
+  claim_text: Definition of done includes a successful real-key run of models.py doctor
+    --profile gemini-3-flash.
+  expected_value: doctor passes for gemini-3-flash
+  verifiable_by:
+  - vps
+  probe: uv run python models.py doctor --profile gemini-3-flash
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0081
+- source_line: 554
+  claim_type: behavioral
+  subtype: negative_test
+  claim_text: Injecting fabricated seg#9999 in LLM mock should cause distill.py to
+    exit 1.
+  expected_value: exit code 1 on fabricated citation
+  verifiable_by:
+  - code
+  - vps
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0082
+- source_line: 557
+  claim_type: concrete
+  subtype: source_hygiene_rule
+  claim_text: Shipped source must contain no TODO or XXX markers.
+  expected_value:
+  - TODO
+  - XXX
+  verifiable_by:
+  - code
+  probe: grep -R -nE '\b(TODO|XXX)\b' .
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0083
+- source_line: 579
+  claim_type: concrete
+  subtype: repository_layout_decision
+  claim_text: claude-video is to be vendored at vendor/claude_video/.
+  expected_value: vendor/claude_video/
+  verifiable_by:
+  - code
+  - doc
+  probe: null
+  source_file: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  owner: owned
+  seen_in: []
+  id: c-0084
+- source_line: 13
+  claim_type: concrete
+  subtype: command
+  claim_text: The dependency installation command is `uv sync`.
+  expected_value: uv sync
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0085
+- source_line: 16
+  claim_type: concrete
+  subtype: command
+  claim_text: The main transcript downloader is run with `uv run python download_transcript.py`.
+  expected_value: uv run python download_transcript.py
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0086
+- source_line: 19
+  claim_type: concrete
+  subtype: command
+  claim_text: The virtual environment can be activated with `source .venv/bin/activate`.
+  expected_value: source .venv/bin/activate
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0087
+- source_line: 24
+  claim_type: concrete
+  subtype: file_path
+  claim_text: The repository contains a script named `download_transcript.py`.
+  expected_value: download_transcript.py
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0088
+- source_line: 25
+  claim_type: concrete
+  subtype: function_name
+  claim_text: '`download_transcript.py` defines a function named `get_safe_title(video_id)`.'
+  expected_value: get_safe_title(video_id)
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0089
+- source_line: 25
+  claim_type: behavioral
+  subtype: behavior
+  claim_text: Calling `get_safe_title(video_id)` fetches a video title via yt-dlp
+    and sanitizes it for filesystem use.
+  expected_value: fetches title via yt-dlp and sanitizes for filesystem
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0090
+- source_line: 26
+  claim_type: concrete
+  subtype: function_name
+  claim_text: '`download_transcript.py` defines a function named `download_transcript(video_id,
+    output_dir)`.'
+  expected_value: download_transcript(video_id, output_dir)
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0091
+- source_line: 26
+  claim_type: behavioral
+  subtype: behavior
+  claim_text: Running `download_transcript(video_id, output_dir)` downloads a transcript
+    and saves two output formats.
+  expected_value: downloads transcript and writes two output formats
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0092
+- source_line: 27
+  claim_type: concrete
+  subtype: file_name
+  claim_text: One transcript output file is named `formatted_transcript.txt`.
+  expected_value: formatted_transcript.txt
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0093
+- source_line: 27
+  claim_type: concrete
+  subtype: format
+  claim_text: '`formatted_transcript.txt` uses a timestamped `start|text` format.'
+  expected_value: start|text
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0094
+- source_line: 28
+  claim_type: concrete
+  subtype: file_name
+  claim_text: Another transcript output file is named `clean_text.txt`.
+  expected_value: clean_text.txt
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0095
+- source_line: 28
+  claim_type: concrete
+  subtype: format
+  claim_text: '`clean_text.txt` contains plain text without timestamps.'
+  expected_value: plain text without timestamps
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0096
+- source_line: 30
+  claim_type: concrete
+  subtype: file_path
+  claim_text: The repository contains `main.py`.
+  expected_value: main.py
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0097
+- source_line: 30
+  claim_type: concrete
+  subtype: status
+  claim_text: '`main.py` is an unused placeholder entry point.'
+  expected_value: placeholder entry point (unused)
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0098
+- source_line: 34
+  claim_type: behavioral
+  subtype: output_behavior
+  claim_text: Each downloaded video creates a directory named from a sanitized video
+    title.
+  expected_value: creates per-video directory named with sanitized title
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0099
+- source_line: 37
+  claim_type: behavioral
+  subtype: output_behavior
+  claim_text: Generated directories include `formatted_transcript.txt` with one `timestamp|text`
+    entry per line.
+  expected_value: formatted_transcript.txt has timestamp|text per line
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0100
+- source_line: 38
+  claim_type: behavioral
+  subtype: output_behavior
+  claim_text: Generated directories include `clean_text.txt` containing concatenated
+    plain text.
+  expected_value: clean_text.txt contains concatenated plain text
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0101
+- source_line: 43
+  claim_type: concrete
+  subtype: dependency
+  claim_text: The project depends on `youtube-transcript-api`.
+  expected_value: youtube-transcript-api
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0102
+- source_line: 43
+  claim_type: behavioral
+  subtype: behavior
+  claim_text: '`youtube-transcript-api` is used to fetch YouTube auto-generated and
+    manual transcripts.'
+  expected_value: fetches YouTube auto-generated/manual transcripts
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0103
+- source_line: 44
+  claim_type: concrete
+  subtype: dependency
+  claim_text: The project depends on `yt-dlp`.
+  expected_value: yt-dlp
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0104
+- source_line: 44
+  claim_type: behavioral
+  subtype: behavior
+  claim_text: '`yt-dlp` is used to extract video metadata, specifically title.'
+  expected_value: extracts video title metadata
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0105
+- source_line: 45
+  claim_type: concrete
+  subtype: dependency
+  claim_text: '`pytube` is present as a dependency.'
+  expected_value: pytube
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0106
+- source_line: 45
+  claim_type: concrete
+  subtype: status
+  claim_text: '`pytube` is currently unused.'
+  expected_value: unused
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: CLAUDE.md
+  owner: owned
+  seen_in: []
+  id: c-0107
+- source_line: 8
+  claim_type: concrete
+  subtype: citation_format
+  claim_text: Transcript segment citations use the format seg#NNN.
+  expected_value: seg#NNN
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0108
+- source_line: 9
+  claim_type: concrete
+  subtype: citation_format
+  claim_text: Frame ID citations may use frame_NNN_t-MM-SS.
+  expected_value: frame_NNN_t-MM-SS
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0109
+- source_line: 9
+  claim_type: concrete
+  subtype: citation_format
+  claim_text: Frame ID citations may use short form frame_NNN.
+  expected_value: frame_NNN
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0110
+- source_line: 10
+  claim_type: concrete
+  subtype: citation_format
+  claim_text: Code-frame cluster citations use the format cluster_id=cN.
+  expected_value: cluster_id=cN
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0111
+- source_line: 11
+  claim_type: concrete
+  subtype: citation_format
+  claim_text: Bare timestamp citations may use t=MM:SS.
+  expected_value: t=MM:SS
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0112
+- source_line: 11
+  claim_type: concrete
+  subtype: citation_format
+  claim_text: "Bare timestamp range citations may use t=MM:SS\u2013MM:SS."
+  expected_value: "t=MM:SS\u2013MM:SS"
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0113
+- source_line: 12
+  claim_type: behavioral
+  subtype: citation_requirement
+  claim_text: Statements without a citation are forbidden.
+  expected_value: uncited statements are forbidden
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0114
+- source_line: 15
+  claim_type: behavioral
+  subtype: transformation_rule
+  claim_text: If OCR text is marked ~approximate, emitted code blocks propagate the
+    ~approximate marker.
+  expected_value: propagates ~approximate marker into emitted code blocks
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0115
+- source_line: 16
+  claim_type: concrete
+  subtype: field_value
+  claim_text: The input may include transcript_quality values low or none.
+  expected_value:
+  - low
+  - none
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0116
+- source_line: 17
+  claim_type: behavioral
+  subtype: section_requirement
+  claim_text: 'When transcript_quality is low or none, the output states this in the
+    ## Quality Note section.'
+  expected_value: 'quality state is reported in ## Quality Note'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0117
+- source_line: 20
+  claim_type: concrete
+  subtype: section_name
+  claim_text: 'A required section is named ## Summary.'
+  expected_value: '## Summary'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0118
+- source_line: 20
+  claim_type: concrete
+  subtype: numeric_range
+  claim_text: "The ## Summary section length is 2\u20134 sentences."
+  expected_value: 2-4
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0119
+- source_line: 21
+  claim_type: concrete
+  subtype: section_name
+  claim_text: 'A required section is named ## Key Points.'
+  expected_value: '## Key Points'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0120
+- source_line: 22
+  claim_type: concrete
+  subtype: section_name
+  claim_text: 'A required section is named ## Steps / Walkthrough.'
+  expected_value: '## Steps / Walkthrough'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0121
+- source_line: 23
+  claim_type: concrete
+  subtype: section_name
+  claim_text: 'A required section is named ## Code.'
+  expected_value: '## Code'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0122
+- source_line: 24
+  claim_type: concrete
+  subtype: section_name
+  claim_text: 'A required section is named ## Tools & References.'
+  expected_value: '## Tools & References'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0123
+- source_line: 25
+  claim_type: concrete
+  subtype: section_name
+  claim_text: 'A required section is named ## Visual Evidence Used.'
+  expected_value: '## Visual Evidence Used'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0124
+- source_line: 26
+  claim_type: concrete
+  subtype: section_name
+  claim_text: 'A required section is named ## Open Questions.'
+  expected_value: '## Open Questions'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0125
+- source_line: 27
+  claim_type: concrete
+  subtype: section_name
+  claim_text: 'A required section is named ## Quality Note.'
+  expected_value: '## Quality Note'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0126
+- source_line: 27
+  claim_type: behavioral
+  subtype: conditional_requirement
+  claim_text: 'The ## Quality Note section is required only when transcript_quality
+    is below high or citations remain unresolved.'
+  expected_value: required only when transcript_quality < high or unresolved citations
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0127
+- source_line: 30
+  claim_type: behavioral
+  subtype: prohibition
+  claim_text: Visual content not present in OCR text must not be inferred.
+  expected_value: no inferred frame text beyond OCR
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0128
+- source_line: 32
+  claim_type: behavioral
+  subtype: prefix_requirement
+  claim_text: Descriptions in Visual Evidence Used are prefixed with 'frame_NNN observation:'.
+  expected_value: 'frame_NNN observation:'
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0129
+- source_line: 35
+  claim_type: behavioral
+  subtype: precedence_rule
+  claim_text: If style guide and contract conflict, the contract takes precedence.
+  expected_value: contract overrides style guide on conflict
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0130
+- source_line: 37
+  claim_type: behavioral
+  subtype: placeholder_rule
+  claim_text: Sections with no content are omitted entirely and must not use 'N/A'
+    placeholders.
+  expected_value: omit empty sections; do not write N/A
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0131
+- source_line: 41
+  claim_type: concrete
+  subtype: path
+  claim_text: A summary file is written to /tmp/opencode-task-extract-distill-contract-v1-md-4a18c2b1ec-summary.md.
+  expected_value: /tmp/opencode-task-extract-distill-contract-v1-md-4a18c2b1ec-summary.md
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0132
+- source_line: 42
+  claim_type: concrete
+  subtype: summary_fields
+  claim_text: The concise summary includes files changed, what was done, and any issues
+    found.
+  expected_value:
+  - files changed
+  - what was done
+  - any issues found
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: prompts/distill_contract_v1.md
+  owner: owned
+  seen_in: []
+  id: c-0133
+- source_line: 10
+  claim_type: concrete
+  subtype: command_name
+  claim_text: The pipeline includes a script named extract.py.
+  expected_value: extract.py
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0134
+- source_line: 10
+  claim_type: concrete
+  subtype: path
+  claim_text: Artifacts are stored under Generated_Data/<title>/.
+  expected_value: Generated_Data/<title>/
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0135
+- source_line: 10
+  claim_type: concrete
+  subtype: command_name
+  claim_text: The pipeline includes a script named distill.py.
+  expected_value: distill.py
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0136
+- source_line: 12
+  claim_type: concrete
+  subtype: file_name
+  claim_text: The extraction artifacts include ocr.json.
+  expected_value: ocr.json
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0137
+- source_line: 22
+  claim_type: behavioral
+  subtype: idempotency
+  claim_text: Re-running extract.py skips work when outputs are still intact.
+  expected_value: re-run skips intact outputs
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: uv run python extract.py "https://youtu.be/KE39P4qBjDk" && uv run python
+    extract.py "https://youtu.be/KE39P4qBjDk"
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0138
+- source_line: 22
+  claim_type: behavioral
+  subtype: command_flow
+  claim_text: run.py chains extract.py and distill.py for one-shot use.
+  expected_value: extract then distill
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0139
+- source_line: 26
+  claim_type: concrete
+  subtype: version
+  claim_text: Supported Python versions are 3.11 to 3.12.
+  expected_value:
+  - '3.11'
+  - '3.12'
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0140
+- source_line: 26
+  claim_type: concrete
+  subtype: dependency
+  claim_text: uv is a required tool.
+  expected_value: uv
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0141
+- source_line: 26
+  claim_type: concrete
+  subtype: dependency
+  claim_text: ffmpeg must be available on PATH.
+  expected_value: ffmpeg
+  verifiable_by:
+  - doc
+  - vps
+  probe: command -v ffmpeg
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0142
+- source_line: 26
+  claim_type: concrete
+  subtype: dependency
+  claim_text: ffprobe must be available on PATH.
+  expected_value: ffprobe
+  verifiable_by:
+  - doc
+  - vps
+  probe: command -v ffprobe
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0143
+- source_line: 29
+  claim_type: concrete
+  subtype: command
+  claim_text: The install command is uv sync.
+  expected_value: uv sync
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0144
+- source_line: 32
+  claim_type: concrete
+  subtype: model_profile
+  claim_text: The default model profile is gemini-3-flash.
+  expected_value: gemini-3-flash
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0145
+- source_line: 32
+  claim_type: concrete
+  subtype: env_var
+  claim_text: The default profile reads OPENROUTER_API_KEY.
+  expected_value: OPENROUTER_API_KEY
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0146
+- source_line: 44
+  claim_type: concrete
+  subtype: command
+  claim_text: One-shot usage runs uv run python run.py with a YouTube URL and style.
+  expected_value: uv run python run.py "https://www.youtube.com/watch?v=KE39P4qBjDk"
+    coding_agent
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0147
+- source_line: 47
+  claim_type: concrete
+  subtype: style_name
+  claim_text: A listed style is coding_agent.
+  expected_value: coding_agent
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0148
+- source_line: 47
+  claim_type: concrete
+  subtype: style_name
+  claim_text: A listed style is diy_project.
+  expected_value: diy_project
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0149
+- source_line: 47
+  claim_type: concrete
+  subtype: style_name
+  claim_text: A listed style is knowledge_base.
+  expected_value: knowledge_base
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0150
+- source_line: 54
+  claim_type: concrete
+  subtype: command
+  claim_text: Phase 1 extraction command uses extract.py with a YouTube URL.
+  expected_value: uv run python extract.py "https://youtu.be/KE39P4qBjDk"
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0151
+- source_line: 61
+  claim_type: concrete
+  subtype: cli_flag
+  claim_text: distill.py accepts --model to choose a model profile.
+  expected_value: --model
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0152
+- source_line: 61
+  claim_type: concrete
+  subtype: model_profile
+  claim_text: claude-sonnet-4-6 is used as a model profile value in the CLI example.
+  expected_value: claude-sonnet-4-6
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0153
+- source_line: 67
+  claim_type: concrete
+  subtype: cli_flag
+  claim_text: extract.py supports --start.
+  expected_value: --start
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0154
+- source_line: 67
+  claim_type: concrete
+  subtype: cli_flag
+  claim_text: extract.py supports --end.
+  expected_value: --end
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0155
+- source_line: 67
+  claim_type: concrete
+  subtype: cli_flag
+  claim_text: extract.py supports --max-frames.
+  expected_value: --max-frames
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0156
+- source_line: 70
+  claim_type: behavioral
+  subtype: timestamp_behavior
+  claim_text: Using --start/--end clips a window while preserving absolute timestamps
+    in citations.
+  expected_value: timestamps stay absolute
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0157
+- source_line: 78
+  claim_type: behavioral
+  subtype: flag_behavior
+  claim_text: --no-frames makes extract.py run transcript-only.
+  expected_value: transcript-only run
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0158
+- source_line: 80
+  claim_type: behavioral
+  subtype: flag_behavior
+  claim_text: --force bypasses idempotency for the whole extraction pipeline.
+  expected_value: bypass full pipeline idempotency
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0159
+- source_line: 80
+  claim_type: behavioral
+  subtype: flag_behavior
+  claim_text: --force-ocr bypasses idempotency for OCR only.
+  expected_value: bypass OCR idempotency only
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0160
+- source_line: 82
+  claim_type: behavioral
+  subtype: precedence
+  claim_text: Model selection precedence is CLI --model over DISTILL_MODEL over models.yaml
+    default.
+  expected_value:
+  - CLI
+  - DISTILL_MODEL
+  - models.yaml
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0161
+- source_line: 83
+  claim_type: concrete
+  subtype: default_value
+  claim_text: Default max vision frames is 16.
+  expected_value: 16
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0162
+- source_line: 85
+  claim_type: behavioral
+  subtype: flag_behavior
+  claim_text: --dry-run-payload writes payload.json and exits before calling the LLM.
+  expected_value: writes payload.json then exits pre-LLM
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0163
+- source_line: 93
+  claim_type: concrete
+  subtype: file_name
+  claim_text: artifact_manifest.json is an output artifact.
+  expected_value: artifact_manifest.json
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0164
+- source_line: 94
+  claim_type: concrete
+  subtype: file_name
+  claim_text: extract_meta.json is an output artifact.
+  expected_value: extract_meta.json
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0165
+- source_line: 98
+  claim_type: concrete
+  subtype: file_name
+  claim_text: ocr.json is an output artifact.
+  expected_value: ocr.json
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0166
+- source_line: 99
+  claim_type: concrete
+  subtype: file_name
+  claim_text: selected_frames.json is an output artifact.
+  expected_value: selected_frames.json
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0167
+- source_line: 100
+  claim_type: concrete
+  subtype: path
+  claim_text: Frame images are stored under a frames/ directory.
+  expected_value: frames/
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0168
+- source_line: 109
+  claim_type: behavioral
+  subtype: citation_requirement
+  claim_text: Every technical claim must include at least one citation token.
+  expected_value: at least one citation per technical claim
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0169
+- source_line: 111
+  claim_type: concrete
+  subtype: citation_token
+  claim_text: seg#NNN is a valid citation token format.
+  expected_value: seg#NNN
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0170
+- source_line: 112
+  claim_type: concrete
+  subtype: citation_token
+  claim_text: frame_NNN_t-MM-SS (and short form frame_NNN) are valid citation token
+    formats.
+  expected_value:
+  - frame_NNN_t-MM-SS
+  - frame_NNN
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0171
+- source_line: 113
+  claim_type: concrete
+  subtype: citation_token
+  claim_text: cluster_id=cN is a valid citation token format.
+  expected_value: cluster_id=cN
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0172
+- source_line: 114
+  claim_type: concrete
+  subtype: citation_token
+  claim_text: "t=MM:SS and t=MM:SS\u2013MM:SS are valid citation token formats."
+  expected_value:
+  - t=MM:SS
+  - "t=MM:SS\u2013MM:SS"
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0173
+- source_line: 116
+  claim_type: behavioral
+  subtype: exit_behavior
+  claim_text: Unresolved citations cause distill.py to exit non-zero.
+  expected_value: non-zero exit on unresolved citations
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0174
+- source_line: 116
+  claim_type: concrete
+  subtype: path
+  claim_text: The citation contract file path is prompts/distill_contract_v1.md.
+  expected_value: prompts/distill_contract_v1.md
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0175
+- source_line: 124
+  claim_type: concrete
+  subtype: model_profile
+  claim_text: gemini-3-flash is marked as the default profile.
+  expected_value: gemini-3-flash
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0176
+- source_line: 124
+  claim_type: concrete
+  subtype: model_id
+  claim_text: The gemini-3-flash profile maps to google/gemini-3-flash-preview on
+    OpenRouter.
+  expected_value: google/gemini-3-flash-preview
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0177
+- source_line: 125
+  claim_type: concrete
+  subtype: model_id
+  claim_text: The gemini-3-pro profile maps to google/gemini-3-pro-preview on OpenRouter.
+  expected_value: google/gemini-3-pro-preview
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0178
+- source_line: 126
+  claim_type: concrete
+  subtype: model_id
+  claim_text: The claude-sonnet-4-6 profile maps to anthropic/claude-sonnet-4.6 on
+    OpenRouter.
+  expected_value: anthropic/claude-sonnet-4.6
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0179
+- source_line: 127
+  claim_type: concrete
+  subtype: model_id
+  claim_text: The gpt-4o profile maps to openai/gpt-4o on OpenRouter.
+  expected_value: openai/gpt-4o
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0180
+- source_line: 132
+  claim_type: concrete
+  subtype: command
+  claim_text: A doctor verification command is uv run python models.py doctor --profile
+    gemini-3-pro.
+  expected_value: uv run python models.py doctor --profile gemini-3-pro
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0181
+- source_line: 135
+  claim_type: behavioral
+  subtype: caching_behavior
+  claim_text: doctor caches probe results for one hour.
+  expected_value: cache duration 1 hour
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0182
+- source_line: 135
+  claim_type: behavioral
+  subtype: fallback_behavior
+  claim_text: distill.py falls back to text-only mode if the vision probe fails.
+  expected_value: fallback to text-only on vision probe failure
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0183
+- source_line: 139
+  claim_type: behavioral
+  subtype: default_behavior
+  claim_text: clean.py runs in dry-run mode by default.
+  expected_value: dry-run default true
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0184
+- source_line: 139
+  claim_type: concrete
+  subtype: cli_flag
+  claim_text: clean.py uses --apply to perform actual deletion.
+  expected_value: --apply
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0185
+- source_line: 146
+  claim_type: behavioral
+  subtype: retention_behavior
+  claim_text: ocr.json is preserved unless explicitly removed.
+  expected_value: OCR artifact preserved by default
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0186
+- source_line: 151
+  claim_type: concrete
+  subtype: command
+  claim_text: The test command uv run pytest is documented.
+  expected_value: uv run pytest
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0187
+- source_line: 152
+  claim_type: concrete
+  subtype: command
+  claim_text: The integration-only test command is uv run pytest -m integration.
+  expected_value: uv run pytest -m integration
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0188
+- source_line: 153
+  claim_type: concrete
+  subtype: command
+  claim_text: A DoD gate command is bash scripts/dod_check.sh.
+  expected_value: bash scripts/dod_check.sh
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0189
+- source_line: 156
+  claim_type: behavioral
+  subtype: script_behavior
+  claim_text: The DoD script greps shipped sources for TODO/XXX markers.
+  expected_value: grep for TODO and XXX
+  verifiable_by:
+  - doc
+  - code
+  - vps
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0190
+- source_line: 161
+  claim_type: behavioral
+  subtype: auth_behavior
+  claim_text: The tool does not bypass DRM, paywalls, or authentication.
+  expected_value: no bypass of DRM/paywalls/auth
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0191
+- source_line: 161
+  claim_type: concrete
+  subtype: cli_flag
+  claim_text: For age-restricted videos, --cookies-from-browser firefox or chrome
+    is supported.
+  expected_value:
+  - firefox
+  - chrome
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0192
+- source_line: 163
+  claim_type: concrete
+  subtype: command
+  claim_text: If yt-dlp download fails, the documented update command is uv pip install
+    -U yt-dlp.
+  expected_value: uv pip install -U yt-dlp
+  verifiable_by:
+  - doc
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0193
+- source_line: 172
+  claim_type: behavioral
+  subtype: delegation_behavior
+  claim_text: download_transcript.py delegates to run.py when a style is provided.
+  expected_value: delegates to run.py when style is given
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0194
+- source_line: 175
+  claim_type: concrete
+  subtype: dependency_chain
+  claim_text: 'transcript.py uses a 4-tier chain: yt-api -> pytube -> yt-dlp -> whisper.'
+  expected_value:
+  - yt-api
+  - pytube
+  - yt-dlp
+  - whisper
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0195
+- source_line: 176
+  claim_type: concrete
+  subtype: classifier
+  claim_text: frame_ocr.py includes a 5-class classifier.
+  expected_value: 5
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0196
+- source_line: 183
+  claim_type: concrete
+  subtype: path
+  claim_text: The prompt contract file is prompts/distill_contract_v1.md.
+  expected_value: prompts/distill_contract_v1.md
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0197
+- source_line: 190
+  claim_type: concrete
+  subtype: path
+  claim_text: The spec document path is docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md.
+  expected_value: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md
+  verifiable_by:
+  - doc
+  - code
+  probe: null
+  source_file: README.md
+  owner: owned
+  seen_in: []
+  id: c-0198
