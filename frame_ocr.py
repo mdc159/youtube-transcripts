@@ -162,3 +162,43 @@ def dedup_code_frames(frames: list[FrameRecord], similarity: float = 0.85) -> li
             cluster_reps.append((match_id, norm))
         out.append(FrameRecord(**{**f.__dict__, "cluster_id": match_id}))
     return out
+
+
+import json as _json
+
+
+def write_ocr_json(path: Path | str, *, video_title: str, duration_seconds: float, frames: list[FrameRecord]) -> None:
+    data = {
+        "video": {"title": video_title, "duration_seconds": duration_seconds},
+        "frames": [
+            {
+                "path": f.path,
+                "timestamp_seconds": f.timestamp_seconds,
+                "ocr_text": f.ocr_text,
+                "ocr_confidence": f.ocr_confidence,
+                "frame_class": f.frame_class.value,
+                "class_confidence": f.class_confidence,
+                "cluster_id": f.cluster_id,
+                "ocr_error": f.ocr_error,
+            }
+            for f in frames
+        ],
+    }
+    Path(path).write_text(_json.dumps(data, indent=2, sort_keys=True))
+
+
+def read_ocr_json(path: Path | str) -> list[FrameRecord]:
+    raw = _json.loads(Path(path).read_text())
+    return [
+        FrameRecord(
+            path=f["path"],
+            timestamp_seconds=f["timestamp_seconds"],
+            ocr_text=f["ocr_text"],
+            ocr_confidence=f["ocr_confidence"],
+            frame_class=FrameClass(f["frame_class"]),
+            class_confidence=f["class_confidence"],
+            cluster_id=f.get("cluster_id"),
+            ocr_error=f.get("ocr_error"),
+        )
+        for f in raw["frames"]
+    ]

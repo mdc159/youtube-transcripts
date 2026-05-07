@@ -107,3 +107,23 @@ def test_dedup_normalizes_comments_and_whitespace():
         _rec(2, 5, b, FrameClass.CODE),
     ])
     assert len({f.cluster_id for f in out}) == 1
+
+
+import json
+from frame_ocr import write_ocr_json, read_ocr_json
+
+
+def test_ocr_json_roundtrip(tmp_path):
+    frames = [
+        _rec(1, 1.0, "x", FrameClass.CODE),
+        _rec(2, 5.0, "y", FrameClass.SLIDE_TEXT),
+    ]
+    target = tmp_path / "ocr.json"
+    write_ocr_json(target, video_title="T", duration_seconds=12.0, frames=frames)
+    raw = json.loads(target.read_text())
+    assert raw["video"]["title"] == "T"
+    assert raw["video"]["duration_seconds"] == 12.0
+    assert raw["frames"][0]["frame_class"] == "code"
+    back = read_ocr_json(target)
+    assert len(back) == 2
+    assert back[0].ocr_text == "x"
