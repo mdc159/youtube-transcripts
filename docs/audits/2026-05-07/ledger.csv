@@ -1,0 +1,793 @@
+id,source_files,source_lines,owner,claim_type,subtype,claim_text,expected_value,doc_says,code_says,vps_says,status,suggested_fix,notes
+c-0001,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,3,owned,concrete,status,Spec status is approved with revisions and awaiting post-revision review.,approved with revisions,"# Design: youtube-transcripts + claude-video merge
+
+**Status:** approved with revisions — review-round 2 feedback incorporated; awaiting post-revision spec review.
+**Date:** 2026-05-07 (initial), revised same day.
+**Author:** mdc159 (with Claude)",,,MATCH,,
+c-0002,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,4,owned,concrete,date,The spec date is 2026-05-07 and was revised the same day.,2026-05-07,"
+**Status:** approved with revisions — review-round 2 feedback incorporated; awaiting post-revision spec review.
+**Date:** 2026-05-07 (initial), revised same day.
+**Author:** mdc159 (with Claude)
+",,,MATCH,,
+c-0003,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,5,owned,concrete,author,The document author is mdc159 (with Claude).,mdc159,"**Status:** approved with revisions — review-round 2 feedback incorporated; awaiting post-revision spec review.
+**Date:** 2026-05-07 (initial), revised same day.
+**Author:** mdc159 (with Claude)
+
+## Context",,,MATCH,,
+c-0004,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,11,owned,concrete,fallback_chain,"youtube-transcripts uses a 3-method transcript fallback chain: youtube-transcript-api, pytube, then yt-dlp captions.","['youtube-transcript-api', 'pytube', 'yt-dlp captions']","Two repositories with overlapping concerns:
+
+- **`youtube-transcripts`** (this repo): YouTube transcript downloader with a 3-method fallback chain (`youtube-transcript-api` → `pytube` → `yt-dlp` captions), title-aware output paths, paragraph cleanup, and a *style transformation* layer that runs tran",,,UNVERIFIABLE,,
+c-0005,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,12,owned,concrete,repository_url,claude-video repository URL is https://github.com/bradautomates/claude-video.,https://github.com/bradautomates/claude-video,"
+- **`youtube-transcripts`** (this repo): YouTube transcript downloader with a 3-method fallback chain (`youtube-transcript-api` → `pytube` → `yt-dlp` captions), title-aware output paths, paragraph cleanup, and a *style transformation* layer that runs transcripts through markdown style guides via Op",,,MATCH,,
+c-0006,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,12,owned,concrete,frame_limit,claude-video frame extraction is constrained to at most 100 frames.,100,"
+- **`youtube-transcripts`** (this repo): YouTube transcript downloader with a 3-method fallback chain (`youtube-transcript-api` → `pytube` → `yt-dlp` captions), title-aware output paths, paragraph cleanup, and a *style transformation* layer that runs transcripts through markdown style guides via Op",,,MATCH,,
+c-0007,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,12,owned,concrete,fps_limit,claude-video frame extraction is constrained to at most 2 fps.,2,"
+- **`youtube-transcripts`** (this repo): YouTube transcript downloader with a 3-method fallback chain (`youtube-transcript-api` → `pytube` → `yt-dlp` captions), title-aware output paths, paragraph cleanup, and a *style transformation* layer that runs transcripts through markdown style guides via Op",,,MATCH,,
+c-0008,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,26,owned,behavioral,traceability_rule,"Every output claim must be traceable to a transcript segment ID, frame ID, or t=MM:SS timestamp.",all claims have at least one traceable evidence token,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0009,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,27,owned,behavioral,idempotency,Re-running on the same source skips completed work unless --force is used.,completed steps are skipped without --force,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0010,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,28,owned,concrete,source_support,"The pipeline is intended to support YouTube, yt-dlp-supported platforms, and local files.","['YouTube', 'yt-dlp sources', 'local video files']","- **Every claim in the output is traceable** to a transcript segment ID, frame ID, or `t=MM:SS` timestamp. Auditability is a hard requirement, not a nice-to-have.
+- **Idempotent and resumable.** Re-running on the same source must skip completed work unless `--force`. Re-distilling with a different s",,,UNVERIFIABLE,,
+c-0011,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,35,owned,concrete,fallback_tier,Whisper is a fourth transcript tier used only if the first three methods fail.,4th tier,"
+- Do *not* repackage the result as a Claude Code skill / plugin. This stays as a personal CLI inside this repo.
+- Do *not* replace the existing 3-method transcript fallback chain. Whisper is added as a 4th tier, fired only when the others fail.
+- No UI, no daemon, no web server.
+- No DRM bypass, no",,,MATCH,,
+c-0012,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,42,owned,concrete,command_name,extract.py is a top-level CLI command in the architecture.,extract.py,"
+```
+extract.py <url-or-path> [--out-dir DIR] [--max-frames N] [--start T] [--end T]
+                         [--no-frames] [--keep-video] [--force] [--force-ocr]
+                         [--cookies-from-browser BROWSER]","./distill.py:47:        print(f""no manifest at {manifest_path}; run extract.py first"", file=sys.stderr)
+./run.py:1:""""""Convenience wrapper: extract.py -> distill.py.""""""
+./docs/audits/2026-05-07/claims.curated.yaml:117:  probe: uv run python extract.py <url-or-path> && uv run python extract.py <url-or",,MATCH,,
+c-0013,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,44,owned,concrete,cli_flag,extract.py accepts --cookies-from-browser.,--cookies-from-browser,"extract.py <url-or-path> [--out-dir DIR] [--max-frames N] [--start T] [--end T]
+                         [--no-frames] [--keep-video] [--force] [--force-ocr]
+                         [--cookies-from-browser BROWSER]
+  ├─ resolve source → derive stable source_id (§7)
+  ├─ check artifact_manifest.json",probe skipped: disabled,,DRIFT,reconcile sources; vps says: probe skipped: disabled,
+c-0014,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,46,owned,behavioral,manifest_skip,extract.py checks artifact_manifest.json and skips completed steps unless --force.,manifest-driven step skipping,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0015,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,48,owned,concrete,transcript_chain,extract.py transcript chain is yt-transcript-api -> pytube -> yt-dlp captions -> Whisper.,"['yt-transcript-api', 'pytube', 'yt-dlp captions', 'Whisper']","  ├─ check artifact_manifest.json — skip completed steps unless --force
+  ├─ get title (yt-dlp --get-title; for local files: filename stem)
+  ├─ fetch transcript (chain): yt-transcript-api → pytube → yt-dlp captions → Whisper
+  ├─ download video (yt-dlp) → media_cache/<source_id>/video.<ext>
+  ├─ ex",,,UNVERIFIABLE,,
+c-0016,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,49,owned,concrete,cache_path,Downloaded video path is media_cache/<source_id>/video.<ext>.,media_cache/<source_id>/video.<ext>,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0017,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,52,owned,concrete,enum,"Frame classifier labels are code, slide_text, ui, diagram, and other.","['code', 'slide_text', 'ui', 'diagram', 'other']","  ├─ extract frames (vendored frames.py)
+  ├─ OCR every frame with confidence gating (RapidOCR)
+  ├─ classify each frame: code | slide_text | ui | diagram | other (§4.3)
+  ├─ deduplicate near-identical OCR clusters (§4.5)
+  ├─ score quality (transcript, ocr, frame coverage) → extract_meta.json",,,UNVERIFIABLE,,
+c-0018,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,58,owned,concrete,command_name,distill.py is a top-level CLI command in the architecture.,distill.py,"  └─ write Generated_Data/<title>/
+
+distill.py <title-or-dir> <style> [--model PROFILE] [--max-vision-frames N]
+                                  [--token-budget T] [--dry-run-payload] [--force]
+  ├─ load transcript, ocr.json, manifest from Generated_Data/<title>/","./run.py:1:""""""Convenience wrapper: extract.py -> distill.py.""""""
+./docs/audits/2026-05-07/claims.curated.yaml:102:  probe: uv run python distill.py <title-or-dir> <style> && grep -Eo 'seg#|frame_[0-9]{3}|t=[0-9]{2}:[0-9]{2}'
+./docs/audits/2026-05-07/claims.curated.yaml:245:  claim_text: distill.py is",,MATCH,,
+c-0019,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,66,owned,behavioral,dry_run_behavior,"With --dry-run-payload, distill.py writes payload.json and exits before calling the provider.",payload written and no API call,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0020,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,71,owned,concrete,command_name,run.py is a convenience command that runs extract then distill.,extract -> distill,"  └─ write Generated_Data/<title>/<title>_<style>.md + distill_result.json
+
+run.py <url-or-path> <style>          # convenience: extract → distill in one shot
+
+models.py doctor --profile <name>     # validates key, text request, image request","./docs/audits/2026-05-07/claims.curated.yaml:273:  expected_value: extract -> distill
+./docs/audits/2026-05-07/claims.verified.yaml:419:  expected_value: extract -> distill
+./docs/audits/2026-05-07/claims.verified.yaml:429:    extract -> distill'
+./docs/audits/2026-05-07/claims.verified.yaml:431:   ",,DRIFT,"reconcile sources; vps says: ./docs/audits/2026-05-07/claims.curated.yaml:273:  expected_value: extract -> distill
+./docs/audits/2026-05-07/claims.verified.yaml:419:  expected_value: extract -> distill
+./docs/audits/2026-05-07/claims.verified.yaml:429:    extract -> distill'
+./docs/audits/2026-05-07/claims.verified.yaml:431:    extract -> distill'",
+c-0021,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,73,owned,concrete,subcommand,models.py provides a doctor subcommand with --profile.,doctor --profile <name>,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0022,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,81,owned,concrete,file_path,vendor/claude_video/scripts/download.py is listed as a new vendored file.,vendor/claude_video/scripts/download.py,"| Path | Status | Role |
+|------|--------|------|
+| `vendor/claude_video/scripts/download.py` | new (vendored) | yt-dlp wrapper |
+| `vendor/claude_video/scripts/frames.py` | new (vendored) | ffmpeg + auto-fps |
+| `vendor/claude_video/scripts/transcribe.py` | new (vendored) | caption parsing + Whispe",path exists: vendor/claude_video/scripts/download.py,,MATCH,,
+c-0023,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,97,owned,behavioral,default_delete_behavior,Downloaded video is deleted after extraction unless --keep-video is used.,delete cached video by default,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0024,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,101,owned,concrete,output_file,distillation structured sidecar file is <title>_<style>.distill_result.json under Generated_Data/<title>/.,<title>_<style>.distill_result.json,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0025,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,103,owned,concrete,frame_filename_pattern,Frame images are named frame_NNN_t-MM-SS.jpg.,frame_NNN_t-MM-SS.jpg,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0026,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,104,owned,concrete,output_file,OCR output is stored in Generated_Data/<title>/ocr.json.,ocr.json,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0027,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,113,owned,concrete,dependency,OCR library is rapidocr-onnxruntime.,rapidocr-onnxruntime,"### 4.1 Library
+
+`rapidocr-onnxruntime`. Python-only install via `uv add`, no system dependencies. Pinned to a tested range in `pyproject.toml` and re-tested on each Python upgrade (§8.2). Rejected `pytesseract` (system tesseract dep).
+
+### 4.2 Per-frame run with confidence gating",,,MATCH,,
+c-0028,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,121,owned,behavioral,confidence_gate,OCR lines with confidence below 0.5 are excluded from high-confidence classification/injection text.,0.5,,,,UNVERIFIABLE,,
+c-0029,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,128,owned,concrete,field_replacement,is_code_heavy is replaced by class and class_confidence fields.,"['class', 'class_confidence']","### 4.3 Classification (5-class)
+
+`is_code_heavy` (boolean) is replaced by `class ∈ {code, slide_text, ui, diagram, other}` plus `class_confidence ∈ [0,1]`.
+
+| Class | Heuristic signals (any 2 trigger) | Distill-time treatment |",,,UNVERIFIABLE,,
+c-0030,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,140,owned,behavioral,classification_fallback,Frames with class_confidence below 0.6 are treated as other.,0.6,,,,UNVERIFIABLE,,
+c-0031,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,148,owned,concrete,algorithm_component,frame_select.py uses imagehash.phash for perceptual hashing.,imagehash.phash,"Algorithm (in `frame_select.py`):
+
+1. Compute a perceptual hash (`imagehash.phash`) for every extracted frame.
+2. Compute Hamming distance between consecutive frames.
+3. Identify ""change points"" where distance exceeds an adaptive threshold (default: median + 1.5×MAD).",,,MATCH,,
+c-0032,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,150,owned,concrete,threshold_formula,Scene-change threshold default is median + 1.5×MAD of consecutive-frame hash distances.,median + 1.5×MAD,"1. Compute a perceptual hash (`imagehash.phash`) for every extracted frame.
+2. Compute Hamming distance between consecutive frames.
+3. Identify ""change points"" where distance exceeds an adaptive threshold (default: median + 1.5×MAD).
+4. For each change point, select the frame *just after* the transi",,,MATCH,,
+c-0033,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,153,owned,behavioral,selection_rule,Code-class frames are always excluded from vision payload selection.,exclude code-class frames,,,,UNVERIFIABLE,,
+c-0034,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,154,owned,concrete,default_value,Default --max-vision-frames is 16.,16,"5. If selection underflows the budget, fill with even-spacing across remaining gaps.
+6. **Always exclude `code`-class frames** — their content is in the transcript already.
+7. **Token-budget-aware cap.** Final count = `min(--max-vision-frames, token_budget // est_image_tokens(resolution))`. Default ",probe skipped: disabled,,DRIFT,reconcile sources; vps says: probe skipped: disabled,
+c-0035,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,163,owned,concrete,similarity_threshold,OCR dedup clusters use fingerprint similarity threshold >= 0.85 via rapidfuzz token-set ratio.,0.85,"
+1. For all frames classified `code`, compute a normalized fingerprint of OCR text (whitespace collapsed, case preserved, comments and trailing punctuation stripped).
+2. Cluster frames with fingerprint similarity ≥ 0.85 (rapidfuzz token-set ratio).
+3. Within a cluster, keep only frames where the OCR",,,MATCH,,
+c-0036,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,173,owned,behavioral,insertion_rule,"Frame OCR/note is inserted immediately after the transcript segment whose [start,end] contains frame.timestamp_seconds.",insert after containing segment,,,,UNVERIFIABLE,,
+c-0037,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,183,owned,concrete,config_file,Model profiles are configured in models.yaml at repo root.,models.yaml,"### 5.1 Reconfigurable model layer
+
+All model config in **`models.yaml`** at the repo root:
+
+```yaml",,,MATCH,,
+c-0038,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,186,owned,concrete,default_profile,Default model profile is gemini-3-flash.,gemini-3-flash,"
+```yaml
+default: gemini-3-flash
+
+profiles:",,,MATCH,,
+c-0039,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,191,owned,concrete,model_id,Profile gemini-3-flash maps to model google/gemini-3-flash-preview.,google/gemini-3-flash-preview,"  gemini-3-flash:
+    base_url: https://openrouter.ai/api/v1
+    model: google/gemini-3-flash-preview
+    vision: true
+    reasoning: true",,,MATCH,,
+c-0040,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,195,owned,concrete,max_images,Profile gemini-3-flash sets max_images to 16.,16,"    reasoning: true
+    api_key_env: OPENROUTER_API_KEY
+    max_images: 16          # provider/model hint, validated by `doctor`
+    max_image_bytes: 5242880
+",,,MATCH,,
+c-0041,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,196,owned,concrete,max_image_bytes,Profile gemini-3-flash sets max_image_bytes to 5242880.,5242880,"    api_key_env: OPENROUTER_API_KEY
+    max_images: 16          # provider/model hint, validated by `doctor`
+    max_image_bytes: 5242880
+
+  gemini-3-pro:",,,MATCH,,
+c-0042,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,219,owned,concrete,env_var,Profile gpt-4o uses OPENAI_API_KEY via api_key_env.,OPENAI_API_KEY,,probe skipped: disabled,OPENAI_API_KEY not present in any env file,DRIFT,reconcile sources; vps says: OPENAI_API_KEY not present in any env file,
+c-0043,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,223,owned,concrete,resolution_order,"Model profile resolution order is CLI flag, then DISTILL_MODEL env var, then models.yaml default.","['CLI', 'DISTILL_MODEL', 'models.yaml default']","```
+
+**Resolution order:** CLI flag (`--model gemini-3-pro`) → env var (`DISTILL_MODEL=gemini-3-pro`) → `models.yaml` `default`. Adding a new model = one YAML entry, zero code changes.
+
+### 5.2 Capability validation (`models.py doctor`)",,,UNVERIFIABLE,,
+c-0044,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,229,owned,behavioral,doctor_check,models.py doctor verifies api_key_env is set in env or .env.,api_key_env must be set,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0045,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,230,owned,behavioral,doctor_probe,models.py doctor sends a 5-token text request and requires non-empty response.,non-empty response from 5-token text probe,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0046,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,231,owned,behavioral,vision_probe,"For vision=true profiles, doctor sends a probe with one 32x32 fixture image and requires non-empty response without schema error.",32x32 image probe passes,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0047,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,235,owned,concrete,cache_path,Doctor cache files are stored under ~/.cache/youtube-transcripts/model_doctor_<profile>_<hash>.json.,~/.cache/youtube-transcripts/model_doctor_<profile>_<hash>.json,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0048,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,235,owned,behavioral,fallback_behavior,"If doctor validation fails in distill.py, processing falls back to text-only path and records a warning in distill_result.json.",text-only fallback with warning,,,,UNVERIFIABLE,,
+c-0049,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,286,owned,concrete,canonical_output,distill_result.json is the canonical output and markdown is rendered from it.,distill_result.json,"### 5.6 Output: markdown + structured sidecar
+
+**`distill_result.json`** is the canonical output. The markdown is rendered from it.
+
+```json",,,MATCH,,
+c-0050,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,290,owned,concrete,schema_version,distill_result.json example uses schema_version 1.,1,"```json
+{
+  ""schema_version"": 1,
+  ""source_id"": ""yt:KE39P4qBjDk"",
+  ""title"": ""How_to_Build_a_RAG_Pipeline"",",,,MATCH,,
+c-0051,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,320,owned,concrete,citation_token,seg#NNN is a valid citation token for transcript segment ID.,seg#NNN,"**Citation tokens** that may appear in any output text:
+
+- `seg#NNN` — transcript segment ID (segments numbered sequentially in `*_formatted_transcript.txt` after parsing).
+- `frame_NNN` — short form of `frame_NNN_t-MM-SS`.
+- `frame_NNN_t-MM-SS` — fully-qualified frame ID with timestamp.",,,MATCH,,
+c-0052,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,322,owned,concrete,citation_token,frame_NNN_t-MM-SS is a valid fully-qualified frame citation token.,frame_NNN_t-MM-SS,"- `seg#NNN` — transcript segment ID (segments numbered sequentially in `*_formatted_transcript.txt` after parsing).
+- `frame_NNN` — short form of `frame_NNN_t-MM-SS`.
+- `frame_NNN_t-MM-SS` — fully-qualified frame ID with timestamp.
+- `cluster_id=cN` — OCR dedup cluster (groups equivalent code-frame ",,,MATCH,,
+c-0053,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,326,owned,behavioral,citation_validation,Unresolved citations cause distill to fail with a structured error listing each unresolved citation.,distill fails on unresolved citations,,,,UNVERIFIABLE,,
+c-0054,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,334,owned,concrete,frontmatter_field,Output frontmatter includes citations.unresolved.,citations.unresolved,,,,UNVERIFIABLE,,
+c-0055,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,344,owned,behavioral,banner_condition,"If unresolved citations are greater than zero, output markdown gets a top banner noting the issue.",banner added when unresolved > 0,,,,UNVERIFIABLE,,
+c-0056,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,354,owned,concrete,source_id_format,YouTube source_id format is yt:<video_id>.,yt:<video_id>,"| Source type | `source_id` |
+|-------------|-------------|
+| YouTube URL | `yt:<video_id>` |
+| TikTok / Vimeo / X / Loom | `<platform>:<id>` from yt-dlp's extractor info |
+| Other yt-dlp source | `web:<sha1(canonical_url)[:12]>` |",,,MATCH,,
+c-0057,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,357,owned,concrete,source_id_format,Local file source_id format is local:<sha1(absolute_path)[:12]>.,local:<sha1(absolute_path)[:12]>,"| TikTok / Vimeo / X / Loom | `<platform>:<id>` from yt-dlp's extractor info |
+| Other yt-dlp source | `web:<sha1(canonical_url)[:12]>` |
+| Local file | `local:<sha1(absolute_path)[:12]>` |
+
+If `--start` / `--end` was used, the source_id is suffixed (`yt:abc123#15-45`). This means the same video at ",,,MATCH,,
+c-0058,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,359,owned,behavioral,clip_suffix,Using --start/--end suffixes source_id with clip range like yt:abc123#15-45.,source_id includes #start-end suffix,,,,UNVERIFIABLE,,
+c-0059,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,367,owned,concrete,manifest_schema,artifact_manifest.json example uses schema_version 1.,1,"```json
+{
+  ""schema_version"": 1,
+  ""source_id"": ""yt:KE39P4qBjDk"",
+  ""source_url"": ""https://..."",",,,MATCH,,
+c-0060,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,408,owned,behavioral,force_semantics,Video download step is skipped when cached video exists and manifest args match; --force reruns it.,skip download unless --force,,,,UNVERIFIABLE,,
+c-0061,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,411,owned,behavioral,force_semantics,OCR step reruns with extract.py --force-ocr even when same ocr_version is already recorded for the frame set.,--force-ocr reruns OCR,,,,UNVERIFIABLE,,
+c-0062,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,414,owned,behavioral,corruption_recovery,"If an artifact is missing or hash-mismatched, the corresponding step reruns without requiring --force.",auto rebuild on missing/corrupt artifact,,,,UNVERIFIABLE,,
+c-0063,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,431,owned,behavioral,safe_delete,clean.py defaults to dry-run listing and requires --apply for actual deletion.,no deletion without --apply,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0064,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,448,owned,behavioral,error_handling,"When yt-dlp is rate-limited (429), the tool reports rate-limited, does not auto-retry, and exits 1.",exit code 1 and no auto-retry on 429,,,,UNVERIFIABLE,,
+c-0065,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,451,owned,behavioral,error_handling,"If ffmpeg or yt-dlp is missing, setup.py --check runs and process exits with code 2.",2,,,,UNVERIFIABLE,,
+c-0066,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,459,owned,behavioral,error_handling,"If citation validation fails, distill.py exits 1 and output files are still written but flagged.",exit 1 with flagged outputs,,,,UNVERIFIABLE,,
+c-0067,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,465,owned,concrete,dependency_range,"rapidocr-onnxruntime is pinned to >=1.4,<2.0.",">=1.4,<2.0","**Python deps** (added to `pyproject.toml`):
+
+- `rapidocr-onnxruntime` (pinned to a tested range, e.g. `>=1.4,<2.0`)
+- `pillow` (image handling, base64)
+- `pyyaml` (`models.yaml`)",,,MATCH,,
+c-0068,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,471,owned,concrete,python_version_range,"Python version is pinned to >=3.10,<3.13.",">=3.10,<3.13","- `rapidfuzz` (OCR dedup similarity)
+
+**Python version:** Pin to `>=3.10,<3.13` initially (`rapidocr-onnxruntime` packaging has historically had Python-version friction). Re-test on each Python upgrade as a CI gate.
+
+**System deps** (existing): `ffmpeg`, `yt-dlp`. Vendored `setup.py` detects them.",,,MATCH,,
+c-0069,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,477,owned,concrete,env_var,OPENROUTER_API_KEY is required for the default profile.,OPENROUTER_API_KEY,,probe skipped: disabled,OPENROUTER_API_KEY not present in any env file,DRIFT,reconcile sources; vps says: OPENROUTER_API_KEY not present in any env file,
+c-0070,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,478,owned,concrete,env_var,Whisper fallback requires GROQ_API_KEY or OPENAI_API_KEY.,"['GROQ_API_KEY', 'OPENAI_API_KEY']",,"./transform_transcript.sh:2:# Transform a transcript using a style guide via OpenRouter (openrouter/free)
+./transform_transcript.sh:3:# Usage: ./transform_transcript.sh <video_dir> <style_name>
+./transform_transcript.sh:4:# Requires OPENROUTER_API_KEY in environment or .env
+./transform_transcript.sh","['GROQ_API_KEY', 'OPENAI_API_KEY'] not present in any env file",DRIFT,"reconcile sources; vps says: ['GROQ_API_KEY', 'OPENAI_API_KEY'] not present in any env file",
+c-0071,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,485,owned,concrete,enum,"transcript_quality values are high, medium, low, none.","['high', 'medium', 'low', 'none']","Three grades, computed at extract time, stored alongside the file paths:
+
+- `transcript_quality` ∈ {`high`, `medium`, `low`, `none`}
+  - `high` — captions returned by youtube-transcript-api or yt-dlp captions, language match.
+  - `medium` — Whisper fallback used, or captions via pytube (less reliabl",,,UNVERIFIABLE,,
+c-0072,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,491,owned,concrete,thresholds,"ocr_quality thresholds are >=0.85 high, 0.65-0.85 medium, and <0.65 low.","{'high': '>=0.85', 'medium': '0.65-0.85', 'low': '<0.65'}","  - `none` — no transcript at all.
+- `ocr_quality` ∈ {`high`, `medium`, `low`, `none`}
+  - Mean per-frame confidence: ≥0.85 high, 0.65–0.85 medium, <0.65 low. `none` if no frames.
+- `vision_frame_coverage` ∈ {`high`, `medium`, `low`} based on (selected_non_code_frames / duration_minutes).
+",,,UNVERIFIABLE,,
+c-0073,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,500,owned,concrete,test_fixture_count,"Unit classifier fixture set contains 15 frames (3 each for code, slides, UI, diagrams, mixed/other).",15,"**Unit:**
+
+- `frame_ocr.py` classifier against a 15-frame fixture set (3 IDE/code, 3 slides, 3 UI, 3 diagrams, 3 mixed/other) committed to `tests/fixtures/`.
+- `frame_ocr.py` deduplication: synthetic OCR-text inputs assert correct cluster grouping and representative selection.
+- `frame_select.py`: d",,,MATCH,,
+c-0074,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,510,owned,concrete,test_fixture_path,Integration test video fixture path is tests/fixtures/test_video.mp4 and duration is 30 seconds.,tests/fixtures/test_video.mp4,"**Integration:**
+
+- `extract.py` against a 30-second public-domain test video committed to `tests/fixtures/test_video.mp4` — assert all expected files land, hashes recorded.
+- `extract.py` resumability: run, delete one artifact, re-run without `--force` → only the missing artifact is rebuilt.
+- `--s",,,MATCH,,
+c-0075,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,523,owned,behavioral,golden_test,Golden tests require --dry-run-payload output to be byte-identical modulo timestamps.,byte-identical payload except timestamps,,,,UNVERIFIABLE,,
+c-0076,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,527,owned,behavioral,legacy_behavior,download_transcript.py <url> keeps transcript-only behavior and internally calls extract.py --no-frames.,legacy no-style path delegates to extract.py --no-frames,,,,UNVERIFIABLE,,
+c-0077,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,528,owned,behavioral,delegation,download_transcript.py <url> <style> delegates to run.py.,delegates to run.py,,,,UNVERIFIABLE,,
+c-0078,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,537,owned,concrete,policy,"The tool does not bypass DRM, paywalls, or authentication.",False,"
+- The user is responsible for having rights to access and process the media.
+- The tool does not bypass DRM, paywalls, or authentication.
+- Cookie-based access (via `yt-dlp --cookies-from-browser`) is supported but cookies stay local and are never logged or transmitted by this tool.
+- Downloaded me",,,UNVERIFIABLE,,
+c-0079,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,538,owned,concrete,cli_flag,Cookie-based access uses yt-dlp --cookies-from-browser and cookies stay local.,--cookies-from-browser,"- The user is responsible for having rights to access and process the media.
+- The tool does not bypass DRM, paywalls, or authentication.
+- Cookie-based access (via `yt-dlp --cookies-from-browser`) is supported but cookies stay local and are never logged or transmitted by this tool.
+- Downloaded med",,,MATCH,,
+c-0080,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,548,owned,behavioral,dod_condition,Definition of done requires uv run pytest to pass including four golden-output fixtures.,pytest pass with four golden fixtures,,probe skipped: disabled,,UNVERIFIABLE,,
+c-0081,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,552,owned,behavioral,doctor_manual_check,Definition of done includes a successful real-key run of models.py doctor --profile gemini-3-flash.,doctor passes for gemini-3-flash,,,,UNVERIFIABLE,,
+c-0082,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,554,owned,behavioral,negative_test,Injecting fabricated seg#9999 in LLM mock should cause distill.py to exit 1.,exit code 1 on fabricated citation,,,,UNVERIFIABLE,,
+c-0083,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,557,owned,concrete,source_hygiene_rule,Shipped source must contain no TODO or XXX markers.,"['TODO', 'XXX']",,probe skipped: disabled,,UNVERIFIABLE,,
+c-0084,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,579,owned,concrete,repository_layout_decision,claude-video is to be vendored at vendor/claude_video/.,vendor/claude_video/,"**Options:** vendor at `vendor/claude_video/`; submodule; fork; install as Claude skill.
+
+**Chosen.** Vendor at `vendor/claude_video/`.
+
+**Why.** Easiest to modify when adapting (programmatic calls instead of skill harness). Submodule rejected (Python imports across submodule boundary are awkward). ",,,MATCH,,
+c-0085,CLAUDE.md,13,owned,concrete,command,The dependency installation command is `uv sync`.,uv sync,"## Entry points
+
+| File | Purpose |
+|---|---|
+| `extract.py` | Phase 1 orchestrator: source → transcript → frames → OCR → manifest |","./docs/audits/2026-05-07/claims.curated.yaml:1160:  claim_text: The dependency installation command is `uv sync`.
+./docs/audits/2026-05-07/claims.curated.yaml:1161:  expected_value: uv sync
+./docs/audits/2026-05-07/claims.curated.yaml:1931:  claim_text: The install command is uv sync.
+./docs/audits/",,DRIFT,"reconcile sources; vps says: ./docs/audits/2026-05-07/claims.curated.yaml:1160:  claim_text: The dependency installation command is `uv sync`.
+./docs/audits/2026-05-07/claims.curated.yaml:1161:  expected_value: uv sync
+./docs/audits/2026-05-07/claims.curated.yaml:1931:  claim_text: The install command is uv sync.
+./docs/audits/2026-05-07/claims.curated.yaml:1932:  expected_value: uv sync
+./docs/audits/2026-05-07/claims.verified.yaml:1553:  claim_text: The dependency installation command is `uv sync`.",
+c-0086,CLAUDE.md,16,owned,concrete,command,The main transcript downloader is run with `uv run python download_transcript.py`.,uv run python download_transcript.py,"|---|---|
+| `extract.py` | Phase 1 orchestrator: source → transcript → frames → OCR → manifest |
+| `distill.py` | Phase 2 orchestrator: artifacts → enrich → frame select → LLM → markdown + JSON |
+| `run.py` | Convenience wrapper: `extract → distill` |
+| `clean.py` | Storage management; dry-run by de","./docs/audits/2026-05-07/claims.curated.yaml:1173:  claim_text: The main transcript downloader is run with `uv run python download_transcript.py`.
+./docs/audits/2026-05-07/claims.curated.yaml:1174:  expected_value: uv run python download_transcript.py
+./docs/audits/2026-05-07/claims.verified.yaml:15",,DRIFT,"reconcile sources; vps says: ./docs/audits/2026-05-07/claims.curated.yaml:1173:  claim_text: The main transcript downloader is run with `uv run python download_transcript.py`.
+./docs/audits/2026-05-07/claims.curated.yaml:1174:  expected_value: uv run python download_transcript.py
+./docs/audits/2026-05-07/claims.verified.yaml:1585:  claim_text: The main transcript downloader is run with `uv run python download_transcript.py`.
+./docs/audits/2026-05-07/claims.verified.yaml:1586:  expected_value: uv run python download_transcript.py
+./docs/audits/2026-05-07/claims.verified.yaml:1595:    uv run python download_transcript.py",
+c-0087,CLAUDE.md,19,owned,concrete,command,The virtual environment can be activated with `source .venv/bin/activate`.,source .venv/bin/activate,"| `run.py` | Convenience wrapper: `extract → distill` |
+| `clean.py` | Storage management; dry-run by default |
+| `models.py` | Profile resolution + `doctor` capability checks; also a CLI subcommand |
+| `download_transcript.py` | Legacy entry point, kept for backward compat. Delegates to `run.py` wh","./docs/audits/2026-05-07/claims.verified.yaml:1615:  claim_text: The virtual environment can be activated with `source .venv/bin/activate`.
+./docs/audits/2026-05-07/claims.verified.yaml:1616:  expected_value: source .venv/bin/activate
+./docs/audits/2026-05-07/claims.verified.yaml:1625:    source .ve",,DRIFT,"reconcile sources; vps says: ./docs/audits/2026-05-07/claims.verified.yaml:1615:  claim_text: The virtual environment can be activated with `source .venv/bin/activate`.
+./docs/audits/2026-05-07/claims.verified.yaml:1616:  expected_value: source .venv/bin/activate
+./docs/audits/2026-05-07/claims.verified.yaml:1625:    source .venv/bin/activate
+./docs/audits/2026-05-07/claims.verified.yaml:1631:    The virtual environment can be activated with `source .venv/bin/activate`.
+./docs/audits/2026-05-07/claims.verified.yaml:1634:    source .venv/bin/activate'",
+c-0088,CLAUDE.md,24,owned,concrete,file_path,The repository contains a script named `download_transcript.py`.,download_transcript.py,"## Library modules
+
+| File | Purpose |
+|---|---|
+| `manifest.py` | `artifact_manifest.json` read/write + per-file integrity tracking |",path exists: download_transcript.py,,DRIFT,reconcile sources; vps says: path exists: download_transcript.py,
+c-0089,CLAUDE.md,25,owned,concrete,function_name,`download_transcript.py` defines a function named `get_safe_title(video_id)`.,get_safe_title(video_id),"
+| File | Purpose |
+|---|---|
+| `manifest.py` | `artifact_manifest.json` read/write + per-file integrity tracking |
+| `transcript.py` | 4-tier chain: youtube-transcript-api → pytube → yt-dlp → whisper |",,,UNVERIFIABLE,,
+c-0090,CLAUDE.md,25,owned,behavioral,behavior,Calling `get_safe_title(video_id)` fetches a video title via yt-dlp and sanitizes it for filesystem use.,fetches title via yt-dlp and sanitizes for filesystem,"
+| File | Purpose |
+|---|---|
+| `manifest.py` | `artifact_manifest.json` read/write + per-file integrity tracking |
+| `transcript.py` | 4-tier chain: youtube-transcript-api → pytube → yt-dlp → whisper |",,,UNVERIFIABLE,,
+c-0091,CLAUDE.md,26,owned,concrete,function_name,"`download_transcript.py` defines a function named `download_transcript(video_id, output_dir)`.","download_transcript(video_id, output_dir)","| File | Purpose |
+|---|---|
+| `manifest.py` | `artifact_manifest.json` read/write + per-file integrity tracking |
+| `transcript.py` | 4-tier chain: youtube-transcript-api → pytube → yt-dlp → whisper |
+| `frame_ocr.py` | RapidOCR wrapper, 5-class classifier (code / slide / ui / diagram / other), rap",,,UNVERIFIABLE,,
+c-0092,CLAUDE.md,26,owned,behavioral,behavior,"Running `download_transcript(video_id, output_dir)` downloads a transcript and saves two output formats.",downloads transcript and writes two output formats,"| File | Purpose |
+|---|---|
+| `manifest.py` | `artifact_manifest.json` read/write + per-file integrity tracking |
+| `transcript.py` | 4-tier chain: youtube-transcript-api → pytube → yt-dlp → whisper |
+| `frame_ocr.py` | RapidOCR wrapper, 5-class classifier (code / slide / ui / diagram / other), rap",,,UNVERIFIABLE,,
+c-0093,CLAUDE.md,27,owned,concrete,file_name,One transcript output file is named `formatted_transcript.txt`.,formatted_transcript.txt,"|---|---|
+| `manifest.py` | `artifact_manifest.json` read/write + per-file integrity tracking |
+| `transcript.py` | 4-tier chain: youtube-transcript-api → pytube → yt-dlp → whisper |
+| `frame_ocr.py` | RapidOCR wrapper, 5-class classifier (code / slide / ui / diagram / other), rapidfuzz dedup, `ocr.",,,UNVERIFIABLE,,
+c-0094,CLAUDE.md,27,owned,concrete,format,`formatted_transcript.txt` uses a timestamped `start|text` format.,start|text,"|---|---|
+| `manifest.py` | `artifact_manifest.json` read/write + per-file integrity tracking |
+| `transcript.py` | 4-tier chain: youtube-transcript-api → pytube → yt-dlp → whisper |
+| `frame_ocr.py` | RapidOCR wrapper, 5-class classifier (code / slide / ui / diagram / other), rapidfuzz dedup, `ocr.",,,UNVERIFIABLE,,
+c-0095,CLAUDE.md,28,owned,concrete,file_name,Another transcript output file is named `clean_text.txt`.,clean_text.txt,"| `manifest.py` | `artifact_manifest.json` read/write + per-file integrity tracking |
+| `transcript.py` | 4-tier chain: youtube-transcript-api → pytube → yt-dlp → whisper |
+| `frame_ocr.py` | RapidOCR wrapper, 5-class classifier (code / slide / ui / diagram / other), rapidfuzz dedup, `ocr.json` I/O ",,,UNVERIFIABLE,,
+c-0096,CLAUDE.md,28,owned,concrete,format,`clean_text.txt` contains plain text without timestamps.,plain text without timestamps,"| `manifest.py` | `artifact_manifest.json` read/write + per-file integrity tracking |
+| `transcript.py` | 4-tier chain: youtube-transcript-api → pytube → yt-dlp → whisper |
+| `frame_ocr.py` | RapidOCR wrapper, 5-class classifier (code / slide / ui / diagram / other), rapidfuzz dedup, `ocr.json` I/O ",,,UNVERIFIABLE,,
+c-0097,CLAUDE.md,30,owned,concrete,file_path,The repository contains `main.py`.,main.py,"| `frame_ocr.py` | RapidOCR wrapper, 5-class classifier (code / slide / ui / diagram / other), rapidfuzz dedup, `ocr.json` I/O |
+| `frame_select.py` | Perceptual-hash scene detection + anchored even-spacing + token-budget cap |
+| `enrichment.py` | Splice frame OCR into transcript at frame timestamps",path exists: main.py,,DRIFT,reconcile sources; vps says: path exists: main.py,
+c-0098,CLAUDE.md,30,owned,concrete,status,`main.py` is an unused placeholder entry point.,placeholder entry point (unused),"| `frame_ocr.py` | RapidOCR wrapper, 5-class classifier (code / slide / ui / diagram / other), rapidfuzz dedup, `ocr.json` I/O |
+| `frame_select.py` | Perceptual-hash scene detection + anchored even-spacing + token-budget cap |
+| `enrichment.py` | Splice frame OCR into transcript at frame timestamps",,,UNVERIFIABLE,,
+c-0099,CLAUDE.md,34,owned,behavioral,output_behavior,Each downloaded video creates a directory named from a sanitized video title.,creates per-video directory named with sanitized title,"| `citation.py` | Citation token regex (`seg#`, `frame_NNN_t-MM-SS`, `cluster_id=cN`, `t=MM:SS`) + extract + validate |
+| `distill_render.py` | `distill_result.json` → Obsidian-ready markdown with frontmatter |
+
+## Config & contracts
+",,,UNVERIFIABLE,,
+c-0100,CLAUDE.md,37,owned,behavioral,output_behavior,Generated directories include `formatted_transcript.txt` with one `timestamp|text` entry per line.,formatted_transcript.txt has timestamp|text per line,"## Config & contracts
+
+- `models.yaml` — model profiles. Default `gemini-3-flash`. Adding a new profile is one YAML entry, zero code changes.
+- `prompts/distill_contract_v1.md` — the citation contract sent to every LLM call. Every technical claim in output must cite at least one of: transcript segme",,,UNVERIFIABLE,,
+c-0101,CLAUDE.md,38,owned,behavioral,output_behavior,Generated directories include `clean_text.txt` containing concatenated plain text.,clean_text.txt contains concatenated plain text,"
+- `models.yaml` — model profiles. Default `gemini-3-flash`. Adding a new profile is one YAML entry, zero code changes.
+- `prompts/distill_contract_v1.md` — the citation contract sent to every LLM call. Every technical claim in output must cite at least one of: transcript segment, frame, cluster, or",,,UNVERIFIABLE,,
+c-0102,CLAUDE.md,43,owned,concrete,dependency,The project depends on `youtube-transcript-api`.,youtube-transcript-api,"## Vendored
+
+`vendor/claude_video/` — frozen at upstream commit `755c157`. Frame extraction (`frames.py`) and Whisper helpers (`whisper.py`) are called from `extract.py` and `transcript.py`. Note the underscore directory name; Python imports require it. Upstream pin and any local modifications are d",,,UNVERIFIABLE,,
+c-0103,CLAUDE.md,43,owned,behavioral,behavior,`youtube-transcript-api` is used to fetch YouTube auto-generated and manual transcripts.,fetches YouTube auto-generated/manual transcripts,"## Vendored
+
+`vendor/claude_video/` — frozen at upstream commit `755c157`. Frame extraction (`frames.py`) and Whisper helpers (`whisper.py`) are called from `extract.py` and `transcript.py`. Note the underscore directory name; Python imports require it. Upstream pin and any local modifications are d",,,UNVERIFIABLE,,
+c-0104,CLAUDE.md,44,owned,concrete,dependency,The project depends on `yt-dlp`.,yt-dlp,"
+`vendor/claude_video/` — frozen at upstream commit `755c157`. Frame extraction (`frames.py`) and Whisper helpers (`whisper.py`) are called from `extract.py` and `transcript.py`. Note the underscore directory name; Python imports require it. Upstream pin and any local modifications are documented in",,,UNVERIFIABLE,,
+c-0105,CLAUDE.md,44,owned,behavioral,behavior,"`yt-dlp` is used to extract video metadata, specifically title.",extracts video title metadata,"
+`vendor/claude_video/` — frozen at upstream commit `755c157`. Frame extraction (`frames.py`) and Whisper helpers (`whisper.py`) are called from `extract.py` and `transcript.py`. Note the underscore directory name; Python imports require it. Upstream pin and any local modifications are documented in",,,UNVERIFIABLE,,
+c-0106,CLAUDE.md,45,owned,concrete,dependency,`pytube` is present as a dependency.,pytube,`vendor/claude_video/` — frozen at upstream commit `755c157`. Frame extraction (`frames.py`) and Whisper helpers (`whisper.py`) are called from `extract.py` and `transcript.py`. Note the underscore directory name; Python imports require it. Upstream pin and any local modifications are documented in ,,,UNVERIFIABLE,,
+c-0107,CLAUDE.md,45,owned,concrete,status,`pytube` is currently unused.,unused,`vendor/claude_video/` — frozen at upstream commit `755c157`. Frame extraction (`frames.py`) and Whisper helpers (`whisper.py`) are called from `extract.py` and `transcript.py`. Note the underscore directory name; Python imports require it. Upstream pin and any local modifications are documented in ,,,UNVERIFIABLE,,
+c-0108,prompts/distill_contract_v1.md,8,owned,concrete,citation_format,Transcript segment citations use the format seg#NNN.,seg#NNN,"1. **No unsupported claims.** Every technical statement, step, code snippet, UI
+   observation, or diagram interpretation must cite at least one of:
+   - a transcript segment ID like `seg#NNN`
+   - a frame ID like `frame_NNN_t-MM-SS` (or its short form `frame_NNN`)
+   - a code-frame cluster ID like ",,,MATCH,,
+c-0109,prompts/distill_contract_v1.md,9,owned,concrete,citation_format,Frame ID citations may use frame_NNN_t-MM-SS.,frame_NNN_t-MM-SS,"   observation, or diagram interpretation must cite at least one of:
+   - a transcript segment ID like `seg#NNN`
+   - a frame ID like `frame_NNN_t-MM-SS` (or its short form `frame_NNN`)
+   - a code-frame cluster ID like `cluster_id=cN`
+   - a bare timestamp range `t=MM:SS` or `t=MM:SS–MM:SS`",,,MATCH,,
+c-0110,prompts/distill_contract_v1.md,9,owned,concrete,citation_format,Frame ID citations may use short form frame_NNN.,frame_NNN,"   observation, or diagram interpretation must cite at least one of:
+   - a transcript segment ID like `seg#NNN`
+   - a frame ID like `frame_NNN_t-MM-SS` (or its short form `frame_NNN`)
+   - a code-frame cluster ID like `cluster_id=cN`
+   - a bare timestamp range `t=MM:SS` or `t=MM:SS–MM:SS`",,,MATCH,,
+c-0111,prompts/distill_contract_v1.md,10,owned,concrete,citation_format,Code-frame cluster citations use the format cluster_id=cN.,cluster_id=cN,"   - a transcript segment ID like `seg#NNN`
+   - a frame ID like `frame_NNN_t-MM-SS` (or its short form `frame_NNN`)
+   - a code-frame cluster ID like `cluster_id=cN`
+   - a bare timestamp range `t=MM:SS` or `t=MM:SS–MM:SS`
+   Statements without a citation are forbidden.",,,MATCH,,
+c-0112,prompts/distill_contract_v1.md,11,owned,concrete,citation_format,Bare timestamp citations may use t=MM:SS.,t=MM:SS,"   - a frame ID like `frame_NNN_t-MM-SS` (or its short form `frame_NNN`)
+   - a code-frame cluster ID like `cluster_id=cN`
+   - a bare timestamp range `t=MM:SS` or `t=MM:SS–MM:SS`
+   Statements without a citation are forbidden.
+",,,MATCH,,
+c-0113,prompts/distill_contract_v1.md,11,owned,concrete,citation_format,Bare timestamp range citations may use t=MM:SS–MM:SS.,t=MM:SS–MM:SS,"   - a frame ID like `frame_NNN_t-MM-SS` (or its short form `frame_NNN`)
+   - a code-frame cluster ID like `cluster_id=cN`
+   - a bare timestamp range `t=MM:SS` or `t=MM:SS–MM:SS`
+   Statements without a citation are forbidden.
+",,,MATCH,,
+c-0114,prompts/distill_contract_v1.md,12,owned,behavioral,citation_requirement,Statements without a citation are forbidden.,uncited statements are forbidden,"   - a code-frame cluster ID like `cluster_id=cN`
+   - a bare timestamp range `t=MM:SS` or `t=MM:SS–MM:SS`
+   Statements without a citation are forbidden.
+
+2. **Preserve uncertainty.** When OCR text in the transcript is marked",,,UNVERIFIABLE,,
+c-0115,prompts/distill_contract_v1.md,15,owned,behavioral,transformation_rule,"If OCR text is marked ~approximate, emitted code blocks propagate the ~approximate marker.",propagates ~approximate marker into emitted code blocks,"
+2. **Preserve uncertainty.** When OCR text in the transcript is marked
+   `~approximate`, propagate the marker into any code block you emit from it.
+   When the input announces `transcript_quality: low` or `none`, say so in the
+   `## Quality Note` section of your output.",,,UNVERIFIABLE,,
+c-0116,prompts/distill_contract_v1.md,16,owned,concrete,field_value,The input may include transcript_quality values low or none.,"['low', 'none']","2. **Preserve uncertainty.** When OCR text in the transcript is marked
+   `~approximate`, propagate the marker into any code block you emit from it.
+   When the input announces `transcript_quality: low` or `none`, say so in the
+   `## Quality Note` section of your output.
+",,,UNVERIFIABLE,,
+c-0117,prompts/distill_contract_v1.md,17,owned,behavioral,section_requirement,"When transcript_quality is low or none, the output states this in the ## Quality Note section.",quality state is reported in ## Quality Note,"   `~approximate`, propagate the marker into any code block you emit from it.
+   When the input announces `transcript_quality: low` or `none`, say so in the
+   `## Quality Note` section of your output.
+
+3. **Required sections** (in this order; omit any that have no content):",,,UNVERIFIABLE,,
+c-0118,prompts/distill_contract_v1.md,20,owned,concrete,section_name,A required section is named ## Summary.,## Summary,"
+3. **Required sections** (in this order; omit any that have no content):
+   - `## Summary` — 2–4 sentence overview.
+   - `## Key Points` — bulleted, each with citation(s).
+   - `## Steps / Walkthrough` — numbered, each with citation(s). Skip if not a how-to.",,,MATCH,,
+c-0119,prompts/distill_contract_v1.md,20,owned,concrete,numeric_range,The ## Summary section length is 2–4 sentences.,2-4,"
+3. **Required sections** (in this order; omit any that have no content):
+   - `## Summary` — 2–4 sentence overview.
+   - `## Key Points` — bulleted, each with citation(s).
+   - `## Steps / Walkthrough` — numbered, each with citation(s). Skip if not a how-to.",,,UNVERIFIABLE,,
+c-0120,prompts/distill_contract_v1.md,21,owned,concrete,section_name,A required section is named ## Key Points.,## Key Points,"3. **Required sections** (in this order; omit any that have no content):
+   - `## Summary` — 2–4 sentence overview.
+   - `## Key Points` — bulleted, each with citation(s).
+   - `## Steps / Walkthrough` — numbered, each with citation(s). Skip if not a how-to.
+   - `## Code` — fenced code blocks with ",,,MATCH,,
+c-0121,prompts/distill_contract_v1.md,22,owned,concrete,section_name,A required section is named ## Steps / Walkthrough.,## Steps / Walkthrough,"   - `## Summary` — 2–4 sentence overview.
+   - `## Key Points` — bulleted, each with citation(s).
+   - `## Steps / Walkthrough` — numbered, each with citation(s). Skip if not a how-to.
+   - `## Code` — fenced code blocks with language hints, each with citation(s).
+   - `## Tools & References` — nam",,,MATCH,,
+c-0122,prompts/distill_contract_v1.md,23,owned,concrete,section_name,A required section is named ## Code.,## Code,"   - `## Key Points` — bulleted, each with citation(s).
+   - `## Steps / Walkthrough` — numbered, each with citation(s). Skip if not a how-to.
+   - `## Code` — fenced code blocks with language hints, each with citation(s).
+   - `## Tools & References` — names of tools, libraries, URLs mentioned, wit",,,MATCH,,
+c-0123,prompts/distill_contract_v1.md,24,owned,concrete,section_name,A required section is named ## Tools & References.,## Tools & References,"   - `## Steps / Walkthrough` — numbered, each with citation(s). Skip if not a how-to.
+   - `## Code` — fenced code blocks with language hints, each with citation(s).
+   - `## Tools & References` — names of tools, libraries, URLs mentioned, with citations.
+   - `## Visual Evidence Used` — list each ",,,MATCH,,
+c-0124,prompts/distill_contract_v1.md,25,owned,concrete,section_name,A required section is named ## Visual Evidence Used.,## Visual Evidence Used,"   - `## Code` — fenced code blocks with language hints, each with citation(s).
+   - `## Tools & References` — names of tools, libraries, URLs mentioned, with citations.
+   - `## Visual Evidence Used` — list each frame ID you describe, with one-line interpretations.
+   - `## Open Questions` — anythi",,,MATCH,,
+c-0125,prompts/distill_contract_v1.md,26,owned,concrete,section_name,A required section is named ## Open Questions.,## Open Questions,"   - `## Tools & References` — names of tools, libraries, URLs mentioned, with citations.
+   - `## Visual Evidence Used` — list each frame ID you describe, with one-line interpretations.
+   - `## Open Questions` — anything ambiguous in the input.
+   - `## Quality Note` — required only when transcrip",,,MATCH,,
+c-0126,prompts/distill_contract_v1.md,27,owned,concrete,section_name,A required section is named ## Quality Note.,## Quality Note,"   - `## Visual Evidence Used` — list each frame ID you describe, with one-line interpretations.
+   - `## Open Questions` — anything ambiguous in the input.
+   - `## Quality Note` — required only when transcript_quality < high or unresolved citations.
+
+4. **No hallucinated visual content.** Do not i",,,MATCH,,
+c-0127,prompts/distill_contract_v1.md,27,owned,behavioral,conditional_requirement,The ## Quality Note section is required only when transcript_quality is below high or citations remain unresolved.,required only when transcript_quality < high or unresolved citations,"   - `## Visual Evidence Used` — list each frame ID you describe, with one-line interpretations.
+   - `## Open Questions` — anything ambiguous in the input.
+   - `## Quality Note` — required only when transcript_quality < high or unresolved citations.
+
+4. **No hallucinated visual content.** Do not i",,,MATCH,,
+c-0128,prompts/distill_contract_v1.md,30,owned,behavioral,prohibition,Visual content not present in OCR text must not be inferred.,no inferred frame text beyond OCR,"
+4. **No hallucinated visual content.** Do not infer text that is in a frame
+   but is not in the OCR. When you describe a frame in `Visual Evidence Used`,
+   prefix the description with `frame_NNN observation:`.
+",,,UNVERIFIABLE,,
+c-0129,prompts/distill_contract_v1.md,32,owned,behavioral,prefix_requirement,Descriptions in Visual Evidence Used are prefixed with 'frame_NNN observation:'.,frame_NNN observation:,"   but is not in the OCR. When you describe a frame in `Visual Evidence Used`,
+   prefix the description with `frame_NNN observation:`.
+
+5. **Style guide overlay.** Apply the user-supplied style guide to tone and
+   structure, but it does NOT override the citation requirement. If the style",,,MATCH,,
+c-0130,prompts/distill_contract_v1.md,35,owned,behavioral,precedence_rule,"If style guide and contract conflict, the contract takes precedence.",contract overrides style guide on conflict,"5. **Style guide overlay.** Apply the user-supplied style guide to tone and
+   structure, but it does NOT override the citation requirement. If the style
+   guide and this contract conflict, this contract wins.
+
+End every section's content; do not leave placeholders. If a section has",,,UNVERIFIABLE,,
+c-0131,prompts/distill_contract_v1.md,37,owned,behavioral,placeholder_rule,Sections with no content are omitted entirely and must not use 'N/A' placeholders.,omit empty sections; do not write N/A,"   guide and this contract conflict, this contract wins.
+
+End every section's content; do not leave placeholders. If a section has
+nothing to say, omit it entirely (do not write ""N/A"").",,,UNVERIFIABLE,,
+c-0132,prompts/distill_contract_v1.md,41,owned,concrete,path,A summary file is written to /tmp/opencode-task-extract-distill-contract-v1-md-4a18c2b1ec-summary.md.,/tmp/opencode-task-extract-distill-contract-v1-md-4a18c2b1ec-summary.md,,path missing: /tmp/opencode-task-extract-distill-contract-v1-md-4a18c2b1ec-summary.md,,DRIFT,reconcile sources; vps says: path missing: /tmp/opencode-task-extract-distill-contract-v1-md-4a18c2b1ec-summary.md,
+c-0133,prompts/distill_contract_v1.md,42,owned,concrete,summary_fields,"The concise summary includes files changed, what was done, and any issues found.","['files changed', 'what was done', 'any issues found']",,,,UNVERIFIABLE,,
+c-0134,README.md,10,owned,concrete,command_name,The pipeline includes a script named extract.py.,extract.py,"
+```
+extract.py  ─►  Generated_Data/<title>/  ─►  distill.py
+   │           transcript + frames +          │
+   │           ocr.json + manifest            ▼","./distill.py:47:        print(f""no manifest at {manifest_path}; run extract.py first"", file=sys.stderr)
+./run.py:1:""""""Convenience wrapper: extract.py -> distill.py.""""""
+./docs/audits/2026-05-07/claims.curated.yaml:117:  probe: uv run python extract.py <url-or-path> && uv run python extract.py <url-or",,MATCH,,
+c-0135,README.md,10,owned,concrete,path,Artifacts are stored under Generated_Data/<title>/.,Generated_Data/<title>/,"
+```
+extract.py  ─►  Generated_Data/<title>/  ─►  distill.py
+   │           transcript + frames +          │
+   │           ocr.json + manifest            ▼",path missing: Generated_Data/<title>,,DRIFT,reconcile sources; vps says: path missing: Generated_Data/<title>,
+c-0136,README.md,10,owned,concrete,command_name,The pipeline includes a script named distill.py.,distill.py,"
+```
+extract.py  ─►  Generated_Data/<title>/  ─►  distill.py
+   │           transcript + frames +          │
+   │           ocr.json + manifest            ▼","./docs/audits/2026-05-07/claims.curated.yaml:102:  probe: uv run python distill.py <title-or-dir> <style> && grep -Eo 'seg#|frame_[0-9]{3}|t=[0-9]{2}:[0-9]{2}'
+./docs/audits/2026-05-07/claims.curated.yaml:245:  claim_text: distill.py is a top-level CLI command in the architecture.
+./docs/audits/2026",,MATCH,,
+c-0137,README.md,12,owned,concrete,file_name,The extraction artifacts include ocr.json.,ocr.json,"extract.py  ─►  Generated_Data/<title>/  ─►  distill.py
+   │           transcript + frames +          │
+   │           ocr.json + manifest            ▼
+   │                                     <title>_<style>.md
+   ▼                                     <title>_<style>.distill_result.json",,,MATCH,,
+c-0138,README.md,22,owned,behavioral,idempotency,Re-running extract.py skips work when outputs are still intact.,re-run skips intact outputs,"```
+
+`extract.py` is idempotent — re-running skips work whose outputs are still intact. `distill.py` runs scene-change-aware frame selection, builds a multimodal payload, validates the model can actually do what its profile claims (`doctor`), then calls the LLM and validates every citation in the re",probe skipped: disabled,,DRIFT,reconcile sources; vps says: probe skipped: disabled,
+c-0139,README.md,22,owned,behavioral,command_flow,run.py chains extract.py and distill.py for one-shot use.,extract then distill,"```
+
+`extract.py` is idempotent — re-running skips work whose outputs are still intact. `distill.py` runs scene-change-aware frame selection, builds a multimodal payload, validates the model can actually do what its profile claims (`doctor`), then calls the LLM and validates every citation in the re",,,UNVERIFIABLE,,
+c-0140,README.md,26,owned,concrete,version,Supported Python versions are 3.11 to 3.12.,"['3.11', '3.12']","## Install
+
+Requires Python 3.11–3.12 (the lower bound is forced by `rapidocr-onnxruntime` wheels), [uv](https://docs.astral.sh/uv/), and `ffmpeg`/`ffprobe` on PATH.
+
+```bash",,,UNVERIFIABLE,,
+c-0141,README.md,26,owned,concrete,dependency,uv is a required tool.,uv,"## Install
+
+Requires Python 3.11–3.12 (the lower bound is forced by `rapidocr-onnxruntime` wheels), [uv](https://docs.astral.sh/uv/), and `ffmpeg`/`ffprobe` on PATH.
+
+```bash",,,MATCH,,
+c-0142,README.md,26,owned,concrete,dependency,ffmpeg must be available on PATH.,ffmpeg,"## Install
+
+Requires Python 3.11–3.12 (the lower bound is forced by `rapidocr-onnxruntime` wheels), [uv](https://docs.astral.sh/uv/), and `ffmpeg`/`ffprobe` on PATH.
+
+```bash",,,MATCH,,
+c-0143,README.md,26,owned,concrete,dependency,ffprobe must be available on PATH.,ffprobe,"## Install
+
+Requires Python 3.11–3.12 (the lower bound is forced by `rapidocr-onnxruntime` wheels), [uv](https://docs.astral.sh/uv/), and `ffmpeg`/`ffprobe` on PATH.
+
+```bash",,,MATCH,,
+c-0144,README.md,29,owned,concrete,command,The install command is uv sync.,uv sync,"
+```bash
+uv sync
+```
+","./docs/audits/2026-05-07/claims.curated.yaml:1160:  claim_text: The dependency installation command is `uv sync`.
+./docs/audits/2026-05-07/claims.curated.yaml:1161:  expected_value: uv sync
+./docs/audits/2026-05-07/claims.curated.yaml:1931:  claim_text: The install command is uv sync.
+./docs/audits/",,MATCH,,
+c-0145,README.md,32,owned,concrete,model_profile,The default model profile is gemini-3-flash.,gemini-3-flash,"```
+
+Set an API key for whichever model profile you want to use. The default profile (`gemini-3-flash`) reads `OPENROUTER_API_KEY`:
+
+```bash",,,MATCH,,
+c-0146,README.md,32,owned,concrete,env_var,The default profile reads OPENROUTER_API_KEY.,OPENROUTER_API_KEY,"```
+
+Set an API key for whichever model profile you want to use. The default profile (`gemini-3-flash`) reads `OPENROUTER_API_KEY`:
+
+```bash","./transform_transcript.sh:4:# Requires OPENROUTER_API_KEY in environment or .env
+./transform_transcript.py:4:API key: OPENROUTER_API_KEY from environment, or from .env in project root.
+./transform_transcript.py:29:    key = os.environ.get(""OPENROUTER_API_KEY"")
+./transform_transcript.py:99:          ",,MATCH,,
+c-0147,README.md,44,owned,concrete,command,One-shot usage runs uv run python run.py with a YouTube URL and style.,"uv run python run.py ""https://www.youtube.com/watch?v=KE39P4qBjDk"" coding_agent","
+```bash
+uv run python run.py ""https://www.youtube.com/watch?v=KE39P4qBjDk"" coding_agent
+```
+",,,MATCH,,
+c-0148,README.md,47,owned,concrete,style_name,A listed style is coding_agent.,coding_agent,"```
+
+Downloads, extracts frames + OCR, and distills with the `coding_agent` style guide. Available styles: `coding_agent`, `diy_project`, `knowledge_base` (in `styles/`). Drop new ones in as plain markdown.
+
+### Two-phase (re-stylable)",,,MATCH,,
+c-0149,README.md,47,owned,concrete,style_name,A listed style is diy_project.,diy_project,"```
+
+Downloads, extracts frames + OCR, and distills with the `coding_agent` style guide. Available styles: `coding_agent`, `diy_project`, `knowledge_base` (in `styles/`). Drop new ones in as plain markdown.
+
+### Two-phase (re-stylable)",,,MATCH,,
+c-0150,README.md,47,owned,concrete,style_name,A listed style is knowledge_base.,knowledge_base,"```
+
+Downloads, extracts frames + OCR, and distills with the `coding_agent` style guide. Available styles: `coding_agent`, `diy_project`, `knowledge_base` (in `styles/`). Drop new ones in as plain markdown.
+
+### Two-phase (re-stylable)",,,MATCH,,
+c-0151,README.md,54,owned,concrete,command,Phase 1 extraction command uses extract.py with a YouTube URL.,"uv run python extract.py ""https://youtu.be/KE39P4qBjDk""","
+```bash
+uv run python extract.py ""https://youtu.be/KE39P4qBjDk""
+```
+",,,MATCH,,
+c-0152,README.md,61,owned,concrete,cli_flag,distill.py accepts --model to choose a model profile.,--model,"```bash
+uv run python distill.py KE39P4qBjDk_Title coding_agent
+uv run python distill.py KE39P4qBjDk_Title knowledge_base --model claude-sonnet-4-6
+```
+",,,MATCH,,
+c-0153,README.md,61,owned,concrete,model_profile,claude-sonnet-4-6 is used as a model profile value in the CLI example.,claude-sonnet-4-6,"```bash
+uv run python distill.py KE39P4qBjDk_Title coding_agent
+uv run python distill.py KE39P4qBjDk_Title knowledge_base --model claude-sonnet-4-6
+```
+",,,MATCH,,
+c-0154,README.md,67,owned,concrete,cli_flag,extract.py supports --start.,--start,"
+```bash
+uv run python extract.py /path/to/lecture.mp4 --start 60 --end 600 --max-frames 80
+```
+",,,MATCH,,
+c-0155,README.md,67,owned,concrete,cli_flag,extract.py supports --end.,--end,"
+```bash
+uv run python extract.py /path/to/lecture.mp4 --start 60 --end 600 --max-frames 80
+```
+",,,MATCH,,
+c-0156,README.md,67,owned,concrete,cli_flag,extract.py supports --max-frames.,--max-frames,"
+```bash
+uv run python extract.py /path/to/lecture.mp4 --start 60 --end 600 --max-frames 80
+```
+",,,MATCH,,
+c-0157,README.md,70,owned,behavioral,timestamp_behavior,Using --start/--end clips a window while preserving absolute timestamps in citations.,timestamps stay absolute,"```
+
+`--start`/`--end` (seconds) clip a window; absolute timestamps are preserved through the pipeline so citations like `t=05:23` still mean what you'd expect.
+
+### Useful flags",,,UNVERIFIABLE,,
+c-0158,README.md,78,owned,behavioral,flag_behavior,--no-frames makes extract.py run transcript-only.,transcript-only run,"| `--max-frames N` | `extract.py`, `run.py` | Cap frames extracted from the video |
+| `--start`, `--end` | `extract.py`, `run.py` | Clip a sub-range; timestamps stay absolute |
+| `--no-frames` | `extract.py` | Transcript-only run |
+| `--keep-video` | `extract.py` | Preserve the cached download for i",,,UNVERIFIABLE,,
+c-0159,README.md,80,owned,behavioral,flag_behavior,--force bypasses idempotency for the whole extraction pipeline.,bypass full pipeline idempotency,"| `--no-frames` | `extract.py` | Transcript-only run |
+| `--keep-video` | `extract.py` | Preserve the cached download for inspection |
+| `--force` / `--force-ocr` | `extract.py` | Bypass idempotency for the whole pipeline / OCR only |
+| `--cookies-from-browser firefox` | `extract.py`, `run.py` | Use",,,UNVERIFIABLE,,
+c-0160,README.md,80,owned,behavioral,flag_behavior,--force-ocr bypasses idempotency for OCR only.,bypass OCR idempotency only,"| `--no-frames` | `extract.py` | Transcript-only run |
+| `--keep-video` | `extract.py` | Preserve the cached download for inspection |
+| `--force` / `--force-ocr` | `extract.py` | Bypass idempotency for the whole pipeline / OCR only |
+| `--cookies-from-browser firefox` | `extract.py`, `run.py` | Use",,,UNVERIFIABLE,,
+c-0161,README.md,82,owned,behavioral,precedence,Model selection precedence is CLI --model over DISTILL_MODEL over models.yaml default.,"['CLI', 'DISTILL_MODEL', 'models.yaml']","| `--force` / `--force-ocr` | `extract.py` | Bypass idempotency for the whole pipeline / OCR only |
+| `--cookies-from-browser firefox` | `extract.py`, `run.py` | Use browser cookies for age-restricted videos |
+| `--model NAME` | `distill.py`, `run.py` | Override the model profile (CLI > `DISTILL_MOD",,,UNVERIFIABLE,,
+c-0162,README.md,83,owned,concrete,default_value,Default max vision frames is 16.,16,"| `--cookies-from-browser firefox` | `extract.py`, `run.py` | Use browser cookies for age-restricted videos |
+| `--model NAME` | `distill.py`, `run.py` | Override the model profile (CLI > `DISTILL_MODEL` env > `models.yaml` default) |
+| `--max-vision-frames N` | `distill.py`, `run.py` | Cap frames s",,,MATCH,,
+c-0163,README.md,85,owned,behavioral,flag_behavior,--dry-run-payload writes payload.json and exits before calling the LLM.,writes payload.json then exits pre-LLM,"| `--max-vision-frames N` | `distill.py`, `run.py` | Cap frames sent to the LLM (default 16) |
+| `--token-budget N` | `distill.py` | Cap by token budget; trims frames to `min(max_vision_frames, budget // est_image_tokens)` |
+| `--dry-run-payload` | `distill.py`, `run.py` | Write `payload.json` (imag",,,UNVERIFIABLE,,
+c-0164,README.md,93,owned,concrete,file_name,artifact_manifest.json is an output artifact.,artifact_manifest.json,"```
+Generated_Data/<title>/
+├── artifact_manifest.json              # source_id, file integrity, distill run log
+├── extract_meta.json                   # transcript/OCR/coverage quality grades
+├── <title>_formatted_transcript.txt    # `start_seconds|text` per line",,,MATCH,,
+c-0165,README.md,94,owned,concrete,file_name,extract_meta.json is an output artifact.,extract_meta.json,"Generated_Data/<title>/
+├── artifact_manifest.json              # source_id, file integrity, distill run log
+├── extract_meta.json                   # transcript/OCR/coverage quality grades
+├── <title>_formatted_transcript.txt    # `start_seconds|text` per line
+├── <title>_clean_text.txt            ",,,MATCH,,
+c-0166,README.md,98,owned,concrete,file_name,ocr.json is an output artifact.,ocr.json,"├── <title>_clean_text.txt              # transcript without timestamps
+├── <title>_enriched_transcript.md      # transcript + inline OCR/slide/UI blocks
+├── ocr.json                            # per-frame OCR + class + cluster
+├── selected_frames.json                # which frames went to the LLM a",,,MATCH,,
+c-0167,README.md,99,owned,concrete,file_name,selected_frames.json is an output artifact.,selected_frames.json,"├── <title>_enriched_transcript.md      # transcript + inline OCR/slide/UI blocks
+├── ocr.json                            # per-frame OCR + class + cluster
+├── selected_frames.json                # which frames went to the LLM and why
+├── frames/                             # frame_NNN_t-MM-SS.jpg
+├",,,MATCH,,
+c-0168,README.md,100,owned,concrete,path,Frame images are stored under a frames/ directory.,frames/,"├── ocr.json                            # per-frame OCR + class + cluster
+├── selected_frames.json                # which frames went to the LLM and why
+├── frames/                             # frame_NNN_t-MM-SS.jpg
+├── <title>_<style>.md                  # final note (Obsidian-ready frontmatter)
+└",path missing: frames,,DRIFT,reconcile sources; vps says: path missing: frames,
+c-0169,README.md,109,owned,behavioral,citation_requirement,Every technical claim must include at least one citation token.,at least one citation per technical claim,"### Citation contract
+
+The model is constrained to cite at least one of these for every technical claim:
+
+- `seg#NNN` — transcript segment",,,UNVERIFIABLE,,
+c-0170,README.md,111,owned,concrete,citation_token,seg#NNN is a valid citation token format.,seg#NNN,"The model is constrained to cite at least one of these for every technical claim:
+
+- `seg#NNN` — transcript segment
+- `frame_NNN_t-MM-SS` (or short form `frame_NNN`) — specific frame
+- `cluster_id=cN` — a deduplicated code-frame cluster",,,MATCH,,
+c-0171,README.md,112,owned,concrete,citation_token,frame_NNN_t-MM-SS (and short form frame_NNN) are valid citation token formats.,"['frame_NNN_t-MM-SS', 'frame_NNN']","
+- `seg#NNN` — transcript segment
+- `frame_NNN_t-MM-SS` (or short form `frame_NNN`) — specific frame
+- `cluster_id=cN` — a deduplicated code-frame cluster
+- `t=MM:SS` or `t=MM:SS–MM:SS` — bare timestamp",,,UNVERIFIABLE,,
+c-0172,README.md,113,owned,concrete,citation_token,cluster_id=cN is a valid citation token format.,cluster_id=cN,"- `seg#NNN` — transcript segment
+- `frame_NNN_t-MM-SS` (or short form `frame_NNN`) — specific frame
+- `cluster_id=cN` — a deduplicated code-frame cluster
+- `t=MM:SS` or `t=MM:SS–MM:SS` — bare timestamp
+",,,MATCH,,
+c-0173,README.md,114,owned,concrete,citation_token,t=MM:SS and t=MM:SS–MM:SS are valid citation token formats.,"['t=MM:SS', 't=MM:SS–MM:SS']","- `frame_NNN_t-MM-SS` (or short form `frame_NNN`) — specific frame
+- `cluster_id=cN` — a deduplicated code-frame cluster
+- `t=MM:SS` or `t=MM:SS–MM:SS` — bare timestamp
+
+Unresolved citations (referencing a frame or segment that doesn't exist) cause `distill.py` to exit non-zero with a warning banner",,,UNVERIFIABLE,,
+c-0174,README.md,116,owned,behavioral,exit_behavior,Unresolved citations cause distill.py to exit non-zero.,non-zero exit on unresolved citations,"- `t=MM:SS` or `t=MM:SS–MM:SS` — bare timestamp
+
+Unresolved citations (referencing a frame or segment that doesn't exist) cause `distill.py` to exit non-zero with a warning banner in the markdown. The full contract is `prompts/distill_contract_v1.md`.
+
+## Models",,,UNVERIFIABLE,,
+c-0175,README.md,116,owned,concrete,path,The citation contract file path is prompts/distill_contract_v1.md.,prompts/distill_contract_v1.md,"- `t=MM:SS` or `t=MM:SS–MM:SS` — bare timestamp
+
+Unresolved citations (referencing a frame or segment that doesn't exist) cause `distill.py` to exit non-zero with a warning banner in the markdown. The full contract is `prompts/distill_contract_v1.md`.
+
+## Models",path exists: prompts/distill_contract_v1.md,,MATCH,,
+c-0176,README.md,124,owned,concrete,model_profile,gemini-3-flash is marked as the default profile.,gemini-3-flash,"| Profile | Provider | Vision | Reasoning |
+|---|---|---|---|
+| `gemini-3-flash` (default) | OpenRouter (`google/gemini-3-flash-preview`) | yes | yes |
+| `gemini-3-pro` | OpenRouter (`google/gemini-3-pro-preview`) | yes | yes |
+| `claude-sonnet-4-6` | OpenRouter (`anthropic/claude-sonnet-4.6`) | yes",,,MATCH,,
+c-0177,README.md,124,owned,concrete,model_id,The gemini-3-flash profile maps to google/gemini-3-flash-preview on OpenRouter.,google/gemini-3-flash-preview,"| Profile | Provider | Vision | Reasoning |
+|---|---|---|---|
+| `gemini-3-flash` (default) | OpenRouter (`google/gemini-3-flash-preview`) | yes | yes |
+| `gemini-3-pro` | OpenRouter (`google/gemini-3-pro-preview`) | yes | yes |
+| `claude-sonnet-4-6` | OpenRouter (`anthropic/claude-sonnet-4.6`) | yes",,,MATCH,,
+c-0178,README.md,125,owned,concrete,model_id,The gemini-3-pro profile maps to google/gemini-3-pro-preview on OpenRouter.,google/gemini-3-pro-preview,"|---|---|---|---|
+| `gemini-3-flash` (default) | OpenRouter (`google/gemini-3-flash-preview`) | yes | yes |
+| `gemini-3-pro` | OpenRouter (`google/gemini-3-pro-preview`) | yes | yes |
+| `claude-sonnet-4-6` | OpenRouter (`anthropic/claude-sonnet-4.6`) | yes | no |
+| `gpt-4o` | OpenRouter (`openai/gpt",,,MATCH,,
+c-0179,README.md,126,owned,concrete,model_id,The claude-sonnet-4-6 profile maps to anthropic/claude-sonnet-4.6 on OpenRouter.,anthropic/claude-sonnet-4.6,"| `gemini-3-flash` (default) | OpenRouter (`google/gemini-3-flash-preview`) | yes | yes |
+| `gemini-3-pro` | OpenRouter (`google/gemini-3-pro-preview`) | yes | yes |
+| `claude-sonnet-4-6` | OpenRouter (`anthropic/claude-sonnet-4.6`) | yes | no |
+| `gpt-4o` | OpenRouter (`openai/gpt-4o`) | yes | no |",,,MATCH,,
+c-0180,README.md,127,owned,concrete,model_id,The gpt-4o profile maps to openai/gpt-4o on OpenRouter.,openai/gpt-4o,"| `gemini-3-pro` | OpenRouter (`google/gemini-3-pro-preview`) | yes | yes |
+| `claude-sonnet-4-6` | OpenRouter (`anthropic/claude-sonnet-4.6`) | yes | no |
+| `gpt-4o` | OpenRouter (`openai/gpt-4o`) | yes | no |
+
+Add a new profile with one YAML entry — no code changes. Verify it works:",,,MATCH,,
+c-0181,README.md,132,owned,concrete,command,A doctor verification command is uv run python models.py doctor --profile gemini-3-pro.,uv run python models.py doctor --profile gemini-3-pro,"
+```bash
+uv run python models.py doctor --profile gemini-3-pro
+```
+","./docs/audits/2026-05-07/claims.verified.yaml:3494:  expected_value: uv run python models.py doctor --profile gemini-3-pro
+./docs/audits/2026-05-07/claims.verified.yaml:3503:    uv run python models.py doctor --profile gemini-3-pro
+./docs/audits/2026-05-07/claims.verified.yaml:3509:    uv run python",,MATCH,,
+c-0182,README.md,135,owned,behavioral,caching_behavior,doctor caches probe results for one hour.,cache duration 1 hour,"```
+
+`doctor` runs real text/image/reasoning probes against the live API and caches the result for an hour. `distill.py` calls it before each run and falls back to text-only mode if the vision probe fails.
+
+## Cleanup",,,UNVERIFIABLE,,
+c-0183,README.md,135,owned,behavioral,fallback_behavior,distill.py falls back to text-only mode if the vision probe fails.,fallback to text-only on vision probe failure,"```
+
+`doctor` runs real text/image/reasoning probes against the live API and caches the result for an hour. `distill.py` calls it before each run and falls back to text-only mode if the vision probe fails.
+
+## Cleanup",,,UNVERIFIABLE,,
+c-0184,README.md,139,owned,behavioral,default_behavior,clean.py runs in dry-run mode by default.,dry-run default true,"## Cleanup
+
+Dry-run by default; `--apply` to actually delete:
+
+```bash",,,UNVERIFIABLE,,
+c-0185,README.md,139,owned,concrete,cli_flag,clean.py uses --apply to perform actual deletion.,--apply,"## Cleanup
+
+Dry-run by default; `--apply` to actually delete:
+
+```bash",,,MATCH,,
+c-0186,README.md,146,owned,behavioral,retention_behavior,ocr.json is preserved unless explicitly removed.,OCR artifact preserved by default,"```
+
+OCR (`ocr.json`) is preserved unless explicitly removed — the cheap-to-keep, expensive-to-recompute artifact.
+
+## Tests",,,UNVERIFIABLE,,
+c-0187,README.md,151,owned,concrete,command,The test command uv run pytest is documented.,uv run pytest,"
+```bash
+uv run pytest                         # unit + fast integration
+uv run pytest -m integration          # only the slow ones (real ffmpeg, real OCR)
+bash scripts/dod_check.sh             # full end-to-end gate (spec §9)","./docs/audits/2026-05-07/claims.verified.yaml:1469:  claim_text: Definition of done requires uv run pytest to pass including four golden-output
+./docs/audits/2026-05-07/claims.verified.yaml:1475:  probe: uv run pytest
+./docs/audits/2026-05-07/claims.verified.yaml:3620:  claim_text: The test command ",,MATCH,,
+c-0188,README.md,152,owned,concrete,command,The integration-only test command is uv run pytest -m integration.,uv run pytest -m integration,"```bash
+uv run pytest                         # unit + fast integration
+uv run pytest -m integration          # only the slow ones (real ffmpeg, real OCR)
+bash scripts/dod_check.sh             # full end-to-end gate (spec §9)
+```","./docs/audits/2026-05-07/claims.verified.yaml:3627:    uv run pytest -m integration          # only the slow ones (real ffmpeg, real\
+./docs/audits/2026-05-07/claims.verified.yaml:3643:    The integration-only test command is uv run pytest -m integration.'
+./docs/audits/2026-05-07/claims.verified.ya",,MATCH,,
+c-0189,README.md,153,owned,concrete,command,A DoD gate command is bash scripts/dod_check.sh.,bash scripts/dod_check.sh,"uv run pytest                         # unit + fast integration
+uv run pytest -m integration          # only the slow ones (real ffmpeg, real OCR)
+bash scripts/dod_check.sh             # full end-to-end gate (spec §9)
+```
+","./docs/audits/2026-05-07/claims.verified.yaml:3628:    \ OCR)\nbash scripts/dod_check.sh             # full end-to-end gate (spec \xA7\
+./docs/audits/2026-05-07/claims.verified.yaml:3659:    \ OCR)\nbash scripts/dod_check.sh             # full end-to-end gate (spec \xA7\
+./docs/audits/2026-05-07/cla",,MATCH,,
+c-0190,README.md,156,owned,behavioral,script_behavior,The DoD script greps shipped sources for TODO/XXX markers.,grep for TODO and XXX,"```
+
+The DoD script runs the test suite, extracts + distills the committed fixture video, exercises resumability, runs the legacy CLI, and greps the shipped sources for `TODO`/`XXX`.
+
+## Legal & auth",,,UNVERIFIABLE,,
+c-0191,README.md,161,owned,behavioral,auth_behavior,"The tool does not bypass DRM, paywalls, or authentication.",no bypass of DRM/paywalls/auth,"
+- You are responsible for having the right to access and process whatever media you pass in.
+- This tool does **not** bypass DRM, paywalls, or auth. For age-restricted videos use `--cookies-from-browser firefox` (or `chrome`); cookies stay local.
+- Downloaded media should not be redistributed unles",,,UNVERIFIABLE,,
+c-0192,README.md,161,owned,concrete,cli_flag,"For age-restricted videos, --cookies-from-browser firefox or chrome is supported.","['firefox', 'chrome']","
+- You are responsible for having the right to access and process whatever media you pass in.
+- This tool does **not** bypass DRM, paywalls, or auth. For age-restricted videos use `--cookies-from-browser firefox` (or `chrome`); cookies stay local.
+- Downloaded media should not be redistributed unles",,,UNVERIFIABLE,,
+c-0193,README.md,163,owned,concrete,command,"If yt-dlp download fails, the documented update command is uv pip install -U yt-dlp.",uv pip install -U yt-dlp,"- This tool does **not** bypass DRM, paywalls, or auth. For age-restricted videos use `--cookies-from-browser firefox` (or `chrome`); cookies stay local.
+- Downloaded media should not be redistributed unless you have the right to do so.
+- `yt-dlp` extractors break — if a download fails, `uv pip inst",,,MATCH,,
+c-0194,README.md,172,owned,behavioral,delegation_behavior,download_transcript.py delegates to run.py when a style is provided.,delegates to run.py when style is given,"run.py                          extract → distill convenience wrapper
+clean.py                        storage management
+download_transcript.py          legacy entry point; delegates to run.py when a style is given
+models.py                       profile resolution + doctor
+manifest.py              ",,,UNVERIFIABLE,,
+c-0195,README.md,175,owned,concrete,dependency_chain,transcript.py uses a 4-tier chain: yt-api -> pytube -> yt-dlp -> whisper.,"['yt-api', 'pytube', 'yt-dlp', 'whisper']","models.py                       profile resolution + doctor
+manifest.py                     artifact_manifest.json read/write + integrity
+transcript.py                   4-tier transcript chain (yt-api → pytube → yt-dlp → whisper)
+frame_ocr.py                    RapidOCR + 5-class classifier + rapid",,,UNVERIFIABLE,,
+c-0196,README.md,176,owned,concrete,classifier,frame_ocr.py includes a 5-class classifier.,5,"manifest.py                     artifact_manifest.json read/write + integrity
+transcript.py                   4-tier transcript chain (yt-api → pytube → yt-dlp → whisper)
+frame_ocr.py                    RapidOCR + 5-class classifier + rapidfuzz dedup
+frame_select.py                 perceptual-hash s",,,MATCH,,
+c-0197,README.md,183,owned,concrete,path,The prompt contract file is prompts/distill_contract_v1.md.,prompts/distill_contract_v1.md,"distill_render.py               distill_result.json → Obsidian markdown
+models.yaml                     model profile config
+prompts/distill_contract_v1.md  the citation contract sent to every LLM call
+styles/                         user-editable style guides
+vendor/claude_video/            vendore",path exists: prompts/distill_contract_v1.md,,MATCH,,
+c-0198,README.md,190,owned,concrete,path,The spec document path is docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md.,docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,"## Spec
+
+Full design and rationale: `docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md`.",path exists: docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md,,MATCH,,

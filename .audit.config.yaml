@@ -1,0 +1,31 @@
+# Three-Way Audit Configuration — youtube-transcripts
+#
+# Scope is the four authoritative docs that meet user-visible code: the README,
+# the agent guidance file, the design spec, and the LLM prompt contract. The
+# 4364-line implementation plan is intentionally excluded — it's task-step prose
+# that produces noisy, redundant claims; the spec is the authoritative design.
+
+# No VPS — youtube-transcripts is a local CLI tool. Run with --skip-vps.
+vps_ssh_target: null
+
+docs_scope:
+  owned:
+    - "README.md"
+    - "CLAUDE.md"
+    - "docs/superpowers/specs/2026-05-07-youtube-transcripts-claude-video-merge-design.md"
+    - "prompts/distill_contract_v1.md"
+  upstream: []
+
+# VPS dump commands not used (vps_ssh_target is null).
+dump_commands: {}
+
+llm:
+  workflow: "three_way_audit"
+  # model: "openai/gpt-5.3-codex"
+
+verification:
+  allow_probes: false
+
+# No service env files in this repo; denylist is empty but kept for forward
+# compatibility with the redact stage.
+secrets_denylist: []
