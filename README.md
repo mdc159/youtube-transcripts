@@ -88,7 +88,7 @@ uv run python extract.py /path/to/lecture.mp4 --start 60 --end 600 --max-frames 
 | `--no-frames` | `extract.py` | Transcript-only run |
 | `--keep-video` | `extract.py` | Preserve the cached download for inspection |
 | `--force` / `--force-ocr` | `extract.py` | Bypass idempotency for the whole pipeline / OCR only |
-| `--cookies-from-browser firefox` | `extract.py`, `run.py` | Use browser cookies for age-restricted videos |
+| `--cookies-from-browser <browser>` | `extract.py`, `run.py` | Use browser cookies for age-gated / bot-detected videos. Forwarded to all `yt-dlp` calls (probe, captions, download). WSL note: use `chrome`/`edge`, not `firefox` (see Troubleshooting). |
 | `--model NAME` | `distill.py`, `run.py` | Override the model profile (CLI > `DISTILL_MODEL` env > `models.yaml` default) |
 | `--max-vision-frames N` | `distill.py`, `run.py` | Cap frames sent to the LLM (default 16) |
 | `--token-budget N` | `distill.py` | Cap by token budget; trims frames to `min(max_vision_frames, budget // est_image_tokens)` |
@@ -171,6 +171,14 @@ The DoD script runs the test suite, extracts + distills the committed fixture vi
 - This tool does **not** bypass DRM, paywalls, or auth. For age-restricted videos use `--cookies-from-browser firefox` (or `chrome`); cookies stay local.
 - Downloaded media should not be redistributed unless you have the right to do so.
 - `yt-dlp` extractors break — if a download fails because the extractor is stale, run `uv lock --upgrade-package yt-dlp && uv sync`.
+
+## Troubleshooting
+
+**`Sign in to confirm you're not a bot` / HTTP 429 from YouTube.** Pass `--cookies-from-browser <browser>`. The flag is forwarded to every `yt-dlp` invocation in the pipeline (probe, captions, download). On WSL, `firefox` is **not** supported when Firefox is installed on the Windows host — the WSL profile path doesn't exist; use `chrome` or `edge` instead. The first three transcript tiers (`youtube-transcript-api`, `pytube`, `yt-dlp` subtitles) all read YouTube directly and can be IP-blocked independently.
+
+**All four transcript tiers failed.** Set `GROQ_API_KEY` (preferred — fast, free tier) or `OPENAI_API_KEY` to enable the Whisper fallback. When credentials are present and frames aren't disabled (`--no-frames`), `extract.py` will reuse the downloaded video, extract audio with `ffmpeg`, and transcribe via Whisper. Without a key the tool prints a one-line hint and writes a `# transcript_unavailable` placeholder.
+
+**Stale `pytube` HTTP 400.** `pytube` is largely broken upstream against current YouTube; it stays in the chain as a cheap second attempt but is expected to fail. The downstream tiers (`yt-dlp` subs, `whisper`) carry the load.
 
 ## Layout
 

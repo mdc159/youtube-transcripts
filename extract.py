@@ -111,21 +111,10 @@ def _probe_source(source: str, cookies_browser: str | None = None) -> tuple[str,
         duration = _ffprobe_duration(source)
         return _safe_title(title), duration, str(Path(source).resolve())
 
-    # Probe URL via yt-dlp --dump-json
-    # #region agent log
-    import json as _dlog_json, time as _dlog_time
-    _dlog_path = "/home/mdc159/projects/youtube-transcripts/.cursor/debug-1cf7db.log"
-    with open(_dlog_path, "a") as _f:
-        _f.write(_dlog_json.dumps({"sessionId":"1cf7db","hypothesisId":"H-E","location":"extract.py:_probe_source","message":"yt-dlp probe start","data":{"source":source,"cookies_browser":cookies_browser},"timestamp":int(_dlog_time.time()*1000)}) + "\n")
-    # #endregion
     cmd = ["yt-dlp", "--no-warnings", "--dump-json", source]
     if cookies_browser:
         cmd += ["--cookies-from-browser", cookies_browser]
     r = subprocess.run(cmd, capture_output=True, text=True)
-    # #region agent log
-    with open(_dlog_path, "a") as _f:
-        _f.write(_dlog_json.dumps({"sessionId":"1cf7db","hypothesisId":"H-E","location":"extract.py:_probe_source","message":"yt-dlp probe result","data":{"returncode":r.returncode,"stderr":r.stderr[:400]},"timestamp":int(_dlog_time.time()*1000)}) + "\n")
-    # #endregion
     if r.returncode != 0:
         raise RuntimeError(f"yt-dlp probe failed: {r.stderr}")
     info = _json.loads(r.stdout)
@@ -162,9 +151,79 @@ def _ffprobe_duration(path: str) -> float:
     return float(r.stdout.strip() or 0.0)
 
 
+def _whisper_credentials_available() -> bool:
+    """True iff GROQ_API_KEY or OPENAI_API_KEY is reachable for the Whisper tier."""
+    from vendor.claude_video.scripts import whisper as _w  # type: ignore
+
+    backend, key = _w.load_api_key()
+    return bool(backend and key)
+
+
+def _ensure_video_downloaded(args, out_dir: Path) -> str:
+    """Return an absolute path to the source video, downloading if necessary.
+
+    Centralises the local-vs-remote / cache-reuse logic so both the Whisper
+    fallback and the frame-extraction step share the same cached download.
+    """
+    if Path(args.source).exists():
+        return str(Path(args.source).resolve())
+
+    cache_dir = Path("media_cache") / out_dir.name
+    if cache_dir.exists():
+        existing = sorted(cache_dir.glob("video.*"))
+        if existing:
+            return str(existing[0].resolve())
+
+    return _download_video(args.source, out_dir, args.cookies_from_browser)
+
+
+def _extract_audio_for_whisper(video_path: str, dest: Path) -> str:
+    """Extract a Whisper-friendly audio track via the vendored ffmpeg helper."""
+    from vendor.claude_video.scripts import whisper as _w  # type: ignore
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    _w.extract_audio(video_path, dest)
+    return str(dest.resolve())
+
+
 def _do_transcript(args, out_dir: Path, manifest: Manifest) -> None:
-    """Run the 4-tier chain. Whisper tier is gated off (audio extraction not yet wired)."""
-    res = fetch_transcript(args.source, allow_whisper=False)
+    """Run the 4-tier chain.
+
+    Tiers 1-3 are tried first (cheap, no download). If they all fail and
+    Whisper credentials are present (GROQ_API_KEY / OPENAI_API_KEY) and the
+    user did not opt out of frame work (which is the only signal that they
+    are willing to pull the video at all), we extract audio from the cached
+    video and retry with ``allow_whisper=True``.
+    """
+    cookies_browser = getattr(args, "cookies_from_browser", None)
+    res = fetch_transcript(
+        args.source,
+        allow_whisper=False,
+        cookies_browser=cookies_browser,
+    )
+
+    if res is None and not getattr(args, "no_frames", False) and _whisper_credentials_available():
+        try:
+            video_path = _ensure_video_downloaded(args, out_dir)
+            audio_dest = Path("media_cache") / out_dir.name / "audio.mp3"
+            audio_path = _extract_audio_for_whisper(video_path, audio_dest)
+            print("[transcript] tiers 1-3 failed; falling back to Whisper")
+            res = fetch_transcript(
+                args.source,
+                allow_whisper=True,
+                audio_path=audio_path,
+                cookies_browser=cookies_browser,
+            )
+        except Exception as exc:  # noqa: BLE001 - fallback is best-effort
+            print(f"[transcript] whisper fallback failed: {exc}")
+    elif res is None:
+        if not _whisper_credentials_available():
+            print(
+                "[transcript] all tiers failed. Set GROQ_API_KEY (preferred) "
+                "or OPENAI_API_KEY to enable the Whisper fallback, or pass "
+                "--cookies-from-browser <chrome|edge|firefox> for caption tiers."
+            )
+
     base = out_dir / out_dir.name
     formatted = Path(str(base) + "_formatted_transcript.txt")
     clean = Path(str(base) + "_clean_text.txt")
@@ -216,11 +275,10 @@ def _do_frames(args, out_dir: Path, manifest: Manifest) -> None:
         print("[extract] frames+ocr: skipping (already complete)")
         return
 
-    # Resolve video path: use local file directly, otherwise download.
-    if Path(args.source).exists():
-        video_path = str(Path(args.source).resolve())
-    else:
-        video_path = _download_video(args.source, out_dir, args.cookies_from_browser)
+    # Resolve video path: local file → cached download → fresh download.
+    # Reusing the cache means the Whisper fallback above doesn't force a
+    # second yt-dlp pull when frames run next.
+    video_path = _ensure_video_downloaded(args, out_dir)
 
     duration = float(manifest.data.get("duration_seconds") or 0.0)
     print(f"[extract] frames: extracting (duration={duration:.1f}s, max={args.max_frames})")
@@ -235,13 +293,6 @@ def _do_frames(args, out_dir: Path, manifest: Manifest) -> None:
     print(f"[extract] frames: extracted {len(paths)} frames")
 
     records: list[FrameRecord] = []
-    # #region agent log
-    import json as _dlog_json3, time as _dlog_time3
-    _dlog_path3 = "/home/mdc159/projects/youtube-transcripts/.cursor/debug-1cf7db.log"
-    if paths:
-        with open(_dlog_path3, "a") as _f:
-            _f.write(_dlog_json3.dumps({"sessionId":"1cf7db","hypothesisId":"H-F","location":"extract.py:_do_frames","message":"path types","data":{"fp_example":paths[0],"fp_is_abs":Path(paths[0]).is_absolute(),"out_dir":str(out_dir),"out_dir_is_abs":out_dir.is_absolute()},"timestamp":int(_dlog_time3.time()*1000)}) + "\n")
-    # #endregion
     for fp in paths:
         ts = _extract_ts(Path(fp).name)
         # ocr.json stores paths relative to out_dir for portability (spec §7.2).
@@ -371,12 +422,6 @@ def _extract_ts(filename: str) -> float:
 
 def _download_video(url: str, out_dir: Path, cookies_browser: str | None) -> str:
     """Download a video to media_cache/<title>/video.<ext>. Returns absolute path."""
-    # #region agent log
-    import json as _dlog_json2, time as _dlog_time2
-    _dlog_path2 = "/home/mdc159/projects/youtube-transcripts/.cursor/debug-1cf7db.log"
-    with open(_dlog_path2, "a") as _f:
-        _f.write(_dlog_json2.dumps({"sessionId":"1cf7db","hypothesisId":"H-C","location":"extract.py:_download_video","message":"download start","data":{"url":url,"cookies_browser":cookies_browser},"timestamp":int(_dlog_time2.time()*1000)}) + "\n")
-    # #endregion
     title = out_dir.name
     cache_dir = Path("media_cache") / title
     cache_dir.mkdir(parents=True, exist_ok=True)
