@@ -17,7 +17,11 @@ from frame_select import detect_scene_changes, select_frames, write_selected_fra
 from enrichment import parse_formatted_transcript, enrich_transcript, write_enriched_transcript
 from payload import build_payload, PayloadBuildError
 from citation import validate_citations, extract_citations, ResolutionContext
-from distill_render import render_markdown
+from distill_render import render_markdown, render_passthrough
+from video_profile import VideoProfile, build_video_profile, format_route_proposal
+
+
+_ENRICH_DEFAULT_ON_STYLES = {"human_tutorial"}
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -29,7 +33,51 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--token-budget", type=int, default=None)
     p.add_argument("--dry-run-payload", action="store_true")
     p.add_argument("--force", action="store_true")
+    enrich_grp = p.add_mutually_exclusive_group()
+    enrich_grp.add_argument(
+        "--enrich",
+        dest="enrich",
+        action="store_true",
+        default=None,
+        help="Run the post-processor (inline frames + deep-links + Mermaid + tables). "
+        "Default on for human_tutorial; default off otherwise.",
+    )
+    enrich_grp.add_argument(
+        "--no-enrich",
+        dest="enrich",
+        action="store_false",
+        help="Skip post-processing even when the style would default it on.",
+    )
+    p.add_argument(
+        "--audience-note",
+        default=None,
+        help=(
+            "Free-form audience profile prepended to the style overlay. Use to "
+            "tell the LLM who the reader is, their skill level, and what they "
+            "want out of the note (e.g. 'Intermediate Python devs evaluating "
+            "tools — emphasise tradeoffs and integration patterns')."
+        ),
+    )
     return p.parse_args(argv)
+
+
+def _compose_style_with_audience(style_md: str, *, audience_note: str | None) -> str:
+    """Prepend an Audience Profile block to the style overlay if a note is set.
+
+    The block sits above the original style guide so the LLM sees the audience
+    framing first, then the section structure. Empty / whitespace-only notes
+    are ignored.
+    """
+    if not audience_note or not audience_note.strip():
+        return style_md
+    block = (
+        "## Audience Profile\n\n"
+        f"{audience_note.strip()}\n\n"
+        "Tune tone, depth, vocabulary, and emphasis to fit this reader. "
+        "Section structure below is still authoritative.\n\n"
+        "---\n\n"
+    )
+    return block + style_md
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -37,10 +85,12 @@ def main(argv: list[str] | None = None) -> int:
 
     repo_root = Path(__file__).resolve().parent
     out_dir = _resolve_out_dir(args.title)
-    style_path = repo_root / "styles" / f"{args.style}.md"
-    if not style_path.is_file():
-        print(f"style {args.style!r} not found at {style_path}", file=sys.stderr)
-        return 1
+    style_path = None
+    if args.style != "auto":
+        style_path = repo_root / "styles" / f"{args.style}.md"
+        if not style_path.is_file():
+            print(f"style {args.style!r} not found at {style_path}", file=sys.stderr)
+            return 1
 
     manifest_path = out_dir / MANIFEST_FILENAME
     if not manifest_path.is_file():
@@ -65,6 +115,19 @@ def main(argv: list[str] | None = None) -> int:
     ocr_path = out_dir / "ocr.json"
     frames = read_ocr_json(ocr_path) if ocr_path.is_file() else []
 
+    style_name, route_profile = _route_style(
+        args.style,
+        title=out_dir.name,
+        segments=segments,
+        frames=frames,
+    )
+    if route_profile is not None:
+        print(f"[distill] auto route:\n{format_route_proposal(route_profile)}")
+    style_path = style_path or repo_root / "styles" / f"{style_name}.md"
+    if not style_path.is_file():
+        print(f"style {style_name!r} not found at {style_path}", file=sys.stderr)
+        return 1
+
     # Enrich
     enriched = enrich_transcript(segments, frames)
     enriched_path = out_dir / f"{out_dir.name}_enriched_transcript.md"
@@ -78,12 +141,18 @@ def main(argv: list[str] | None = None) -> int:
         change_points=cps,
         max_frames=args.max_vision_frames,
         token_budget=args.token_budget,
+        style=style_name,
     )
     write_selected_frames_json(out_dir / "selected_frames.json", sel)
 
     # Build payload
     contract = (Path(__file__).resolve().parent / "prompts" / "distill_contract_v1.md").read_text()
-    style = style_path.read_text()
+    style = _compose_style_with_audience(
+        style_path.read_text(),
+        audience_note=getattr(args, "audience_note", None),
+    )
+    if getattr(args, "audience_note", None):
+        print(f"[distill] audience note applied: {args.audience_note}")
     try:
         content = build_payload(
             profile=profile,
@@ -166,11 +235,44 @@ def main(argv: list[str] | None = None) -> int:
         },
     }
 
-    style_name = args.style
     today_iso = date.today().isoformat()
-    md = render_markdown(parsed_full, style_name=style_name, today_iso=today_iso)
-    (out_dir / f"{out_dir.name}_{style_name}.md").write_text(md)
+    # The contract instructs the model to return markdown. When that's what
+    # came back (most of the time), preserve the style-driven section
+    # structure verbatim. Only fall through to the structured renderer when
+    # the model explicitly emitted a JSON object with the legacy schema.
+    if parsed is None:
+        md = render_passthrough(parsed_full, style_name=style_name, today_iso=today_iso)
+    else:
+        md = render_markdown(parsed_full, style_name=style_name, today_iso=today_iso)
+    md_path = out_dir / f"{out_dir.name}_{style_name}.md"
+    md_path.write_text(md)
     (out_dir / f"{out_dir.name}_{style_name}.distill_result.json").write_text(json.dumps(parsed_full, indent=2))
+
+    # Optional post-processing: inline frame embeds, YouTube deep-links,
+    # contact-sheet gallery, code appendix, Mermaid diagrams, ref tables.
+    enrich_on = args.enrich
+    if enrich_on is None:
+        enrich_on = style_name in _ENRICH_DEFAULT_ON_STYLES
+    if enrich_on:
+        try:
+            from enrich import enrich as _enrich  # local import keeps import-time cost low
+
+            print(f"[enrich] post-processing {style_name} markdown")
+            _enrich(out_dir, style_name=style_name, profile=profile)
+        except Exception as exc:  # noqa: BLE001 - enrichment is best-effort
+            print(f"[enrich] failed: {exc}", file=sys.stderr)
+
+    # Always announce the final artifact paths, prominently, with absolute
+    # paths so they're click-to-open in any IDE that linkifies file: URIs.
+    abs_md = md_path.resolve()
+    abs_json = (out_dir / f"{out_dir.name}_{style_name}.distill_result.json").resolve()
+    print()
+    print("=" * 72)
+    print("[distill] DONE. Final outputs:")
+    print(f"  Markdown:  {abs_md}")
+    print(f"  JSON:      {abs_json}")
+    print(f"  Frames:    {abs_md.parent / 'frames'}/")
+    print("=" * 72)
 
     # Citation validator gate
     if val.unresolved:
@@ -191,6 +293,24 @@ def _try_parse_json_object(text: str) -> dict | None:
         return json.loads(text)
     except Exception:
         return None
+
+
+def _route_style(
+    requested_style: str,
+    *,
+    title: str,
+    segments: list,
+    frames: list,
+) -> tuple[str, VideoProfile | None]:
+    if requested_style != "auto":
+        return requested_style, None
+    transcript_text = "\n".join(getattr(seg, "text", "") for seg in segments)
+    profile = build_video_profile(
+        title=title,
+        transcript_text=transcript_text,
+        frames=frames,
+    )
+    return profile.recommended_style, profile
 
 
 def _confidence_from(unresolved: list, manifest: Manifest) -> str:

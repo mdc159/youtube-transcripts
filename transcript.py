@@ -87,15 +87,52 @@ def _parse_vtt(vtt_content: str) -> list[tuple[float, str]]:
     return out
 
 
+# --- helpers --------------------------------------------------------------
+
+# YouTube video IDs are exactly 11 chars from [A-Za-z0-9_-]. We stay strict
+# so that arbitrary 11-char path segments don't false-positive.
+_VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
+_YOUTU_BE_RE = re.compile(r"youtu\.be/([A-Za-z0-9_-]{11})")
+_WATCH_RE = re.compile(r"[?&]v=([A-Za-z0-9_-]{11})")
+_EMBED_RE = re.compile(r"youtube\.com/embed/([A-Za-z0-9_-]{11})")
+_SHORTS_RE = re.compile(r"youtube\.com/shorts/([A-Za-z0-9_-]{11})")
+
+
+def _extract_video_id(source: str) -> Optional[str]:
+    """Return the 11-char YouTube video ID from a URL, ID, or ``None``.
+
+    Returns ``None`` for non-YouTube sources (local paths, Vimeo URLs, etc.)
+    so callers can skip YouTube-only tiers. Crucially, never just pass through
+    a full URL: the upstream youtube-transcript-api treats its argument as a
+    raw ID and concatenates it onto its own URL template, producing garbage
+    like ``…/watch?v=https://youtu.be/...`` and a hard failure.
+    """
+    if not source:
+        return None
+    if _VIDEO_ID_RE.match(source):
+        return source
+    for pat in (_YOUTU_BE_RE, _WATCH_RE, _EMBED_RE, _SHORTS_RE):
+        m = pat.search(source)
+        if m:
+            return m.group(1)
+    return None
+
+
 # --- tier impls -----------------------------------------------------------
 
-def _fetch_via_transcript_api(video_id: str) -> list[tuple[float, str]]:
+def _fetch_via_transcript_api(source: str) -> list[tuple[float, str]]:
+    video_id = _extract_video_id(source)
+    if not video_id:
+        raise RuntimeError(f"not a YouTube URL: {source}")
     api = YouTubeTranscriptApi()
     transcript = api.fetch(video_id)
     return [(e.start, e.text) for e in transcript]
 
 
-def _fetch_via_pytube(video_id: str) -> list[tuple[float, str]]:
+def _fetch_via_pytube(source: str) -> list[tuple[float, str]]:
+    video_id = _extract_video_id(source)
+    if not video_id:
+        raise RuntimeError(f"not a YouTube URL: {source}")
     from pytube import YouTube
     yt = YouTube(f"https://www.youtube.com/watch?v={video_id}")
     cap = yt.captions.get("en") or yt.captions.get("a.en") or (next(iter(yt.captions.values())) if yt.captions else None)
@@ -104,12 +141,18 @@ def _fetch_via_pytube(video_id: str) -> list[tuple[float, str]]:
     return _parse_srt(cap.generate_srt_captions())
 
 
-def _fetch_via_ytdlp(video_id_or_url: str) -> list[tuple[float, str]]:
+def _fetch_via_ytdlp(
+    video_id_or_url: str,
+    *,
+    cookies_browser: Optional[str] = None,
+) -> list[tuple[float, str]]:
     url = video_id_or_url if "://" in video_id_or_url else f"https://www.youtube.com/watch?v={video_id_or_url}"
     with tempfile.TemporaryDirectory() as tmp:
         out = os.path.join(tmp, "%(id)s.%(ext)s")
         cmd = ["yt-dlp", "--write-auto-sub", "--write-sub", "--sub-lang", "en",
                "--sub-format", "vtt", "--skip-download", "-o", out, url]
+        if cookies_browser:
+            cmd += ["--cookies-from-browser", cookies_browser]
         r = subprocess.run(cmd, capture_output=True, text=True)
         vtts = [f for f in os.listdir(tmp) if f.endswith(".vtt")]
         if not vtts:
@@ -167,16 +210,21 @@ def fetch_transcript(
     allow_whisper: bool = False,
     audio_path: Optional[str] = None,
     whisper_backend: Optional[str] = None,
+    cookies_browser: Optional[str] = None,
 ) -> Optional[TranscriptResult]:
     """Try each tier in order until one succeeds.
 
     Whisper is opt-in (requires audio_path) so we don't accidentally extract
     audio for every YouTube video that already has captions.
+
+    ``cookies_browser`` is forwarded to the yt-dlp subtitle tier so videos
+    behind YouTube's bot-detection can still surface captions when the user
+    has a logged-in browser profile.
     """
     methods = [
         ("youtube-transcript-api", lambda: _fetch_via_transcript_api(video_id_or_url)),
         ("pytube", lambda: _fetch_via_pytube(video_id_or_url)),
-        ("yt-dlp", lambda: _fetch_via_ytdlp(video_id_or_url)),
+        ("yt-dlp", lambda: _fetch_via_ytdlp(video_id_or_url, cookies_browser=cookies_browser)),
     ]
     if allow_whisper and audio_path:
         methods.append(("whisper", lambda: _fetch_via_whisper(audio_path, whisper_backend)))

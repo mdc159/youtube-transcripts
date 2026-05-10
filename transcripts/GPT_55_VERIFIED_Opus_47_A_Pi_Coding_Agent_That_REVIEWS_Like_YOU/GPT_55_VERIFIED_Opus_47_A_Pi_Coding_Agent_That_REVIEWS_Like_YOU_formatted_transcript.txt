@@ -1,0 +1,943 @@
+0.16|What's up engineers? Andy Devdan here.
+2.399|Today I've got an absolute banger agent
+5.12|system to share with you. But first,
+6.96|let's set the stage. April 2026 had the
+10.48|highest velocity of model releases ever.
+13.36|We got Opus 4.7, GPT 5.5, Deepseek V4,
+18.08|GLM 5.1, Kim K 2.6, and the Quinn
+21.92|series. The pace has been incredible.
+24.64|But for us engineers, model performance
+27.199|is no longer the bottleneck. It's you
+30.48|and I. It's our ability to extract value
+34.32|out of Agentic Systems at scale safely.
+37.76|If you look closely at any one of these
+39.28|benchmarks, you'll see something that's
+41.28|missing. Have you noticed it? It's
+43.04|hiding in plain sight. And once you
+45.52|realize it, every benchmark looks
+47.76|incomplete. So instead of rehashing yet
+50.32|another model release which we know will
+52.32|keep coming over time, let's talk about
+54.48|what we can do with combinations of
+57.28|models with every release moving
+60.079|forward. Here I have two specialized PI
+64.239|coding agents each running
+66.88|state-of-the-art cracked models. We have
+69.2|Opus 4.7 on the right and we have GPT
+72.72|5.5 on the left. I've customized these
+75.68|agent harnesses to deliver unique value.
+78.08|But you'll notice something weird here.
+80.4|This harness takes no input. What is
+83.2|this? How does it work? And what's
+85.52|missing from every benchmark? Let's
+87.68|break it down with the verifier agent.
+95.28|One of the highest leveraged things you
+97.36|and I can do is increase the information
+100.159|density per action for agents in our
+103.6|production code bases. OpenAI's new GBT
+106.399|image 2 model is exceptional at this. So
+109.52|let's use this new image generation
+111.119|model to showcase how the verifier
+113.439|works. And our builder agent on the
+115.2|right here, I'm going to prompt run
+116.799|prime then run skill GBT image 2
+120.159|generate arch.jbg JBG to concisely
+123.36|describe the architecture of the
+125.6|verifier 2 agent system. The prime
+128.8|command gives our agent essential
+130.56|context about this codebase. You can see
+132.48|this customized PI agent going through
+134.16|the process. It's going to study the
+135.68|codebase, understand how this works, and
+137.52|you can see here it's reading this GBT
+139.52|image 2 skill I've created to teach the
+141.599|agent how to generate and edit images
+143.76|with this new model. It's kicking off
+145.68|that script with a highly highly
+147.84|detailed image prompt. This is one of
+149.92|the great parts about Claude Opus 4.7.
+152.72|It understands agents. It understands
+155.12|models. It knows that it itself can
+157.519|prompt other models. And you can push
+159.36|this ability by templating and teaching
+161.92|exactly how you want your prompts to be
+163.68|written. This is super super key for
+165.68|prompting other models and agents, which
+167.76|is key for scaling our work beyond a
+170.319|single agent, which you'll see here. So,
+172.319|this will take some time. You can see
+173.599|here 70 seconds already, but the image
+175.599|quality coming out of the new GPT image
+177.68|2.0 model is insane. It's worth the wait
+180.56|and it's worth the price. Image
+182.239|generation is complete. The agent's
+183.76|checking its work and now it's marking
+185.2|it done. Now watch what happens here
+187.599|once our builder agent completes.
+190.319|Excellent. And now our verifier agent
+192.959|has kicked off unprompted. We did not
+195.28|prompt this. I'm not doing anything
+196.56|here. My hands are off the keyboard. The
+198.0|verifier agent is now taking over. We
+200.4|have this very simple two agent system
+203.12|where on completion of any prompt that
+206.08|executes the verifier is kicking off and
+208.959|doing work. Now the big question is what
+211.68|is this agent doing? What is the work
+213.36|that's being accomplished here? You can
+214.879|see that it's reading the image that was
+216.879|generated. And now what's going to
+218.08|happen is it's going to validate a few
+220.319|things. The first thing it's going to do
+221.76|is validate the individual claims the
+224.56|builder agent has made. And then second,
+226.879|it's going to make sure that what we
+228.4|asked for is what it built. So if we
+230.72|just hit up here on the builder agent,
+232.48|you can see exactly what we asked for.
+234.159|What's going to happen here is our
+235.44|verifier is going to walk through every
+237.76|single claim. There we go. Check this
+239.36|out. And if it needs to, it's going to
+241.76|prompt the primary agent. So this is
+243.519|really incredible. I didn't prompt this.
+245.36|My verifier agent just prompted my
+248.239|builder agent. Let's make this super
+249.76|clear. This prompt here from the
+251.519|verifier kicked off a prompt in our
+254.159|builder agent. The verifier agent found
+256.639|something that was incorrect. Let's go
+258.32|ahead and see if it's written up its
+259.519|report here. Okay, it has. Fantastic.
+261.12|So, let's go ahead and let that image
+262.32|generate. And let's break down the
+263.919|feedback here. You can see that our
+265.68|input here is prompted builder. This is
+268.479|feedback mode. Our verify agent here has
+271.12|given our primary agent feedback
+273.28|completely unprompted. Again, I did
+275.28|nothing here. The system is acting on
+277.6|its own. So, what happened here? Right
+279.36|on every prompt on the stop hook, the
+281.52|builder agent sends an event through a
+283.6|Unix socket. Actually, we should take a
+285.04|look at this image before it gets
+286.32|updated. So, we're going to open up VS
+287.6|Code and let's look at this architecture
+289.36|diagram. You can see here a very
+290.88|detailed image generated by GBT image
+293.68|2.0. The text styling and pretty much
+297.04|everything coming out of this model is
+298.56|very very state-of-the-art. You can ask
+300.4|for exactly what you want to see and
+301.919|it'll generate it for you. But you can
+303.44|see a solid description, a solid
+305.6|understanding. And in fact, before this
+307.52|gets overwritten, I'm just going to
+308.56|clone it here so we have it as a backup.
+310.4|What's happening in this report? Status
+312.08|failed. Our agents work was not
+314.16|successful. Stats failed. Confidence is
+316.16|feedback. What did you verify? GBG image
+318.479|2 was used. It ran the right script from
+320.479|the right skill. The image was
+322.0|generated. It validated that it existed.
+324.479|Right file size. It is a JPG image as
+327.12|asked. Validated the claims, everything
+329.68|the builder said that it did. And then
+331.84|the model is looking visually at the
+333.68|image to make sure that it describes the
+335.68|verifier 2 agent system, which is the
+337.68|code base that we're generating the
+339.36|architecture diagram for. Readability
+341.52|and text density looks good. It could
+343.44|verify everything it needed to. Very
+345.12|important. But check this out. Our agent
+347.199|gave feedback. And you can see here the
+349.44|work is completed. Our builder agent
+351.52|violated one of the rules. Okay. And so
+353.84|we were just getting into that. Let me
+354.96|just pause this. Scroll back up. You can
+356.32|see that next stop hook is coming over.
+357.919|What feedback did you give? Arch JBG
+360.24|existed visually shows the verifier 2
+362.08|agent system but violates the
+363.68|readability contract by exceeding 10
+366.4|distinct blocks inside of the verifier
+368.639|agent for image generation. We have a
+370.88|rule that we should never have more than
+372.72|10 blocks of text inside any image. So
+376.8|this is just a great rule for building
+378.319|out diagrams. This looks good but it is
+381.039|overloaded with information. There's a
+382.639|lot going on. It takes time to digest
+384.08|this. Right? An image should be worth a
+385.68|thousand words. It shouldn't force you
+387.28|to work through things and read a ton of
+389.6|text. That's what text is for. It really
+391.84|simplified that for us. And so this is
+393.52|one of the rules we have that we
+395.44|directly built into our verifier. And so
+397.759|that was feedback that our verifier
+399.6|directly gave our verifiable agent or
+403.36|just the builder agent. So if we scroll
+405.039|down here, we can see that that second
+406.639|prompt was completed and now it has an
+408.88|updated status. Right now we have a
+410.479|clean green bar here. We have a
+412.72|successful bar. Verify image verified.
+415.36|Perfect. In the bottom section here in
+417.28|its report format, we're being very
+418.96|consistent. Return index one. We have
+420.72|our total atomic claims. And then we
+423.36|have our claims verified, claims failed,
+425.919|claims unverified. And we got seven out
+428.16|of seven verified. So everything was
+430.0|successful. Our verifier agent did not
+432.72|reprompt our primary agent. You can kind
+435.199|of see the value proposition of having
+437.599|an agent that just observes, that just
+439.919|watches, and only gives feedback when
+442.479|necessary. And speaking of feedback, we
+444.639|have a couple really important key
+446.56|sections here that is going to help us
+448.639|improve this system. What could you not
+450.56|verify? As you can imagine, this will be
+452.96|very important for us improving our
+455.68|verifier agent. This verifier agent has
+457.759|a lot of special properties built into
+459.919|it. So, let's go and check out that
+461.199|image that was generated. You can see
+462.479|here this second version much better,
+464.56|right? A lot less text overloaded. This
+467.199|is an image, not a markdown file. So, we
+470.319|want it to be super clear, super
+471.599|concise. And this is the PI verifier
+474.08|agent architecture builder agent and we
+475.919|have a verifier. They communicate
+477.44|through a local Unix socket. It has a
+479.599|few guard rails and constraints that
+482.16|we're going to talk about in a moment
+483.199|here. And the verifier takes in the
+485.36|session file thanks to the PI Asian
+487.44|harness. We have full access to
+488.96|everything our builder agent has done.
+491.36|And our verifier can just look at that
+493.199|at any point in time. And if it needs
+494.72|to, only if it's violated a rule of the
+497.36|verifier does it actually reprompt. This
+500.16|system looks good. I want to add
+501.599|something to this image. Let's go and
+502.96|push this new GBT image to model a
+504.96|little bit. It's missing one thing. It's
+506.479|missing us in this picture. I'll say
+508.56|this are the ones prompting the
+511.039|verifiable also known as the builder.
+514.159|So, we'll fry that off and another round
+516.88|is going to occur. This is one of the
+518.56|keys of this system. I am just working
+521.12|on a single agent harness, a single
+523.68|agent decoding tool as you do. Check out
+525.92|the compute I'm spending here on the
+527.279|left to verify all the claims and to
+529.92|write the prompts that I would have had
+531.68|to write myself anyway. Here we go. Opus
+534.32|getting to work doing the building. And
+536.0|after it builds, GBT 5.5 is going to get
+538.399|its back. It's going to check its work.
+540.16|It's going to make sure that it's doing
+541.839|the right thing. We are pair
+543.519|programming. Let's be super clear about
+545.04|this. We have two agents working
+546.56|together in a very, very simplified
+549.2|multi- aent system. On the channel,
+550.959|we've talked about teams of agents.
+552.64|We've broken down a three layer
+554.399|architecture where you have an
+555.44|orchestrator, leads, and worker agents.
+558.16|Very powerful, very complex. Here we're
+560.32|simplifying. We're focusing on one of
+562.16|the first most important multi- aent
+564.64|systems that you can probably build. And
+566.16|I have to tell you, you know, many of
+567.6|the ideas I share with you here are
+569.36|experiments. Many of the ideas are trial
+571.44|and error. This is one of the systems
+572.8|that as soon as I found this, I put this
+575.04|in my pocket.
+576.88|And u this is the system I'm using a lot
+579.2|right now. And this is a good time to
+580.56|start talking about the benefits of the
+582.0|system. What problem does the verifier
+584.48|agent solve for you? What does this
+585.839|unlock for you? Let's talk about this.
+592.16|Whenever you can, you should be spending
+594.48|tokens to save time. As you saw here
+596.8|with my image generation system, people
+599.68|don't like noisy images with a bunch of
+602.0|text that you have to reason through.
+603.6|So, I built it into my image
+604.8|verification agent that for every image
+607.04|you see, it cannot be bloated with text.
+610.16|10 blocks of text is the limit. And so,
+612.399|this is a very, very powerful system.
+613.76|I'm spending more tokens. And you can
+615.839|see here, 4% on Opus, 23% on GPT 5.5,
+620.079|quite literally spending 5x tokens to
+622.959|make sure that I spend less of my time.
+625.6|And this is an interesting equation you
+627.12|can do. How much is your time worth? If
+629.44|you ask me, your time is worth a
+631.92|ton. You should not be trading your time
+634.32|for anything you don't have to or for
+636.48|anything that you don't want to. And so
+638.16|one of the key value propositions of the
+640.32|system is that we are scaling our
+642.399|compute to scale our impact. We are
+644.0|directly spending more tokens to save
+646.72|time. What are we spending more tokens
+648.8|and saving time on? That's the next big
+651.44|value proposition. And let me go ahead
+652.72|and write these out, right? Let's be
+653.92|super explicit about the value that
+655.68|we're actually getting out of the
+656.56|system. So what's the value of the
+657.839|verifier agent? Spend tokens to save
+660.16|time. And so what are we saving time
+661.92|doing? Review constraint. Time is worth
+664.72|more. So what are we actually spending
+666.16|our tokens on? We're spending our tokens
+667.92|on breaking through the review
+669.92|constraint of AGC agent coding. Right?
+672.72|Let me just spell this out. In agentic
+674.399|coding, there are two constraints. If
+676.0|you're agentic engineering properly, you
+677.839|have already noticed this. Planning and
+679.68|reviewing. If you're doing things right,
+681.2|you're spending your time planning and
+682.88|reviewing. With the verifier agent, we
+685.44|can improve our review constraint. How?
+687.839|By teaching an agent exactly how we
+690.72|verify by adding these rules by making
+692.72|them read the files that you would read.
+694.959|This is a very very clear concise
+696.72|example for you. When this agent runs
+698.959|and I'm generating images, I'm always
+701.279|going to run a validator behind it to
+703.44|make sure that it didn't violate any of
+705.04|the rules for image generation that I
+707.279|have set. And this allows me to do
+709.279|something really special. We'll talk
+710.32|about this at the end, but I can just
+711.839|continue to stack up these verifier
+714.32|agents to focus on one specific thing.
+716.959|We're hitting on this key tactic of
+718.48|agentic coding. Once again, one agent,
+720.48|one prompt, one purpose. A focus agent
+722.959|is a performant agent. These validators,
+725.76|these verifiers just focus on one thing.
+728.88|They make sure that that one thing is
+730.56|right. You can see here, you know, we're
+732.0|working through image generation as a
+734.079|concise example. But now every image I
+736.24|generate is going to run through a
+737.839|check, a series of constraints that are
+741.44|validated nondeterministically and as
+743.44|you'll see in our upcoming example,
+745.2|deterministically as well. And so this
+747.2|is another advantage of this system.
+749.68|We're spending tokens to save time. And
+752.079|what do these tokens do? They help us
+753.6|break through the review constraint.
+754.88|We're teaching our agents how to review
+757.12|and verify the work. And you can see
+759.12|everything that our agent verified by
+761.44|hand. We have nine sets of text blocks
+763.839|here. and it spelled them all out
+765.6|individually which is fantastic. You
+767.2|know GBT 5.5 is one of the best image
+770.16|reading models. There was no feedback to
+772.24|give so it just stopped right and it
+774.32|wrote this report for us. It didn't give
+776.0|any feedback and it doesn't need
+777.76|anything from us to verify this next
+779.92|time. This leads us into the next huge
+781.839|huge huge value proposition of this
+783.6|verifier agent specifically. You'll
+785.68|notice here we have a feedback loop.
+788.48|this field here, this report section
+790.72|that this agent always reports in
+792.959|because I prompt engineered the system
+795.36|prompt. If there's ever something the
+797.04|agent can't actually verify, it will
+799.519|tell me. It will say it right here. And
+801.68|guess what I can do with this? This is a
+803.2|positive feedback loop. It's a flywheel.
+805.36|I can then if I need to take the
+807.36|information it's given me here on what
+808.72|it could not verify and I can encode
+810.88|this. I can template this into the
+813.44|agents system prompt. And let's go and
+815.12|just take a look at this one. We have an
+816.48|entire customized system prompt. This is
+818.88|not an average system prompt. I am
+820.399|adding things into the front matter of
+822.48|this prompt to override and get special
+824.959|behavior. This is what you can do when
+826.399|you own the agent harness. More on that
+828.16|in a moment. But you can see here that I
+830.079|have a bunch of rules and verification
+833.04|steps that are verifier follows. We can
+835.92|just search this max text elements right
+838.399|here, right in our instructions. Okay,
+840.48|so it's super clear. If we look at the
+842.399|report, we are teaching our agent how to
+844.959|respond as well, right? We have this
+846.88|clean, clear report section. What could
+849.04|you not verify and what do you need from
+851.519|me to verify this next time? Super,
+854.24|super important. Why do we care about
+855.6|the verifier agent? It's because we have
+857.6|builtin positive feedback loops. I
+860.16|always advocate that you get out the
+862.0|loop, but it's important to be in the
+864.16|loop for certain work. And since you're
+866.16|there, you might as well be compounding
+868.56|the advantages of the agents you're
+870.8|working in and working on. This is one
+872.88|of the ways you can do this. Last but
+874.72|not least, template your engineering as
+877.04|a habit. Let's be super clear about
+878.639|this. The most important piece about
+880.639|this verifier agent is that we have
+883.04|templated our engineering into the
+885.04|system prompt of this agent and then
+887.04|we've wrapped it inside of a custom PI
+889.12|agent harness where I actually cannot do
+892.24|anything but follow the rules of this
+894.0|system. Right? I can't prompt this. I
+896.24|cannot fall to the lowest hanging fruit
+898.16|of the generative AI age. There's no
+899.76|vibe coding this stuff. I cannot just
+901.44|fire a one-off prompt. I can't say do
+903.76|XYZ. I cannot even interact with the
+905.839|verifier. That means that if something
+907.68|goes wrong here, if the verifier isn't
+909.519|verifying something, if it's missing
+910.959|something, if I need to add something to
+912.639|the system, there's no one-offs. I am
+914.8|forced to template my engineering into
+917.44|my verifier agent. This is very, very
+919.92|important. There's an increasing gap
+921.68|between the two key sets of engineers.
+924.079|engineers who are stuck in the loop
+926.079|prompting back and forth with their
+927.92|agents. You're here. You're prompting
+929.68|back and forth. And then there's a
+930.88|second set. They're starting to build
+932.639|systems like the verifier agent. They're
+934.56|starting to build multi- aent systems
+935.92|that scale. They're building AI
+937.68|developer workflows, a key topic we
+940.0|talked about in tactical agent coding.
+941.839|They're building something like Stripe's
+943.519|blueprint system, which we covered in a
+945.6|previous video. They are stacking up
+947.44|code plus agents to outperform either
+950.079|alone to run longer threads of work. If
+953.279|you're stuck prompting back and forth,
+954.72|you will not get those advantages. And
+956.72|here, we are forcing oursel to get that
+959.36|advantage. Okay? We're building it into
+961.36|the tool we're using. This is very
+963.04|important. These tools haven't emerged
+965.04|into the true form of what it means to
+967.6|be an agentic engineer. They don't fit
+969.68|the shape of what we are becoming yet,
+971.519|of the new role that we are adopting and
+974.16|and creating. But this is a step in that
+977.12|direction. I can't prompt this. I'm
+979.92|forcing myself to get out the loop. This
+982.72|is super super powerful. So this forces
+984.56|me to template my engineering if
+985.92|something goes wrong. I don't just fire
+987.759|off another prompt. I'm effectively
+989.6|forced to improve one or more of the
+991.6|core four context model prompt or tools.
+994.48|So this is the other big advantage as a
+997.199|habit by force. That's kind of the other
+999.36|thing, right? Um thanks to the Asian
+1001.68|harness. And I'll be super specific
+1003.199|here. This is a customized agent
+1004.8|harness, not just any agent harness. I
+1006.8|have a dedicated workflow that is built
+1009.279|in here. Now that you understand the
+1010.639|benefits of a verifier agent, a simple
+1012.56|two agent system, let's go ahead and
+1014.079|dive a little bit deeper here. Right,
+1015.279|let me show another example and an
+1017.04|additional key attribute of this system.
+1019.04|And if we quickly check the architecture
+1021.68|diagram created, you can see that this
+1023.279|looks great, even better from our
+1024.959|original version. We ran two prompts and
+1027.199|we got a nice improved hero image. This
+1029.52|looks great. I'm going to use this for
+1031.199|this application as a hostess. And I'll
+1033.439|be giving away two versions of the
+1035.12|verifier agent. So stick around to the
+1036.88|end to figure out which version will be
+1038.319|available to you. As an engineer, you're
+1040.16|never just reviewing one thing. You're
+1042.079|reviewing sets of things. And that's the
+1043.52|great part about this system. If we type
+1045.12|J, we can see all the commands. This is
+1047.36|just it is a simple command line runner.
+1049.2|I use this in every single codebase now.
+1051.039|And we're going to boot up JVSQL. We're
+1053.76|going to show off one more key example
+1055.12|here. And here we're using the GLM 5.1
+1057.44|model. Find all SQLite DBs in this repo.
+1060.48|Break down tables, columns, and
+1063.28|relationships.
+1064.88|Now we have a verify SQL light agent and
+1068.08|one of the key things you maybe notice
+1070.16|here is that the verifier is independent
+1072.64|of the verifiable and this means that
+1075.44|you can do whatever you want. You can
+1077.28|run however many agents. You can set up
+1079.36|whatever PI agent harness this primary
+1081.84|agent however you want to. What we're
+1083.6|doing here is creating an extension that
+1085.84|is layered on top of whatever your
+1087.919|primary agent is that adds serious
+1090.4|customized specialized validation. All
+1093.44|the relationships, all the tables, all
+1095.679|the SQLite databases in the system were
+1098.4|found and were reported. The agent,
+1100.32|right, this is Cloud Opus 4.7. It's an
+1102.16|absolutely correct model. It did the
+1103.76|work. But there is no harm in having an
+1105.919|agent validate that that is true. And so
+1108.08|once again, the verifier agent is
+1109.6|getting to work. We have a nice powerful
+1111.919|yet cheap GLM 5.1 model here doing
+1114.559|something really powerful. So how this
+1116.4|system works is is super important. You
+1118.0|can see here the agent broke up the work
+1120.88|into atomic claims. Everything you
+1123.36|prompt into your agents, they're all
+1125.44|small axioms. They're small claims.
+1128.4|They're units of information that can be
+1130.559|proven true or proven false. For
+1132.64|instance, find all SQLite databases in
+1134.64|this repo. So, this is something that is
+1136.4|validatable. Did the builder agent
+1138.799|actually find all the SQLite databases?
+1141.76|Break down the tables. That is another
+1143.44|thing that can be validated and proven.
+1146.08|Did the agent break down the tables and
+1147.84|the columns and the relationships? There
+1149.6|are several claims and provable steps,
+1153.28|right? Provable pieces of information
+1155.2|that the verifier can work on. And this
+1157.36|was part of the system prompt of this
+1159.44|customized agent. This is a custom
+1161.2|agent. It is built to break the prompts
+1163.6|and the work done down into individual
+1166.16|claims, right? Individual atomic claims,
+1169.2|individual units of truth or false. And
+1171.36|so you can see that here, right? What
+1172.559|did you verify? Look at all these atomic
+1174.32|claims. Look at all these individual
+1176.08|things the agent has proven very very
+1177.919|powerful. Everything's true. This is a
+1179.76|simple find and report. And if you
+1181.52|scroll up here, you'll see that the
+1183.36|agent is also doing something really
+1185.28|interesting. I have restricted this
+1187.12|agent. Once again, we have one agent,
+1188.96|one prompt, and one purpose. This agent
+1191.44|is restricted to running just this one
+1194.0|script. We can see that inside of its
+1196.64|system prompt here. So, inside of PI,
+1198.88|verifier agents. Of course, when you're
+1200.96|building your own customized PI agents,
+1202.64|you can set up whatever directory
+1203.84|structure you want. You're in full
+1205.2|control when you control your agent
+1206.88|harness. When you're not, you can't.
+1208.559|We're doing something really special
+1209.52|here. We're giving access to several
+1211.679|sets of tools here. But also, we have a
+1213.36|bash policy. Not sure if you noticed,
+1215.28|the number of security vulnerabilities
+1217.36|is hitting the roof. It's going
+1219.2|parabolic. And also, not sure if you
+1221.28|noticed, but the number of times an
+1223.6|agent is losing control, hallucinating,
+1226.48|or just ignoring instructions is going
+1228.96|up as well. If you're harness
+1230.48|engineering properly, and less
+1232.0|controllable agent harnesses like Cloud
+1233.679|Code, Codeex, Gemini, Open Code, yada
+1236.08|yada yada. If you're using those, you
+1238.08|can control what your bash tool can do.
+1240.32|Let me make this super clear. The bash
+1241.76|tool is the most dangerous tool you can
+1243.679|give your agents. I'm going to talk
+1244.96|about this more in the channel. Make
+1246.0|sure you like, make sure you subscribe.
+1247.44|But this tool is a ticking time bomb.
+1250.4|And so what I've done here in my
+1251.76|verifier agent is I've restricted it to
+1254.24|using just one script. This is the
+1256.799|highest level of control you can give.
+1259.28|And so if at any time this model calls
+1262.4|anything with the bash tool other than
+1264.4|my script, it's blocked fully blocked.
+1266.64|And so this is one of the things I've
+1267.919|built into the system. SQL light agent.
+1270.0|Think about this. This can be your
+1271.28|Postgress agent. This can be your
+1272.799|whatever cloud DB agent, your MongoDB
+1275.919|agent, MySQL agent, whatever backend SQL
+1278.88|blah blah blah you use. Replace this
+1280.88|with that. Right? That's the idea here.
+1282.72|And with this, it's very, very powerful,
+1284.96|right? Especially for data manipulation
+1287.44|related activities your agents are
+1289.2|taking. Having a verifier is
+1290.72|extraordinarily powerful because your
+1292.559|agent might only find some of the data.
+1294.64|It might only report some of the tables.
+1296.88|With a verifier, they can come in and
+1298.559|just double check. And and once again,
+1300.08|notice Obus spent 1% of its tokens. So
+1302.88|something like, you know, 10K tokens.
+1304.559|GLM 5.1. This is a 200k token context
+1307.039|window model. Uh so what is that? 10%
+1309.039|that's 20K. So so this model spent two
+1311.28|times the tokens verifying this agent
+1313.679|than the actual agent execution. I'm
+1315.28|spending 2x compute. Once again, I'm
+1316.96|spending tokens to save time. And what
+1319.12|I'm actually doing here is a little more
+1321.36|important than you might see. I am
+1322.88|increasing the trust I have in my agent
+1325.6|system by having this verifier agent
+1327.76|validate the atomic claims that the
+1330.72|builder agent has performed. And so once
+1332.88|again, same prompt format, same
+1335.2|verification set, same set of confidence
+1337.6|levels it can report, nothing it can
+1339.2|verify, no feedback, and no improvements
+1341.919|for the verifier agent to improve for
+1344.08|the next run. This is a compounding
+1345.84|system. This is a system that's going to
+1347.28|improve with every prompt I write. And
+1349.44|hint hint, as I mentioned, you can stack
+1351.919|more than one of these verifier agents.
+1353.679|Not going to show that here. Don't have
+1354.72|enough time. But this is one of the
+1356.0|patterns I have been using a lot and I'm
+1359.12|getting a lot of value out of this. So
+1361.12|that's the core of this system. We have
+1362.88|a two agent multi- aent team. One is a
+1365.44|verifier and one is whatever your normal
+1367.44|agent is. And this could be running
+1369.2|anything you wanted to. This is just
+1370.88|your primary pie coding agent. on the
+1372.96|left here though as mentioned in the
+1374.24|beginning we're validating all the
+1375.84|claims that the builder agent made and
+1378.32|we're making sure that what we asked for
+1380.559|is what was built okay we are directly
+1382.88|attacking the review constraint of
+1385.12|agentic coding and this is where most
+1386.88|engineers spend their time let me make
+1388.24|this even clear if I can here thanks to
+1390.24|this two agent system I'm spending less
+1392.559|of my time reviewing work this is the
+1395.039|problem to solve multi- aent
+1396.64|orchestration is the solution so let's
+1399.2|come up right I'm not going to spend too
+1400.48|much time in this code you're going to
+1401.6|have this available to you to kind of
+1403.2|break down and understand and you'll be
+1404.72|able to throw your agents at this with
+1406.24|some really clear architecture diagrams.
+1407.919|You know, in the beginning I said
+1409.039|something's missing from all these
+1410.159|benchmarks. What is it?
+1416.0|As you can see here, every single model
+1417.919|benchmark you look at, they're all
+1419.52|making the exact same mistake from the
+1421.679|perspective of us engineers. Every one
+1423.52|of these benchmarks is running a single
+1425.76|model in isolation. Now, you might be
+1428.08|thinking, yeah, obviously we're testing
+1429.76|the individual models. But my point here
+1431.44|is that to get maximum intelligence out
+1433.919|of these models to get the true
+1435.76|capabilities, you don't just run one of
+1438.0|these models. You run multiple models.
+1440.64|And most importantly, you know, we're
+1442.88|not just kicking off sub agents. I'm not
+1444.48|talking about delegation. I'm talking
+1446.159|about multi- aent orchestration. I'm
+1448.72|talking about setting up systems of
+1450.48|agents. I'm talking about setting up
+1452.48|teams of agents that operate better
+1454.72|together than alone. We're not just
+1456.559|talking about simple delegation. We're
+1457.679|talking about coordinated agents. We are
+1459.36|talking about multi- aent orchestration.
+1461.6|We've been talking about this on the
+1463.12|channel week after week after week and I
+1465.039|will be continuing to hammer on this
+1466.559|idea because every benchmark is missing
+1468.96|the true capability of what you can
+1471.279|really do with these models. It's not
+1473.76|about GPT 5.5 or Opus 4.7. It's GPT 5.5
+1478.64|and Opus 4.7. Right? It's an and not an
+1481.84|or. Once again, you got to get out of
+1483.679|this simple competitive mindset. stack
+1486.64|intelligence, orchestrate intelligence,
+1489.279|and a key part of this is owning your
+1492.0|agent harness. This is why I've been
+1494.159|such a fan of the PI coding agent. Looks
+1496.72|like we got a website update. I'm not a
+1498.72|huge fan of this itallic font. Kind of
+1501.6|hard to read, but anyway. You know, the
+1503.679|idea here is simple. There are many
+1504.88|coding agents. There are many agent
+1506.64|harnesses, but this one is yours. Fully
+1509.44|customizable, adaptable, and it doesn't
+1512.08|change underneath your feet. As soon as
+1514.159|a new update rolls out, you can control
+1516.0|it. It's yours. This has been one of the
+1517.84|most valuable and simplest ones. So, I
+1519.84|wanted to come to the channel and share
+1521.44|it with you here. As mentioned, I'll be
+1523.279|sharing two versions of the verifier
+1525.52|agent. One is going to be available for
+1527.44|free for you on my GitHub repository.
+1529.76|I'm going to make this public for you.
+1531.279|And the other one is going to be a
+1532.96|souped-up version with a couple
+1534.96|additional bells and whistles. And
+1536.559|that's going to be available exclusively
+1538.159|for Tactical Agent Coding and Aenta
+1541.2|Horizon members. What is this? I'm going
+1543.2|to quickly pitch this. If you've already
+1544.64|seen this, you know, good time to sign
+1546.08|off. This is my take on how to scale far
+1548.4|beyond AI coding and vibe coding with
+1550.08|advanced agentic engineering. So
+1551.76|powerful your codebase runs itself. A
+1554.32|lot of what you're seeing right now with
+1555.679|multi- aent orchestration. We have
+1557.279|covered we have foreseen inside of this
+1559.919|course. There are thousands of engineers
+1561.76|inside this course. And let me be super
+1563.2|clear here. This is for engineers that
+1564.64|ship to production. If you're a vibe
+1566.48|coder, if you're a new newbie engineer,
+1568.96|this is not for you. This is not simple.
+1570.96|This is not for beginners. I built this
+1572.559|for the top 20% of actual software
+1575.36|engineers. Okay, but there are a couple
+1576.799|things here that we cover. Let me just
+1578.159|cover a couple facts. A coding was just
+1580.4|the beginning. Phase one vibe coding is
+1582.24|the lowest hanging fruit. 95 of all code
+1584.559|bases are now outdated and inefficient.
+1586.32|As we discussed, you the engineer are
+1588.559|the bottleneck. It's not the models.
+1590.32|It's not the tools. It's not the agents.
+1592.559|It's you and I. It's what we can do with
+1594.48|this technology. There's a new role and
+1596.4|it's getting talked about more and more
+1598.0|and more by top engineers. This new role
+1600.48|is called agentic engineering. The
+1602.799|ability to build these kind of pseudo
+1604.96|living intelligent systems, right?
+1607.12|That's what we're doing here. We're
+1608.4|building systems that build systems. And
+1611.039|that's the key idea inside of tactical
+1613.76|agentic coding. We ask the question,
+1615.919|what if your codebase could ship itself?
+1618.799|And we build the system that builds the
+1621.279|system. You don't want to be working on
+1623.039|your application anymore. If you're
+1625.12|still doing this, you're wasting time.
+1627.279|I'll just be really blunt with you.
+1628.559|Someone has to. Instead, you work on the
+1630.96|agentic system. The system that builds
+1633.919|the system. This is what matters now.
+1636.08|All the engineers getting the highest
+1637.84|leverage. They're doing things like
+1640.159|controlling their agent harness. They're
+1642.24|controlling the core four context model
+1644.4|prompt tools. They're making it safe,
+1646.4|secure. They're locking down the bash
+1648.32|tool. They're adding more agents.
+1650.48|They're adding custom agents. And then
+1652.159|they're orchestrating their agents. What
+1653.84|are they doing? They're operating on the
+1655.84|agentic layer of their codebase. the
+1658.48|agentic system. They're not operating on
+1660.799|the application. This is low leverage
+1662.559|activity. You can prompt against your
+1664.48|primary codebase and fix things oneoff
+1667.039|super super slowly over and over and
+1668.72|over. Waste all your time. That's fine.
+1670.32|You can do that if that's you. Click
+1672.159|away. The video's done. You know, GG,
+1674.159|good to see you. But um for everyone
+1676.559|else that understands that we're in the
+1678.64|age of agents. This is the highest
+1681.12|leverage opportunity that's ever existed
+1683.44|for us engineers. And everyone's so
+1685.52|afraid that vibe coders and their mom
+1688.08|and their brother are going to take away
+1689.84|engineering jobs. Guys, that's just not
+1692.0|true. Okay, vibe coding is the floor.
+1694.399|Agentic engineering is the ceiling that
+1696.64|no one has even imagined the
+1698.96|capabilities of yet. If you're
+1700.48|interested in advanced agentic
+1702.24|engineering, so powerful that your
+1703.52|codebase runs itself, this course is for
+1705.12|you. All that to say, I'm going to be
+1706.96|adding this codebase. Uh this is the
+1709.44|full kind of version of the codebase
+1711.039|where I'll be sharing all the verifier
+1713.919|specialists, not just the generic
+1715.84|verifier. And I'll also be sharing my
+1718.159|GPT image 2 image generation skill with
+1720.559|you there. In fact, I'll be honest with
+1723.279|you, the additional membersonly code
+1725.12|bases that you're going to get inside of
+1726.88|Agenda Horizon is just a trick to get
+1729.52|you inside the course. And by trick, I
+1731.44|mean the real value is in the lesson. So
+1733.919|let me make this super clear. There's
+1735.12|been confusion about this in the past.
+1736.399|There are two courses here. Tactical
+1737.919|Agentic Coding and Agentic Horizon. If
+1740.64|you want the full verifier agent, you
+1742.64|need to get both of these. You need to
+1744.0|get Agentic Horizon. If you think it's
+1745.679|too much, if you think it's too
+1746.799|expensive, it's probably not for you.
+1748.559|Okay? And that's okay. All right? Don't
+1750.24|complain in my comment section. If it's
+1751.76|not for you, it's not for you. And on
+1753.36|that note, there's a full no questions
+1754.96|asked 30-day refund. If this is not for
+1756.799|you, if you don't get value, you can get
+1758.32|a refund by lesson 4 of tactical agent
+1761.52|coding. I don't want you in here if you
+1762.88|don't want to be in here, okay? This is
+1764.24|not a ploy or some scam. This is serious
+1766.559|agentic engineering. I've been with the
+1768.32|genera industry since the beginning and
+1770.159|I'm going to be here until it's all
+1771.679|over. And so eight lessons in the first
+1773.679|course and then six lessons in the
+1775.76|second course. We talk about big hitting
+1777.2|ideas, agentic prompt engineering,
+1779.2|building custom agents. We talk about
+1780.96|multi-agent orchestration, agent
+1782.64|experts, and then the codebase
+1784.0|singularity. The moment you want to
+1785.44|strive toward where your agents can run
+1787.12|your codebase better than you can.
+1788.64|Here's what the course looks like. Let
+1789.679|me just go ahead and show you this. Once
+1790.96|you sign up, you'll get access to all
+1792.799|the lessons like this tactical agenda
+1795.12|coding on the top, agenda horizon on the
+1796.799|bottom, and then you'll be able to click
+1798.24|into member assets. And here you're
+1800.559|going to have access to premium multi-
+1802.64|aent orchestration systems that we've
+1804.48|been working on some on the channel and
+1806.799|some that you haven't seen. So these are
+1808.799|all here. I'm going to be adding the
+1810.32|verifier agent as a fourth member onlyly
+1812.96|asset for you here. And once again,
+1815.039|you'll want both courses to gain access
+1816.64|to that. Enough pitching. Again, I'm
+1818.48|going to have a basic version of this on
+1820.72|my GitHub repo for you to check out. The
+1822.32|core ideas are going to be there for you
+1824.159|as well. All right, so I hope this all
+1825.76|makes sense. This is just one more
+1828.0|reason to own your agent harness. Okay,
+1830.799|the number of custom agents,
+1832.48|specifically the number of custom agent
+1834.159|harnesses I'm building in 2026 is
+1836.64|growing very, very rapidly. I mean, it's
+1838.559|catching up with the number of skills
+1840.0|prompts and custom agents I'm building,
+1841.679|which is a crazy thing to say. It's
+1843.2|because I'm getting full control over
+1845.36|the experience that I'm having with my
+1848.32|agents. And this comes down to once
+1850.159|again two things. Trust and scale. I
+1853.279|said it at the end of 2025. 2026 is the
+1855.919|year of trust. Do you trust your agents
+1858.399|to do what you asked them to? And then
+1860.559|how much at what scale? That's what
+1862.96|we're dialed into here. This is just one
+1865.12|of many ways you can scale your compute
+1867.279|to scale your impact. The verifier agent
+1869.919|is a very unique agent, though. Don't
+1872.32|ignore this. Don't skip over this. Dial
+1874.24|into this. Really think through this
+1875.679|with your agents. The verifier sits at a
+1878.0|very important middle ground between
+1879.6|trust and scale. Most agents increase
+1882.24|trust or scale, not both. The verifier
+1884.799|does both by validating the claims that
+1887.36|your primary agent has done in an atomic
+1890.0|way and then helping you improve it with
+1892.72|every prompt it writes. What could it
+1894.399|not verify? What feedback does it need?
+1896.08|What does it need from you? This
+1897.84|feedback forces you out the loop. It
+1900.559|forces you to template your engineering
+1902.64|into the fabric of your agent harness.
+1905.2|Where are we going on the channel?
+1906.399|What's next? As you can tell, it's these
+1908.48|two things. The winning formula is often
+1910.799|much more simple and less hype-filled
+1913.679|than you realize. All the top performers
+1915.919|do two or three things over and over and
+1918.559|over and over. We're increasing the
+1920.08|trust we have in our system and we're
+1921.76|scaling the out of our agents.
+1923.6|That's it. That's what we're going to do
+1924.64|on this channel for the rest of the
+1926.159|year. If that interests you, like,
+1928.159|subscribe. To be super concrete, there
+1930.399|is a big hole in everyone's agent right
+1933.6|now. And that hole is the bash tool.
+1937.36|This is the most dangerous tool every
+1940.08|engineer is running right now. And it is
+1942.159|going to cause massive cataclysmic
+1944.32|damage at some point to you. So, we're
+1946.48|going to get ahead of that. Again, make
+1948.08|sure you like, subscribe so you don't
+1949.679|miss that video. We're going to be
+1951.279|talking about agentic security. And I'm
+1953.519|not talking about prompt injection. I'm
+1955.2|talking about damage from within, damage
+1957.279|from systems that you think you trust,
+1959.2|but you don't. All right? And again,
+1961.6|this focuses on our trust theme. You
+1964.32|know where to find me every single week.
+1966.399|Stay focused and keep building.

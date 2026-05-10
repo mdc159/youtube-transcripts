@@ -21,6 +21,21 @@ def main(argv=None):
     p.add_argument("--end", type=float, default=None)
     p.add_argument("--dry-run-payload", action="store_true")
     p.add_argument("--force", action="store_true")
+    p.add_argument("--cookies-from-browser", default=None)
+    enrich_grp = p.add_mutually_exclusive_group()
+    enrich_grp.add_argument(
+        "--enrich",
+        dest="enrich",
+        action="store_true",
+        default=None,
+        help="Force enrichment post-processor (default on for human_tutorial).",
+    )
+    enrich_grp.add_argument("--no-enrich", dest="enrich", action="store_false")
+    p.add_argument(
+        "--audience-note",
+        default=None,
+        help="Free-form audience profile forwarded to distill.py.",
+    )
     args = p.parse_args(argv)
 
     extract_argv = [args.source]
@@ -32,6 +47,8 @@ def main(argv=None):
         extract_argv += ["--end", str(args.end)]
     if args.force:
         extract_argv += ["--force"]
+    if args.cookies_from_browser:
+        extract_argv += ["--cookies-from-browser", args.cookies_from_browser]
     rc = extract.main(extract_argv)
     if rc != 0:
         return rc
@@ -61,6 +78,12 @@ def main(argv=None):
         distill_argv += ["--dry-run-payload"]
     if args.force:
         distill_argv += ["--force"]
+    if args.enrich is True:
+        distill_argv += ["--enrich"]
+    elif args.enrich is False:
+        distill_argv += ["--no-enrich"]
+    if args.audience_note:
+        distill_argv += ["--audience-note", args.audience_note]
     return distill.main(distill_argv)
 
 

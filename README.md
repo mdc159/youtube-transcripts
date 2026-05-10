@@ -1,10 +1,10 @@
 # YouTube Transcripts
 
-Turn a YouTube URL or local video into a citation-grounded, multimodal study note. The pipeline pulls a transcript, extracts and OCRs frames, classifies what's on screen (code / slide / UI / diagram), then sends an enriched payload to a vision-capable LLM that emits a structured note where every claim cites a transcript segment, frame, or timestamp.
+Turn a YouTube URL or local video into a citation-grounded, multimodal artifact for an agent workflow. The pipeline pulls a transcript, extracts and OCRs visual evidence, classifies what's on screen (code / slide / UI / diagram), routes the content to the best skill-style workflow, then sends an enriched payload to a vision-capable LLM where every claim cites a transcript segment, frame, cluster, or timestamp.
 
 ## How it works
 
-Two phases, written so you can re-style without re-downloading:
+Two phases, written so you can re-route or re-style without re-downloading:
 
 ```
 extract.py  ─►  Generated_Data/<title>/  ─►  distill.py
@@ -16,10 +16,11 @@ download → 4-tier transcript chain
        → ffmpeg frame extraction
        → RapidOCR + 5-class classifier
        → near-duplicate code-frame clustering
+       → optional style router
        → quality grades + extract_meta.json
 ```
 
-`extract.py` is idempotent — re-running skips work whose outputs are still intact. `distill.py` runs scene-change-aware frame selection, builds a multimodal payload, validates the model can actually do what its profile claims (`doctor`), then calls the LLM and validates every citation in the response. `run.py` chains both for one-shot use.
+`extract.py` is idempotent — re-running skips work whose outputs are still intact. `distill.py` can use an explicit style or `auto`, which builds a lightweight video profile from transcript and OCR signals, picks `coding_agent`, `diy_project`, or `knowledge_base`, runs style-aware frame selection, builds a multimodal payload, validates the model can actually do what its profile claims (`doctor`), then calls the LLM and validates every citation in the response. `run.py` chains both for one-shot use.
 
 ## Install
 
@@ -42,9 +43,10 @@ export OPENROUTER_API_KEY=sk-or-...
 
 ```bash
 uv run python run.py "https://www.youtube.com/watch?v=KE39P4qBjDk" coding_agent
+uv run python run.py "https://www.youtube.com/watch?v=KE39P4qBjDk" auto
 ```
 
-Downloads, extracts frames + OCR, and distills with the `coding_agent` style guide. Available styles: `coding_agent`, `diy_project`, `knowledge_base` (in `styles/`). Drop new ones in as plain markdown.
+Downloads, extracts frames + OCR, and distills with either an explicit style or the router. Available styles: `coding_agent`, `diy_project`, `knowledge_base` (in `styles/`). `auto` inspects transcript/OCR evidence and routes to the strongest style; ambiguous content prints a recommendation with alternatives.
 
 ### Two-phase (re-stylable)
 
@@ -58,8 +60,16 @@ Phase 2 — distill with any style; re-run with a different style to get a new n
 
 ```bash
 uv run python distill.py KE39P4qBjDk_Title coding_agent
+uv run python distill.py KE39P4qBjDk_Title auto
 uv run python distill.py KE39P4qBjDk_Title knowledge_base --model claude-sonnet-4-6
 ```
+
+Project-local Cursor skills in `.cursor/skills/` mirror these workflows:
+
+- `video-distill-router` chooses the workflow from cheap evidence.
+- `youtube-coding-agent` turns developer tutorials into agent-executable implementation guidance.
+- `youtube-diy-project` turns maker/how-to videos into build instructions.
+- `youtube-knowledge-base` turns talks and conceptual videos into reference notes.
 
 ### Local files
 
@@ -78,7 +88,7 @@ uv run python extract.py /path/to/lecture.mp4 --start 60 --end 600 --max-frames 
 | `--no-frames` | `extract.py` | Transcript-only run |
 | `--keep-video` | `extract.py` | Preserve the cached download for inspection |
 | `--force` / `--force-ocr` | `extract.py` | Bypass idempotency for the whole pipeline / OCR only |
-| `--cookies-from-browser firefox` | `extract.py`, `run.py` | Use browser cookies for age-restricted videos |
+| `--cookies-from-browser <browser>` | `extract.py`, `run.py` | Use browser cookies for age-gated / bot-detected videos. Forwarded to all `yt-dlp` calls (probe, captions, download). WSL note: use `chrome`/`edge`, not `firefox` (see Troubleshooting). |
 | `--model NAME` | `distill.py`, `run.py` | Override the model profile (CLI > `DISTILL_MODEL` env > `models.yaml` default) |
 | `--max-vision-frames N` | `distill.py`, `run.py` | Cap frames sent to the LLM (default 16) |
 | `--token-budget N` | `distill.py` | Cap by token budget; trims frames to `min(max_vision_frames, budget // est_image_tokens)` |
@@ -160,7 +170,15 @@ The DoD script runs the test suite, extracts + distills the committed fixture vi
 - You are responsible for having the right to access and process whatever media you pass in.
 - This tool does **not** bypass DRM, paywalls, or auth. For age-restricted videos use `--cookies-from-browser firefox` (or `chrome`); cookies stay local.
 - Downloaded media should not be redistributed unless you have the right to do so.
-- `yt-dlp` extractors break — if a download fails, `uv pip install -U yt-dlp` first.
+- `yt-dlp` extractors break — if a download fails because the extractor is stale, run `uv lock --upgrade-package yt-dlp && uv sync`.
+
+## Troubleshooting
+
+**`Sign in to confirm you're not a bot` / HTTP 429 from YouTube.** Pass `--cookies-from-browser <browser>`. The flag is forwarded to every `yt-dlp` invocation in the pipeline (probe, captions, download). On WSL, `firefox` is **not** supported when Firefox is installed on the Windows host — the WSL profile path doesn't exist; use `chrome` or `edge` instead. The first three transcript tiers (`youtube-transcript-api`, `pytube`, `yt-dlp` subtitles) all read YouTube directly and can be IP-blocked independently.
+
+**All four transcript tiers failed.** Set `GROQ_API_KEY` (preferred — fast, free tier) or `OPENAI_API_KEY` to enable the Whisper fallback. When credentials are present and frames aren't disabled (`--no-frames`), `extract.py` will reuse the downloaded video, extract audio with `ffmpeg`, and transcribe via Whisper. Without a key the tool prints a one-line hint and writes a `# transcript_unavailable` placeholder.
+
+**Stale `pytube` HTTP 400.** `pytube` is largely broken upstream against current YouTube; it stays in the chain as a cheap second attempt but is expected to fail. The downstream tiers (`yt-dlp` subs, `whisper`) carry the load.
 
 ## Layout
 
@@ -174,14 +192,16 @@ models.py                       profile resolution + doctor
 manifest.py                     artifact_manifest.json read/write + integrity
 transcript.py                   4-tier transcript chain (yt-api → pytube → yt-dlp → whisper)
 frame_ocr.py                    RapidOCR + 5-class classifier + rapidfuzz dedup
-frame_select.py                 perceptual-hash scene change + anchored even-spacing
+frame_select.py                 style-aware perceptual-hash scene change + anchored even-spacing
 enrichment.py                   splice OCR into transcript at frame timestamps
 payload.py                      multimodal LLM payload builder
 citation.py                     citation token extract + validate
 distill_render.py               distill_result.json → Obsidian markdown
+video_profile.py                lightweight router profile for auto style selection
 models.yaml                     model profile config
 prompts/distill_contract_v1.md  the citation contract sent to every LLM call
 styles/                         user-editable style guides
+.cursor/skills/                 project-local agent workflows for video distillation
 vendor/claude_video/            vendored ffmpeg/whisper helpers (see UPSTREAM.md)
 ```
 

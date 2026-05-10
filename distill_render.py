@@ -1,12 +1,63 @@
-"""Render distill_result.json → Obsidian-ready markdown."""
+"""Render distill_result.json → Obsidian-ready markdown.
+
+Two render paths:
+  * ``render_markdown`` — structured: maps a JSON-shaped result (key_points,
+    steps, code_blocks, …) into the canonical generic-distill section list.
+  * ``render_passthrough`` — markdown-from-LLM: the contract instructs the
+    model to emit markdown directly; this path keeps that markdown verbatim
+    so the *style guide's* section structure flows through unmolested. This
+    is the active path for the human_tutorial / coding_agent / diy_project /
+    knowledge_base styles whose section shapes differ.
+"""
 from __future__ import annotations
 
-from typing import Any
+import re
+
+
+_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+", re.MULTILINE)
+
+
+def _first_prose_line(summary: str, *, max_len: int = 240) -> str:
+    """Pick the first non-heading, non-blank line and truncate for frontmatter.
+
+    The LLM frequently starts its output with ``## Summary`` (per the contract),
+    so the naive ``splitlines()[0]`` produced ``summary: ## Summary`` in the
+    frontmatter and a duplicate heading in the body.
+    """
+    if not summary:
+        return ""
+    for raw in summary.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            continue
+        line = line.replace('"', "'")
+        if len(line) > max_len:
+            line = line[: max_len - 1].rstrip() + "…"
+        return line
+    return ""
+
+
+def _strip_leading_summary_heading(summary: str) -> str:
+    """Remove a leading ``## Summary`` (any heading level) so the renderer can
+    emit its own canonical heading without producing two of them."""
+    if not summary:
+        return summary
+    lines = summary.splitlines()
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    if lines and re.match(r"^\s{0,3}#{1,6}\s+summary\s*$", lines[0], re.IGNORECASE):
+        lines.pop(0)
+        while lines and not lines[0].strip():
+            lines.pop(0)
+    return "\n".join(lines)
 
 
 def _frontmatter(data: dict, style_name: str, today_iso: str) -> str:
     cit = data.get("citations") or {}
     q = data.get("quality") or {}
+    fm_summary = _first_prose_line(data.get("summary", ""))
     return (
         "---\n"
         "type: tutorial\n"
@@ -21,7 +72,7 @@ def _frontmatter(data: dict, style_name: str, today_iso: str) -> str:
         "  - tutorial\n"
         f"  - {style_name}\n"
         "  - transformed-transcript\n"
-        f"summary: {data.get('summary','').splitlines()[0] if data.get('summary') else ''}\n"
+        f"summary: {fm_summary}\n"
         "enriched_at: \"\"\n"
         f"model_profile: {data.get('model_profile','')}\n"
         f"prompt_contract_version: {data.get('prompt_contract_version','')}\n"
@@ -42,12 +93,29 @@ def _cite(cs: list[str]) -> str:
     return f" ({', '.join(cs)})" if cs else ""
 
 
+def render_passthrough(data: dict, *, style_name: str, today_iso: str) -> str:
+    """Emit the model's markdown body verbatim under our frontmatter.
+
+    Use this when the LLM returned a markdown response (the contract's primary
+    mode) so the *style guide's* section structure flows through. Citation
+    enforcement still happens upstream in `distill.py` via the citation
+    validator, so this is purely a presentation layer.
+    """
+    parts = [_frontmatter(data, style_name, today_iso)]
+    if data.get("citations", {}).get("unresolved", 0) > 0:
+        parts.append("> ⚠ This note has unresolved citations. Re-run distill.\n\n")
+    body = data.get("summary") or ""
+    parts.append(body.rstrip() + "\n")
+    return "".join(parts)
+
+
 def render_markdown(data: dict, *, style_name: str, today_iso: str) -> str:
     parts = [_frontmatter(data, style_name, today_iso)]
     if data.get("citations", {}).get("unresolved", 0) > 0:
         parts.append("> ⚠ This note has unresolved citations. Re-run distill.\n\n")
-    if data.get("summary"):
-        parts.append(f"## Summary\n\n{data['summary']}\n\n")
+    summary = _strip_leading_summary_heading(data.get("summary") or "")
+    if summary:
+        parts.append(f"## Summary\n\n{summary}\n\n")
     if data.get("key_points"):
         parts.append("## Key Points\n\n")
         for p in data["key_points"]:

@@ -54,6 +54,35 @@ def test_excludes_code_frames_from_selection(tmp_path):
     assert all(s.frame_class != FrameClass.CODE for s in res.selected)
 
 
+def test_coding_style_can_include_code_frames():
+    frames = [_rec(0, 0, FrameClass.CODE), _rec(1, 5, FrameClass.SLIDE_TEXT), _rec(2, 10)]
+    res = select_frames(frames, change_points=[], max_frames=2, token_budget=None, style="coding_agent")
+    assert any(s.frame_class == FrameClass.CODE for s in res.selected)
+
+
+def test_diy_style_prioritizes_visual_step_frames():
+    frames = [
+        _rec(0, 0, FrameClass.OTHER),
+        _rec(1, 5, FrameClass.SLIDE_TEXT),
+        _rec(2, 10, FrameClass.UI),
+        _rec(3, 15, FrameClass.OTHER),
+    ]
+    res = select_frames(frames, change_points=[], max_frames=2, token_budget=None, style="diy_project")
+    assert [s.frame_class for s in res.selected] == [FrameClass.SLIDE_TEXT, FrameClass.UI]
+
+
+def test_diy_style_outputs_selected_frames_chronologically():
+    frames = [
+        _rec(0, 0, FrameClass.OTHER),
+        _rec(1, 5, FrameClass.SLIDE_TEXT),
+        _rec(2, 10, FrameClass.UI),
+        _rec(3, 15, FrameClass.DIAGRAM),
+        _rec(4, 20, FrameClass.OTHER),
+    ]
+    res = select_frames(frames, change_points=[], max_frames=4, token_budget=None, style="diy_project")
+    assert [s.timestamp_seconds for s in res.selected] == sorted(s.timestamp_seconds for s in res.selected)
+
+
 def test_uses_change_points_when_available():
     frames = [_rec(i, i * 1.0) for i in range(10)]
     cps = [ChangePoint(index=3, distance=20), ChangePoint(index=7, distance=20)]
