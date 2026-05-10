@@ -18,6 +18,33 @@ def test_parse_args_flags():
     assert ns.force is True
 
 
+def test_parse_args_audience_note():
+    ns = distill._parse_args(["X", "y", "--audience-note", "Intermediate Python devs evaluating tools."])
+    assert ns.audience_note == "Intermediate Python devs evaluating tools."
+
+
+def test_parse_args_audience_note_missing_defaults_none():
+    ns = distill._parse_args(["X", "y"])
+    assert ns.audience_note is None
+
+
+def test_compose_style_with_audience_note_prepends_block():
+    style_md = "# Human Tutorial Style Guide\n\n## Output Format\n\n### 1. Introduction\n..."
+    out = distill._compose_style_with_audience(style_md, audience_note="DIY makers, no Python.")
+    assert "## Audience Profile" in out
+    assert "DIY makers, no Python." in out
+    # The original style content must follow the audience block, not be replaced.
+    assert out.endswith(style_md) or style_md in out
+    assert out.index("Audience Profile") < out.index("Human Tutorial Style Guide")
+
+
+def test_compose_style_without_audience_note_returns_style_unchanged():
+    style_md = "## Output Format\n\n### 1. Step\n"
+    assert distill._compose_style_with_audience(style_md, audience_note=None) == style_md
+    assert distill._compose_style_with_audience(style_md, audience_note="") == style_md
+    assert distill._compose_style_with_audience(style_md, audience_note="   \n  ") == style_md
+
+
 def _seg(text: str) -> TranscriptSegment:
     return TranscriptSegment(seg_id=0, start=0.0, end=5.0, text=text)
 
