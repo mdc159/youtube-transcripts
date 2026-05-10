@@ -78,21 +78,27 @@ def select_frames(
     max_frames: int,
     token_budget: int | None,
     est_image_tokens: int = 5000,
+    style: str = "knowledge_base",
 ) -> SelectionResult:
-    """Select non-code frames for the vision payload.
+    """Select frames for the vision payload.
 
     Order of operations (spec §4.4):
-      1. Drop CODE-class frames.
+      1. Filter or prioritize frames by style.
       2. Take frames just after each change_point index.
       3. Fill remaining budget with even-spacing across the surviving frames.
       4. Cap by min(max_frames, token_budget // est_image_tokens) if budget given.
     """
+    eligible_pairs: list[tuple[int, FrameRecord]] = []
+    for orig_idx, frame in enumerate(frames):
+        if _include_for_style(frame, style):
+            eligible_pairs.append((orig_idx, frame))
+    eligible_pairs = _order_for_style(eligible_pairs, style)
+
     eligible: list[FrameRecord] = []
     original_to_eligible: dict[int, int] = {}
-    for orig_idx, f in enumerate(frames):
-        if f.frame_class != FrameClass.CODE:
-            original_to_eligible[orig_idx] = len(eligible)
-            eligible.append(f)
+    for orig_idx, f in eligible_pairs:
+        original_to_eligible[orig_idx] = len(eligible)
+        eligible.append(f)
     if not eligible:
         return SelectionResult(selected=[])
 
@@ -124,6 +130,8 @@ def select_frames(
             if remaining >= n:
                 # Fewer than `remaining` eligible — just take everything not yet chosen.
                 preferred = list(range(n))
+            elif style == "diy_project":
+                preferred = list(range(n))
             elif remaining == 1:
                 preferred = [n // 2]  # midpoint when only one slot
             else:
@@ -152,7 +160,7 @@ def select_frames(
                     if len(chosen_idx) >= cap:
                         break
 
-    chosen_idx.sort(key=lambda x: x[0])
+    chosen_idx.sort(key=lambda x: eligible[x[0]].timestamp_seconds)
     sel = [
         Selected(
             path=eligible[i].path,
@@ -163,6 +171,25 @@ def select_frames(
         for i, reason in chosen_idx
     ]
     return SelectionResult(selected=sel)
+
+
+def _include_for_style(frame: FrameRecord, style: str) -> bool:
+    if style == "coding_agent":
+        return True
+    return frame.frame_class != FrameClass.CODE
+
+
+def _order_for_style(pairs: list[tuple[int, FrameRecord]], style: str) -> list[tuple[int, FrameRecord]]:
+    if style != "diy_project":
+        return pairs
+    priority = {
+        FrameClass.SLIDE_TEXT: 0,
+        FrameClass.UI: 1,
+        FrameClass.DIAGRAM: 2,
+        FrameClass.OTHER: 3,
+        FrameClass.CODE: 4,
+    }
+    return sorted(pairs, key=lambda item: (priority[item[1].frame_class], item[1].timestamp_seconds))
 
 
 def write_selected_frames_json(path: Path | str, sel: SelectionResult) -> None:

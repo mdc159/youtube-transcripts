@@ -21,6 +21,7 @@ def main(argv=None):
     p.add_argument("--end", type=float, default=None)
     p.add_argument("--dry-run-payload", action="store_true")
     p.add_argument("--force", action="store_true")
+    p.add_argument("--cookies-from-browser", default=None)
     args = p.parse_args(argv)
 
     extract_argv = [args.source]
@@ -32,6 +33,8 @@ def main(argv=None):
         extract_argv += ["--end", str(args.end)]
     if args.force:
         extract_argv += ["--force"]
+    if args.cookies_from_browser:
+        extract_argv += ["--cookies-from-browser", args.cookies_from_browser]
     rc = extract.main(extract_argv)
     if rc != 0:
         return rc

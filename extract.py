@@ -45,7 +45,7 @@ def main(argv: list[str] | None = None) -> int:
     source_id = derive_source_id(args.source, start=args.start, end=args.end)
     print(f"[extract] source_id={source_id}")
 
-    title, duration_seconds, source_url = _probe_source(args.source)
+    title, duration_seconds, source_url = _probe_source(args.source, cookies_browser=args.cookies_from_browser)
     out_root = Path(args.out_dir or os.environ.get("YT_GENERATED_DATA_DIR") or "Generated_Data")
     out_dir = out_root / title
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -100,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _probe_source(source: str) -> tuple[str, float, str]:
+def _probe_source(source: str, cookies_browser: str | None = None) -> tuple[str, float, str]:
     """Return (safe_title, duration_seconds, canonical_url_or_path).
 
     Local files are detected via Path.exists() FIRST so we don't try to ask
@@ -112,11 +112,20 @@ def _probe_source(source: str) -> tuple[str, float, str]:
         return _safe_title(title), duration, str(Path(source).resolve())
 
     # Probe URL via yt-dlp --dump-json
-    r = subprocess.run(
-        ["yt-dlp", "--no-warnings", "--dump-json", source],
-        capture_output=True,
-        text=True,
-    )
+    # #region agent log
+    import json as _dlog_json, time as _dlog_time
+    _dlog_path = "/home/mdc159/projects/youtube-transcripts/.cursor/debug-1cf7db.log"
+    with open(_dlog_path, "a") as _f:
+        _f.write(_dlog_json.dumps({"sessionId":"1cf7db","hypothesisId":"H-E","location":"extract.py:_probe_source","message":"yt-dlp probe start","data":{"source":source,"cookies_browser":cookies_browser},"timestamp":int(_dlog_time.time()*1000)}) + "\n")
+    # #endregion
+    cmd = ["yt-dlp", "--no-warnings", "--dump-json", source]
+    if cookies_browser:
+        cmd += ["--cookies-from-browser", cookies_browser]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    # #region agent log
+    with open(_dlog_path, "a") as _f:
+        _f.write(_dlog_json.dumps({"sessionId":"1cf7db","hypothesisId":"H-E","location":"extract.py:_probe_source","message":"yt-dlp probe result","data":{"returncode":r.returncode,"stderr":r.stderr[:400]},"timestamp":int(_dlog_time.time()*1000)}) + "\n")
+    # #endregion
     if r.returncode != 0:
         raise RuntimeError(f"yt-dlp probe failed: {r.stderr}")
     info = _json.loads(r.stdout)
@@ -226,10 +235,17 @@ def _do_frames(args, out_dir: Path, manifest: Manifest) -> None:
     print(f"[extract] frames: extracted {len(paths)} frames")
 
     records: list[FrameRecord] = []
+    # #region agent log
+    import json as _dlog_json3, time as _dlog_time3
+    _dlog_path3 = "/home/mdc159/projects/youtube-transcripts/.cursor/debug-1cf7db.log"
+    if paths:
+        with open(_dlog_path3, "a") as _f:
+            _f.write(_dlog_json3.dumps({"sessionId":"1cf7db","hypothesisId":"H-F","location":"extract.py:_do_frames","message":"path types","data":{"fp_example":paths[0],"fp_is_abs":Path(paths[0]).is_absolute(),"out_dir":str(out_dir),"out_dir_is_abs":out_dir.is_absolute()},"timestamp":int(_dlog_time3.time()*1000)}) + "\n")
+    # #endregion
     for fp in paths:
         ts = _extract_ts(Path(fp).name)
         # ocr.json stores paths relative to out_dir for portability (spec §7.2).
-        rel_path = str(Path(fp).relative_to(out_dir))
+        rel_path = str(Path(fp).relative_to(out_dir.resolve()))
         try:
             ocr_res = ocr_frame(fp)
             cls, conf = classify_frame(ocr_res)
@@ -355,6 +371,12 @@ def _extract_ts(filename: str) -> float:
 
 def _download_video(url: str, out_dir: Path, cookies_browser: str | None) -> str:
     """Download a video to media_cache/<title>/video.<ext>. Returns absolute path."""
+    # #region agent log
+    import json as _dlog_json2, time as _dlog_time2
+    _dlog_path2 = "/home/mdc159/projects/youtube-transcripts/.cursor/debug-1cf7db.log"
+    with open(_dlog_path2, "a") as _f:
+        _f.write(_dlog_json2.dumps({"sessionId":"1cf7db","hypothesisId":"H-C","location":"extract.py:_download_video","message":"download start","data":{"url":url,"cookies_browser":cookies_browser},"timestamp":int(_dlog_time2.time()*1000)}) + "\n")
+    # #endregion
     title = out_dir.name
     cache_dir = Path("media_cache") / title
     cache_dir.mkdir(parents=True, exist_ok=True)

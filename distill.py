@@ -18,6 +18,7 @@ from enrichment import parse_formatted_transcript, enrich_transcript, write_enri
 from payload import build_payload, PayloadBuildError
 from citation import validate_citations, extract_citations, ResolutionContext
 from distill_render import render_markdown
+from video_profile import VideoProfile, build_video_profile, format_route_proposal
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -37,10 +38,12 @@ def main(argv: list[str] | None = None) -> int:
 
     repo_root = Path(__file__).resolve().parent
     out_dir = _resolve_out_dir(args.title)
-    style_path = repo_root / "styles" / f"{args.style}.md"
-    if not style_path.is_file():
-        print(f"style {args.style!r} not found at {style_path}", file=sys.stderr)
-        return 1
+    style_path = None
+    if args.style != "auto":
+        style_path = repo_root / "styles" / f"{args.style}.md"
+        if not style_path.is_file():
+            print(f"style {args.style!r} not found at {style_path}", file=sys.stderr)
+            return 1
 
     manifest_path = out_dir / MANIFEST_FILENAME
     if not manifest_path.is_file():
@@ -65,6 +68,19 @@ def main(argv: list[str] | None = None) -> int:
     ocr_path = out_dir / "ocr.json"
     frames = read_ocr_json(ocr_path) if ocr_path.is_file() else []
 
+    style_name, route_profile = _route_style(
+        args.style,
+        title=out_dir.name,
+        segments=segments,
+        frames=frames,
+    )
+    if route_profile is not None:
+        print(f"[distill] auto route:\n{format_route_proposal(route_profile)}")
+    style_path = style_path or repo_root / "styles" / f"{style_name}.md"
+    if not style_path.is_file():
+        print(f"style {style_name!r} not found at {style_path}", file=sys.stderr)
+        return 1
+
     # Enrich
     enriched = enrich_transcript(segments, frames)
     enriched_path = out_dir / f"{out_dir.name}_enriched_transcript.md"
@@ -78,6 +94,7 @@ def main(argv: list[str] | None = None) -> int:
         change_points=cps,
         max_frames=args.max_vision_frames,
         token_budget=args.token_budget,
+        style=style_name,
     )
     write_selected_frames_json(out_dir / "selected_frames.json", sel)
 
@@ -166,7 +183,6 @@ def main(argv: list[str] | None = None) -> int:
         },
     }
 
-    style_name = args.style
     today_iso = date.today().isoformat()
     md = render_markdown(parsed_full, style_name=style_name, today_iso=today_iso)
     (out_dir / f"{out_dir.name}_{style_name}.md").write_text(md)
@@ -191,6 +207,24 @@ def _try_parse_json_object(text: str) -> dict | None:
         return json.loads(text)
     except Exception:
         return None
+
+
+def _route_style(
+    requested_style: str,
+    *,
+    title: str,
+    segments: list,
+    frames: list,
+) -> tuple[str, VideoProfile | None]:
+    if requested_style != "auto":
+        return requested_style, None
+    transcript_text = "\n".join(getattr(seg, "text", "") for seg in segments)
+    profile = build_video_profile(
+        title=title,
+        transcript_text=transcript_text,
+        frames=frames,
+    )
+    return profile.recommended_style, profile
 
 
 def _confidence_from(unresolved: list, manifest: Manifest) -> str:
