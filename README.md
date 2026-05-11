@@ -46,7 +46,7 @@ uv run python run.py "https://www.youtube.com/watch?v=KE39P4qBjDk" coding_agent
 uv run python run.py "https://www.youtube.com/watch?v=KE39P4qBjDk" auto
 ```
 
-Downloads, extracts frames + OCR, and distills with either an explicit style or the router. Available styles: `coding_agent`, `diy_project`, `knowledge_base` (in `styles/`). `auto` inspects transcript/OCR evidence and routes to the strongest style; ambiguous content prints a recommendation with alternatives.
+Downloads, extracts frames + OCR, and distills with either an explicit style or the router. Available styles: `coding_agent`, `diy_project`, `knowledge_base`, `human_tutorial` (in `styles/`). `auto` inspects transcript/OCR evidence and routes to the strongest style; ambiguous content prints a recommendation with alternatives.
 
 ### Two-phase (re-stylable)
 
@@ -85,6 +85,7 @@ uv run python extract.py /path/to/lecture.mp4 --start 60 --end 600 --max-frames 
 |---|---|---|
 | `--max-frames N` | `extract.py`, `run.py` | Cap frames extracted from the video |
 | `--start`, `--end` | `extract.py`, `run.py` | Clip a sub-range; timestamps stay absolute |
+| `--out-dir PATH` | `extract.py` | Override the `Generated_Data` root directory |
 | `--no-frames` | `extract.py` | Transcript-only run |
 | `--keep-video` | `extract.py` | Preserve the cached download for inspection |
 | `--force` / `--force-ocr` | `extract.py` | Bypass idempotency for the whole pipeline / OCR only |
@@ -92,6 +93,8 @@ uv run python extract.py /path/to/lecture.mp4 --start 60 --end 600 --max-frames 
 | `--model NAME` | `distill.py`, `run.py` | Override the model profile (CLI > `DISTILL_MODEL` env > `models.yaml` default) |
 | `--max-vision-frames N` | `distill.py`, `run.py` | Cap frames sent to the LLM (default 16) |
 | `--token-budget N` | `distill.py` | Cap by token budget; trims frames to `min(max_vision_frames, budget // est_image_tokens)` |
+| `--enrich`, `--no-enrich` | `distill.py`, `run.py` | Force/skip the post-processor (inline frames, Mermaid, tables). Default: ON for `human_tutorial`, OFF otherwise. |
+| `--audience-note TEXT` | `distill.py`, `run.py` | Prepend a free-form audience profile to the style guide for tone/depth tuning |
 | `--dry-run-payload` | `distill.py`, `run.py` | Write `payload.json` (image bytes elided) and exit before calling the LLM |
 
 ## Output
