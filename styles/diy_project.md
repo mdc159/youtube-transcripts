@@ -65,6 +65,9 @@ Continue for all steps. Include sub-steps where the video shows detailed process
 - Other videos or tutorials referenced
 - Suppliers or sources for materials
 
+### 9. Open Questions
+Anything a builder would still need to figure out: unstated measurements, skipped steps, materials shown but never specified. Always include this section; write "None identified" if the instructions are complete.
+
 ## Rules
 - **Extract ALL measurements, quantities, and specifications exactly as stated** - these are critical
 - **Preserve brand names and part numbers** when given - viewers may want the exact products

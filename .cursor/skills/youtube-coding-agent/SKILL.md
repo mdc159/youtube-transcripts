@@ -18,16 +18,20 @@ description: Convert developer tutorial videos into citation-grounded implementa
 Produce implementation guidance with:
 
 - Overview: what the video teaches and who it is for.
+- Source & Environment: source repo URL first if one exists (recreation starts from cloning it), plus stated runtime/tool versions.
 - Prerequisites: tools, versions, accounts, repo setup, and assumed knowledge.
 - Key Concepts: all technical concepts in the speaker's terminology.
 - Steps: imperative actions, exact commands, expected results, and caveats.
+- Definition of Done: verifiable criteria for what the finished artifact demonstrably does.
 - Troubleshooting: only issues mentioned or visibly demonstrated.
-- Technical Reference: tools, commands, paths, APIs, and code snippets.
+- Technical Reference: tools, commands, project structure / visible file trees, APIs, and code snippets.
 - Key Takeaways and Resources.
+- Open Questions: gaps an agent would hit when recreating ("None identified" if complete).
 
 ## Quality Rules
 
 - Every technical claim needs a citation: `seg#NNN`, `frame_NNN_t-MM-SS`, `cluster_id=cN`, or `t=MM:SS`.
+- A referenced source repo outranks reconstructed steps as the recreation starting point.
 - Extract all tools, commands, file paths, and technical terms.
 - Remove filler and promotion while preserving substantive caveats.
 - When the video is mostly conceptual, frame the steps as implementation principles rather than pretending there was a concrete tutorial.

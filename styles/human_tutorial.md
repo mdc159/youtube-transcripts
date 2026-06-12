@@ -26,6 +26,9 @@ A bulleted list of common pitfalls, alternative approaches, or useful tips menti
 ### 6. Conclusion
 A brief wrap-up of what was accomplished and any recommended next steps or resources for further learning.
 
+### 7. Open Questions
+Anything the tutorial glossed over that the reader would need to figure out themselves. Always include this section; write "None identified" if the tutorial is complete.
+
 ---
 
 ## Rules
@@ -41,6 +44,3 @@ A brief wrap-up of what was accomplished and any recommended next steps or resou
 - Preserve the speaker's insights, tips, and warnings.
 - Remove filler words, repetitive phrasing, and promotional content.
 - If the speaker skips a small but obvious step (like saving a file), you may implicitly include it for clarity, but do not invent complex unstated commands.
-
-**Citations:**
-- Every technical claim, code block, or major step must cite a transcript segment, frame, cluster, or timestamp (e.g., `seg#123`, `frame_045_t-01-20`).
