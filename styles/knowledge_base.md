@@ -54,8 +54,13 @@ How to apply this knowledge:
 - Prerequisites or foundational knowledge referenced
 - Related resources or materials mentioned
 
+### 8. Open Questions
+Points the video left unresolved, ambiguous, or asserted without support. Always include this section; write "None identified" if everything was clear.
+
 ## Rules
 - Preserve the speaker's terminology and phrasing for technical concepts
+- **Name concepts canonically**: each Key Concept heading is a singular noun phrase in the speaker's own term ("Context Window", not "how context windows work"). Downstream ingestion converts concept names into `[[wikilinks]]` and may split each into its own wiki page — write names so that conversion is mechanical
+- Treat Key Concepts and Related Topics entries as wiki-page candidates: self-contained, definition-first, no pronouns referring back to the video
 - Extract ALL mentioned tools, technologies, and resources - don't filter
 - Include nuance and caveats - don't oversimplify complex ideas
 - Capture opinions and perspectives, noting whose view it is

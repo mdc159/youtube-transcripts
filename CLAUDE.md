@@ -38,9 +38,9 @@ User-facing details live in `README.md`. Architectural rationale is in `docs/sup
 
 - `models.yaml` — model profiles. Default `gemini-3-flash`. Adding a new profile is one YAML entry, zero code changes.
 - `prompts/distill_contract_v1.md` — the citation contract sent to every LLM call. Every technical claim in output must cite at least one of: transcript segment, frame, cluster, or timestamp range.
-- `styles/<name>.md` — user-editable style overlays. Available: `coding_agent`, `knowledge_base`, `diy_project`.
+- `styles/<name>.md` — user-editable style overlays. Available: `coding_agent`, `knowledge_base`, `diy_project`, `human_tutorial` (human-reader tone; the only style not reachable via `auto` routing — explicit only).
 - `.cursor/skills/video-distill-router` — meta skill for choosing between video workflows.
-- `.cursor/skills/youtube-coding-agent`, `.cursor/skills/youtube-diy-project`, `.cursor/skills/youtube-knowledge-base` — output workflow skills that mirror the style overlays.
+- `.cursor/skills/youtube-coding-agent`, `.cursor/skills/youtube-diy-project`, `.cursor/skills/youtube-knowledge-base`, `.cursor/skills/youtube-human-tutorial` — output workflow skills that mirror the style overlays. Keep skills and `styles/` in sync when editing either.
 
 ## Vendored
 

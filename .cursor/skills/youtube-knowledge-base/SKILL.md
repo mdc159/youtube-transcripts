@@ -23,10 +23,12 @@ Produce durable reference notes with:
 - Quotes and Insights: notable statements worth preserving verbatim.
 - Practical Applications: concrete actions, examples, and next steps.
 - Related Topics: prerequisites, resources, and follow-up areas.
+- Open Questions: unresolved or unsupported points ("None identified" if everything was clear).
 
 ## Quality Rules
 
 - Preserve terminology, nuance, caveats, and speaker perspective.
+- Name concepts canonically (singular noun phrase, speaker's term) — downstream ingestion converts them into `[[wikilinks]]` and wiki pages, so names must convert mechanically.
 - Do not over-compress complex arguments into generic summaries.
 - Include all substantive tools and resources, even if briefly mentioned.
 - Every technical or conceptual claim needs a citation: `seg#NNN`, `frame_NNN_t-MM-SS`, `cluster_id=cN`, or `t=MM:SS`.

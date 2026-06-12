@@ -70,6 +70,7 @@ Project-local Cursor skills in `.cursor/skills/` mirror these workflows:
 - `youtube-coding-agent` turns developer tutorials into agent-executable implementation guidance.
 - `youtube-diy-project` turns maker/how-to videos into build instructions.
 - `youtube-knowledge-base` turns talks and conceptual videos into reference notes.
+- `youtube-human-tutorial` turns tutorials into conversational follow-along guides for a human reader (explicit style only; `auto` never routes here).
 
 ### Local files
 

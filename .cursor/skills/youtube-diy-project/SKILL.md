@@ -23,6 +23,7 @@ Produce build-ready instructions with:
 - Safety Notes: PPE, hazards, and warnings.
 - Instructions: numbered steps with exact measurements, tips, and watch-for notes.
 - Variations and Resources when mentioned.
+- Open Questions: unstated measurements, skipped steps, unspecified materials ("None identified" if complete).
 
 ## Quality Rules
 

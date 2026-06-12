@@ -23,6 +23,7 @@ Produce a step-by-step tutorial with:
 - Step-by-Step Instructions: numbered steps with goals, actions, code/commands, and explanations.
 - Tips and Gotchas: common pitfalls and alternative approaches.
 - Conclusion: wrap-up and next steps.
+- Open Questions: anything glossed over that the reader must figure out ("None identified" if complete).
 
 ## Quality Rules
 
