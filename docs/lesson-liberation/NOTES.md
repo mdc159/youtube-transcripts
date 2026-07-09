@@ -133,3 +133,14 @@ asset gaps confirmed correct). Fix layer 2 (machine-wide): encrypted-DNS
 .mobileconfig (Cloudflare DoH) generated for install. Claude Code sandbox also
 opened globally (~/.claude/settings.json allowedDomains ["*"]) — it was the
 first suspect but NOT the root cause.
+
+### D12 — Cross-platform requirement (operator, 2026-07-09)
+The harness must run on any OS. Status: all pipeline code is portable (pure
+Python stdlib DoH fallback; pathlib; subprocess only to git/yt-dlp/ffmpeg).
+Machine-level DNS fixes (macOS profile / cloudflared daemon) were scrapped for
+exactly this reason — the in-repo dns_fallback.py is the portable fix and needs
+no OS config or admin rights. Sole caveat: the Archon workflow's bash nodes
+need Git-Bash/WSL on Windows; the phase CLIs themselves run natively anywhere
+(the spec's "plain CLI" fallback). YouTube access needs no cookies or API key
+on any platform — cookies remain available via the existing
+--cookies-from-browser flag only if a network ever triggers bot-detection.
