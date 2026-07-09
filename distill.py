@@ -81,6 +81,8 @@ def _compose_style_with_audience(style_md: str, *, audience_note: str | None) ->
 
 
 def main(argv: list[str] | None = None) -> int:
+    import env_bootstrap
+    env_bootstrap.load()
     args = _parse_args(sys.argv[1:] if argv is None else argv)
 
     repo_root = Path(__file__).resolve().parent
@@ -145,20 +147,44 @@ def main(argv: list[str] | None = None) -> int:
     )
     write_selected_frames_json(out_dir / "selected_frames.json", sel)
 
+    # Reconciliation pass — only active when reference_follower pinned repo
+    # snapshots exist. Repo evidence upgrades the contract to v2 (adds the
+    # repo:path#Lx-Ly@SHA citation kind + conflict-flagging rules).
+    recon = None
+    try:
+        from reconcile import reconcile as _reconcile  # local import keeps import-time cost low
+
+        source_meta_path = out_dir / "refs" / "source_meta.json"
+        upload_date = None
+        if source_meta_path.is_file():
+            upload_date = json.loads(source_meta_path.read_text()).get("upload_date")
+        recon = _reconcile(out_dir, frames=frames, video_upload_date=upload_date)
+    except Exception as exc:  # noqa: BLE001 - reconciliation is additive evidence
+        print(f"[reconcile] failed: {exc}", file=sys.stderr)
+    if recon is not None:
+        print(
+            f"[reconcile] {len(recon.repos)} repo(s), {len(recon.alignments)} alignment(s), "
+            f"{len(recon.conflicts)} conflict(s), {len(recon.unmatched_clusters)} unmatched cluster(s)"
+        )
+
+    contract_version = 2 if recon is not None else 1
     # Build payload
-    contract = (Path(__file__).resolve().parent / "prompts" / "distill_contract_v1.md").read_text()
+    contract = (Path(__file__).resolve().parent / "prompts" / f"distill_contract_v{contract_version}.md").read_text()
     style = _compose_style_with_audience(
         style_path.read_text(),
         audience_note=getattr(args, "audience_note", None),
     )
     if getattr(args, "audience_note", None):
         print(f"[distill] audience note applied: {args.audience_note}")
+    transcript_block = enriched
+    if recon is not None and recon.evidence_markdown:
+        transcript_block = enriched + recon.evidence_markdown
     try:
         content = build_payload(
             profile=profile,
             system_prompt=contract,
             style=style,
-            enriched_transcript=enriched,
+            enriched_transcript=transcript_block,
             selected=sel.selected,
             frames_root=out_dir,
         )
@@ -207,6 +233,7 @@ def main(argv: list[str] | None = None) -> int:
         segment_ids={s.seg_id for s in segments},
         frame_ids={Path(f.path).stem for f in frames},
         cluster_ids={f.cluster_id for f in frames if f.cluster_id},
+        repo_refs=recon.repo_refs if recon is not None else set(),
     )
     val = validate_citations(msg, cit_ctx)
     parsed_full = {
@@ -214,7 +241,7 @@ def main(argv: list[str] | None = None) -> int:
         "source_id": manifest.data["source_id"],
         "title": manifest.data["title"],
         "model_profile": profile.name,
-        "prompt_contract_version": 1,
+        "prompt_contract_version": contract_version,
         **(parsed or {"summary": msg}),
         "quality": {
             "transcript": (manifest.data.get("extract") or {}).get("transcript_quality", "unknown"),
@@ -222,7 +249,8 @@ def main(argv: list[str] | None = None) -> int:
             "frame_coverage": "unknown",
             "distillation_confidence": _confidence_from(val.unresolved, manifest),
         },
-        "warnings": parsed.get("warnings", []) if parsed else [],
+        "warnings": (parsed.get("warnings", []) if parsed else [])
+        + ([c["note"] for c in recon.conflicts] if recon is not None else []),
         "token_usage": {
             "prompt": getattr(response.usage, "prompt_tokens", None),
             "completion": getattr(response.usage, "completion_tokens", None),
@@ -231,6 +259,7 @@ def main(argv: list[str] | None = None) -> int:
         "citations": {
             "segments_referenced": sum(1 for c in val.citations if c.kind == "segment"),
             "frames_referenced": sum(1 for c in val.citations if c.kind == "frame"),
+            "repo_referenced": sum(1 for c in val.citations if c.kind == "repo"),
             "unresolved": len(val.unresolved),
         },
     }
@@ -247,6 +276,20 @@ def main(argv: list[str] | None = None) -> int:
     md_path = out_dir / f"{out_dir.name}_{style_name}.md"
     md_path.write_text(md)
     (out_dir / f"{out_dir.name}_{style_name}.distill_result.json").write_text(json.dumps(parsed_full, indent=2))
+
+    # claude_skill emits a self-sufficient bundle alongside the standard pair.
+    bundle_dir = None
+    if style_name == "claude_skill":
+        from skill_bundle import write_skill_bundle  # local import keeps import-time cost low
+
+        bundle_dir = write_skill_bundle(
+            out_dir,
+            skill_md=msg if parsed is None else md,
+            distill_result=parsed_full,
+            manifest_data=manifest.data,
+            unresolved_citations=[c.raw for c in val.unresolved],
+        )
+        print(f"[distill] skill bundle written to {bundle_dir}")
 
     # Optional post-processing: inline frame embeds, YouTube deep-links,
     # contact-sheet gallery, code appendix, Mermaid diagrams, ref tables.
@@ -272,6 +315,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  Markdown:  {abs_md}")
     print(f"  JSON:      {abs_json}")
     print(f"  Frames:    {abs_md.parent / 'frames'}/")
+    if bundle_dir is not None:
+        print(f"  Skill:     {bundle_dir.resolve()}/")
     print("=" * 72)
 
     # Citation validator gate

@@ -1,0 +1,112 @@
+# Lesson Liberation — video → self-sufficient Claude Code skill package.
+#
+# Deterministic phase structure with validation gates between phases; the LLM
+# supplies judgment WITHIN phases only (inside distill.py / review_loop.py).
+# Every phase is independently re-runnable off the cached manifest — re-running
+# the workflow skips completed work (extract/reference-follow are idempotent).
+#
+# Artifacts persist OUTSIDE the worktree (YT_GENERATED_DATA_DIR) so isolated
+# runs don't lose a multi-hour extraction on worktree cleanup.
+#
+# Usage:  archon workflow run lesson-liberation "<video-url>"
+name: lesson-liberation
+description: |
+  Use when: User wants to distill a tutorial/course video into a self-sufficient
+  Claude Code skill package that another agent can follow without the source.
+  Triggers: "liberate this lesson", "distill this video into a skill",
+            "lesson liberation", "turn this tutorial into a skill package".
+  Does: extract (transcript+frames) -> reference-follow (clone linked repos,
+        pin SHA) -> distill claude_skill (+reconciliation) -> downstream-hat
+        review loop -> package report.
+  NOT for: Short summaries (use knowledge_base style), human-readable notes
+           (human_tutorial), PR/code work, or videos the user has no right to process.
+
+nodes:
+  # ── Phase 1: extract (idempotent; transcript-only for >98min videos — the
+  #    frame filename format caps at 99 minutes; targeted grabs in the review
+  #    loop are the visual channel for long courses).
+  - id: extract
+    bash: |
+      set -e
+      export YT_GENERATED_DATA_DIR="${YT_GENERATED_DATA_DIR:-$HOME/.lesson-liberation/Generated_Data}"
+      mkdir -p "$YT_GENERATED_DATA_DIR"
+      URL="$ARGUMENTS"
+      if [ -z "$URL" ]; then echo "usage: archon workflow run lesson-liberation <video-url>" >&2; exit 1; fi
+      DUR=$(yt-dlp --no-warnings --print duration "$URL" 2>/dev/null | head -1 || echo 0)
+      DUR=${DUR%.*}
+      FLAGS=""
+      if [ "${DUR:-0}" -gt 5880 ] 2>/dev/null; then
+        echo "[workflow] duration ${DUR}s > 98min: transcript-only extraction (targeted grabs cover visuals)"
+        FLAGS="--no-frames"
+      fi
+      uv run python extract.py "$URL" $FLAGS
+    timeout: 3600000
+
+  # ── Gate + handoff: resolve the artifact dir name (newest under the data root).
+  - id: resolve-title
+    depends_on: [extract]
+    bash: |
+      set -e
+      export YT_GENERATED_DATA_DIR="${YT_GENERATED_DATA_DIR:-$HOME/.lesson-liberation/Generated_Data}"
+      TITLE=$(ls -td "$YT_GENERATED_DATA_DIR"/*/ | head -1)
+      TITLE=$(basename "$TITLE")
+      test -f "$YT_GENERATED_DATA_DIR/$TITLE/artifact_manifest.json" || { echo "no manifest for $TITLE" >&2; exit 1; }
+      grep -q "transcript_unavailable" "$YT_GENERATED_DATA_DIR/$TITLE/${TITLE}_formatted_transcript.txt" && { echo "transcript unavailable — cannot liberate" >&2; exit 1; }
+      echo -n "$TITLE"
+
+  # ── Phase 1.5: reference follower (idempotent; budgets enforced in-CLI).
+  - id: reference-follow
+    depends_on: [resolve-title]
+    bash: |
+      set -e
+      export YT_GENERATED_DATA_DIR="${YT_GENERATED_DATA_DIR:-$HOME/.lesson-liberation/Generated_Data}"
+      uv run python reference_follower.py "$resolve-title.output"
+    timeout: 1800000
+
+  # ── Phase 2: distill through the claude_skill style. Reconciliation runs
+  #    automatically when pinned repo snapshots exist (contract v2 + repo
+  #    citations); the skill bundle is emitted alongside the note pair.
+  - id: distill
+    depends_on: [reference-follow]
+    bash: |
+      set -e
+      export YT_GENERATED_DATA_DIR="${YT_GENERATED_DATA_DIR:-$HOME/.lesson-liberation/Generated_Data}"
+      uv run python distill.py "$resolve-title.output" claude_skill
+    timeout: 1800000
+
+  # ── Gate: the bundle must exist and be structurally sound before review.
+  - id: gate-bundle
+    depends_on: [distill]
+    bash: |
+      set -e
+      export YT_GENERATED_DATA_DIR="${YT_GENERATED_DATA_DIR:-$HOME/.lesson-liberation/Generated_Data}"
+      DIR="$YT_GENERATED_DATA_DIR/$resolve-title.output"
+      BUNDLE=$(ls -d "$DIR"/skills/*/ | head -1)
+      test -s "$BUNDLE/SKILL.md" || { echo "gate: SKILL.md missing/empty" >&2; exit 1; }
+      uv run python -c "import json,sys; json.load(open(sys.argv[1]))" "$BUNDLE/provenance.json"
+      echo -n "$BUNDLE"
+
+  # ── Phase 3: downstream-hat review loop (fresh-context reviewer sees only
+  #    the bundle; targeted escalation; cap 3; incomplete ships flagged).
+  - id: review-loop
+    depends_on: [gate-bundle]
+    bash: |
+      set -e
+      export YT_GENERATED_DATA_DIR="${YT_GENERATED_DATA_DIR:-$HOME/.lesson-liberation/Generated_Data}"
+      uv run python review_loop.py "$resolve-title.output" --max-iterations 3
+    timeout: 3600000
+
+  # ── Phase 4: package report (deterministic; never truncates gap info).
+  - id: package
+    depends_on: [review-loop]
+    bash: |
+      set -e
+      export YT_GENERATED_DATA_DIR="${YT_GENERATED_DATA_DIR:-$HOME/.lesson-liberation/Generated_Data}"
+      BUNDLE="$gate-bundle.output"
+      STATUS=$(uv run python -c "import json,sys; print(json.load(open(sys.argv[1]))['status'])" "$BUNDLE/provenance.json")
+      GAPS=$(uv run python -c "import json,sys; print(len(json.load(open(sys.argv[1])).get('residual_gaps', [])))" "$BUNDLE/provenance.json")
+      echo "Lesson liberated: $BUNDLE"
+      echo "status=$STATUS residual_gaps=$GAPS"
+      if [ "$STATUS" != "complete" ]; then
+        echo "NOTE: shipped marked '$STATUS' — residual gap list is embedded in provenance.json (never silently truncated)."
+      fi

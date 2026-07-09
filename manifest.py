@@ -110,16 +110,21 @@ class Manifest:
         payload.setdefault("completed_at", datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
         self.data["distill_runs"].append(payload)
 
+    def set_references(self, payload: dict) -> None:
+        payload = dict(payload)
+        payload.setdefault("completed_at", datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+        self.data["references"] = payload
+
     def record_file(self, section: str, key: str, path: Path) -> None:
         path = Path(path)
         rel = path.relative_to(self.out_dir) if path.is_absolute() and self.out_dir in path.parents else path
         entry = {"path": str(rel), "sha256": _sha256(path) if path.is_file() else None}
         if path.is_dir():
             entry["frame_count"] = sum(1 for _ in path.iterdir() if _.is_file())
-        if section == "extract":
-            if self.data["extract"] is None:
-                self.data["extract"] = {}
-            self.data["extract"].setdefault("files", {})[key] = entry
+        if section in ("extract", "references"):
+            if self.data.get(section) is None:
+                self.data[section] = {}
+            self.data[section].setdefault("files", {})[key] = entry
         else:
             raise ValueError(f"unknown section {section!r}")
 

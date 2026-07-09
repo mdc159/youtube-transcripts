@@ -41,6 +41,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
+    import env_bootstrap
+    env_bootstrap.load()
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     source_id = derive_source_id(args.source, start=args.start, end=args.end)
     print(f"[extract] source_id={source_id}")
