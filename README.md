@@ -1,6 +1,6 @@
 # YouTube Transcripts
 
-Turn a YouTube URL or local video into a citation-grounded, multimodal artifact for an agent workflow. The pipeline pulls a transcript, extracts and OCRs visual evidence, classifies what's on screen (code / slide / UI / diagram), routes the content to the best skill-style workflow, then sends an enriched payload to a vision-capable LLM where every claim cites a transcript segment, frame, cluster, or timestamp.
+Turn a YouTube URL or local video into a citation-grounded, multimodal artifact for an agent workflow. The pipeline pulls a transcript, extracts and OCRs visual evidence, classifies what's on screen (code / slide / UI / diagram), optionally follows linked sources (repos pinned to a commit SHA, docs), routes the content to the best skill-style workflow, then sends an enriched payload to a vision-capable LLM where every claim cites a transcript segment, frame, cluster, timestamp, or pinned repository line range.
 
 ## How it works
 
@@ -46,7 +46,7 @@ uv run python run.py "https://www.youtube.com/watch?v=KE39P4qBjDk" coding_agent
 uv run python run.py "https://www.youtube.com/watch?v=KE39P4qBjDk" auto
 ```
 
-Downloads, extracts frames + OCR, and distills with either an explicit style or the router. Available styles: `coding_agent`, `diy_project`, `knowledge_base`, `human_tutorial` (in `styles/`). `auto` inspects transcript/OCR evidence and routes to the strongest style; ambiguous content prints a recommendation with alternatives.
+Downloads, extracts frames + OCR, and distills with either an explicit style or the router. Available styles: `coding_agent`, `diy_project`, `knowledge_base`, `human_tutorial`, `claude_skill` (in `styles/`). `auto` inspects transcript/OCR evidence and routes to the strongest style; ambiguous content prints a recommendation with alternatives. `human_tutorial` and `claude_skill` are explicit-only — `auto` never routes to them.
 
 ### Two-phase (re-stylable)
 
@@ -71,6 +71,23 @@ Project-local Cursor skills in `.cursor/skills/` mirror these workflows:
 - `youtube-diy-project` turns maker/how-to videos into build instructions.
 - `youtube-knowledge-base` turns talks and conceptual videos into reference notes.
 - `youtube-human-tutorial` turns tutorials into conversational follow-along guides for a human reader (explicit style only; `auto` never routes here).
+- `youtube-claude-skill` turns long-form tutorials into self-sufficient skill packages for a consuming agent (explicit style only; `auto` never routes here).
+
+### Lesson liberation (skill packages)
+
+Two additional phases turn a long-form tutorial into a self-sufficient skill package another agent can follow without the source:
+
+```bash
+uv run python reference_follower.py KE39P4qBjDk_Title      # harvest links: clone repos @SHA, fetch docs
+uv run python distill.py KE39P4qBjDk_Title claude_skill    # emits skills/<slug>/ bundle (+reconciliation)
+uv run python review_loop.py KE39P4qBjDk_Title             # fresh-context reviewer → gaps → re-synthesize
+```
+
+`reference_follower.py` harvests URLs from the description, pinned/top comments, transcript, and OCR (resolving link shorteners), classifies them (`github_repo | docs | asset_download | other`), shallow-clones repos pinned to a commit SHA, and snapshots key files (budgets: `--max-repo-mb`, `--max-fetches`). When pinned repo snapshots exist, `distill.py` runs a reconciliation pass — repo code is authoritative for exact syntax, the transcript for intent and ordering, OCR clusters bridge the two — and conflicts are flagged in the note, never silently resolved. The `claude_skill` style then emits `skills/<slug>/` containing `SKILL.md` (build manifest, imperative lessons, techniques, gotchas, open gaps; every step `status: distilled`), `assets/` (cited frames), `reference/` (repo pointers + snapshots + docs), and `provenance.json`.
+
+`review_loop.py` is the quality gate: a fresh-context reviewer sees only the bundle, dry-runs every step, and reports gaps wherever it would be guessing; gaps escalate deterministically (targeted `ffmpeg` frame grabs at flagged timestamps, snapshot repo pulls, transcript re-reads) and a re-synthesis closes them. After `--max-iterations` (default 3) the bundle ships marked `incomplete` with the residual gap list in provenance. Per-phase models: `--review-model` / `--synth-model`.
+
+An Archon workflow wrapping the full chain lives at `.archon/workflows/lesson-liberation.yaml`.
 
 ### Local files
 
@@ -112,9 +129,16 @@ Generated_Data/<title>/
 ├── ocr.json                            # per-frame OCR + class + cluster
 ├── selected_frames.json                # which frames went to the LLM and why
 ├── frames/                             # frame_NNN_t-MM-SS.jpg
+├── references.json                     # harvested links + provenance (reference_follower.py)
+├── refs/                               # repo snapshots @SHA, fetched docs, source_meta.json
+├── reconciliation.json                 # transcript↔OCR↔repo alignments + flagged conflicts
+├── frames_targeted/                    # review-loop targeted grabs (tgrab_SSSSSS.jpg)
+├── skills/<slug>/                      # claude_skill bundle: SKILL.md, assets/, reference/, provenance.json
 ├── <title>_<style>.md                  # final note (Obsidian-ready frontmatter)
 └── <title>_<style>.distill_result.json # structured form: summary, key_points, code_blocks, citations…
 ```
+
+(`references.json`/`refs/` appear after running `reference_follower.py`; `reconciliation.json` only when pinned repo snapshots exist; `frames_targeted/` and `skills/` only on the `claude_skill` path.)
 
 The final markdown has [Obsidian-style](https://obsidian.md/) YAML frontmatter with citation counts, quality grades, model profile, and prompt-contract version.
 
@@ -125,9 +149,10 @@ The model is constrained to cite at least one of these for every technical claim
 - `seg#NNN` — transcript segment
 - `frame_NNN_t-MM-SS` (or short form `frame_NNN`) — specific frame
 - `cluster_id=cN` — a deduplicated code-frame cluster
-- `t=MM:SS` or `t=MM:SS–MM:SS` — bare timestamp
+- `t=MM:SS` (also `H:MM:SS` / `MMM:SS` for videos past 99 minutes), optionally as a `–` range — bare timestamp
+- `repo:path/to/file#L10-L40@SHA` — pinned repository line range (contract v2 only)
 
-Unresolved citations (referencing a frame or segment that doesn't exist) cause `distill.py` to exit non-zero with a warning banner in the markdown. The full contract is `prompts/distill_contract_v1.md`.
+Unresolved citations (referencing a frame, segment, or repo file that doesn't exist) cause `distill.py` to exit non-zero with a warning banner in the markdown. The base contract is `prompts/distill_contract_v1.md`; when reference following has pinned repo snapshots, `distill.py` automatically upgrades to `prompts/distill_contract_v2.md`, which adds the repo citation kind and conflict-flagging rules.
 
 ## Models
 
@@ -188,7 +213,9 @@ The DoD script runs the test suite, extracts + distills the committed fixture vi
 
 ```
 extract.py                      Phase 1 orchestrator
-distill.py                      Phase 2 orchestrator
+reference_follower.py           Phase 1.5: harvest links → classify → snapshot repos @SHA / fetch docs
+distill.py                      Phase 2 orchestrator (+reconciliation, +claude_skill bundle emission)
+review_loop.py                  Phase 3: fresh-context downstream review → escalate → re-synthesize
 run.py                          extract → distill convenience wrapper
 clean.py                        storage management
 download_transcript.py          legacy entry point; delegates to run.py when a style is given
@@ -199,12 +226,18 @@ frame_ocr.py                    RapidOCR + 5-class classifier + rapidfuzz dedup
 frame_select.py                 style-aware perceptual-hash scene change + anchored even-spacing
 enrichment.py                   splice OCR into transcript at frame timestamps
 payload.py                      multimodal LLM payload builder
-citation.py                     citation token extract + validate
+citation.py                     citation token extract + validate (incl. repo:path#Lx-Ly@SHA)
+reconcile.py                    transcript↔OCR↔repo cross-check; conflicts flagged, never resolved
+skill_bundle.py                 claude_skill bundle writer (SKILL.md, assets/, reference/, provenance)
 distill_render.py               distill_result.json → Obsidian markdown
 video_profile.py                lightweight router profile for auto style selection
+env_bootstrap.py                per-entry-point .env loading + DNS fallback arming
+dns_fallback.py                 DoH fallback resolver for port-53-filtered networks
 models.yaml                     model profile config
 prompts/distill_contract_v1.md  the citation contract sent to every LLM call
+prompts/distill_contract_v2.md  v1 + repo citations & conflict rules (auto-selected with repo evidence)
 styles/                         user-editable style guides
+.archon/workflows/              Archon workflow wrapping the lesson-liberation chain
 .cursor/skills/                 project-local agent workflows for video distillation
 vendor/claude_video/            vendored ffmpeg/whisper helpers (see UPSTREAM.md)
 ```

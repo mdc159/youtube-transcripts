@@ -13,11 +13,14 @@ User-facing details live in `README.md`. Architectural rationale is in `docs/sup
 | File | Purpose |
 |---|---|
 | `extract.py` | Phase 1 orchestrator: source → transcript → frames → OCR → manifest |
-| `distill.py` | Phase 2 orchestrator: artifacts → enrich → frame select → LLM → markdown + JSON |
+| `reference_follower.py` | Phase 1.5: harvest URLs (description/comments/transcript/OCR) → classify → snapshot repos pinned to SHA / fetch docs. Budgets: `--max-repo-mb`, `--max-fetches` |
+| `distill.py` | Phase 2 orchestrator: artifacts → enrich → frame select → reconcile (when repo snapshots exist) → LLM → markdown + JSON (+ `skills/<slug>/` bundle for `claude_skill`) |
+| `review_loop.py` | Phase 3 quality gate: fresh-context reviewer sees only the bundle → gaps → targeted escalation → re-synthesis; cap `--max-iterations` (3) then ships `incomplete` |
 | `run.py` | Convenience wrapper: `extract → distill` |
 | `clean.py` | Storage management; dry-run by default |
 | `models.py` | Profile resolution + `doctor` capability checks; also a CLI subcommand |
 | `download_transcript.py` | Legacy entry point, kept for backward compat. Delegates to `run.py` when a style is given |
+| `.archon/workflows/` | Archon workflow (`lesson-liberation.yaml`) wrapping extract → refs → distill → review |
 | `.cursor/skills/` | Project-local agent skills for routing and output workflows |
 
 ## Library modules
@@ -30,17 +33,21 @@ User-facing details live in `README.md`. Architectural rationale is in `docs/sup
 | `frame_select.py` | Style-aware perceptual-hash scene detection + anchored even-spacing + token-budget cap |
 | `enrichment.py` | Splice frame OCR into transcript at frame timestamps |
 | `payload.py` | Multimodal LLM payload builder (text + base64 images) |
-| `citation.py` | Citation token regex (`seg#`, `frame_NNN_t-MM-SS`, `cluster_id=cN`, `t=MM:SS`) + extract + validate |
+| `citation.py` | Citation token regex (`seg#`, `frame_NNN_t-MM-SS`, `cluster_id=cN`, `t=MM:SS` incl. `H:MM:SS`/`MMM:SS`, `repo:path#Lx-Ly@SHA`) + extract + validate |
+| `reconcile.py` | Cross-check transcript ↔ OCR code clusters ↔ pinned repo snapshots; conflicts flagged, never silently resolved; emits `reconciliation.json` + payload evidence block |
+| `skill_bundle.py` | `claude_skill` bundle writer: `skills/<slug>/{SKILL.md, assets/, reference/, provenance.json}` |
 | `distill_render.py` | `distill_result.json` → Obsidian-ready markdown with frontmatter |
 | `video_profile.py` | Lightweight transcript/OCR signal router for `auto` style selection |
+| `env_bootstrap.py` | Per-entry-point bootstrap: repo-root `.env` loading + DNS fallback arming |
+| `dns_fallback.py` | DoH fallback resolver (Cloudflare → Google) for networks that hijack/filter port-53 DNS |
 
 ## Config & contracts
 
 - `models.yaml` — model profiles. Default `gemini-3-flash`. Adding a new profile is one YAML entry, zero code changes.
-- `prompts/distill_contract_v1.md` — the citation contract sent to every LLM call. Every technical claim in output must cite at least one of: transcript segment, frame, cluster, or timestamp range.
-- `styles/<name>.md` — user-editable style overlays. Available: `coding_agent`, `knowledge_base`, `diy_project`, `human_tutorial` (human-reader tone; the only style not reachable via `auto` routing — explicit only).
+- `prompts/distill_contract_v1.md` — the citation contract sent to every LLM call. Every technical claim in output must cite at least one of: transcript segment, frame, cluster, or timestamp range. `prompts/distill_contract_v2.md` adds `repo:path#Lx-Ly@SHA` citations + evidence-authority/conflict rules; `distill.py` selects v2 automatically when reference following has pinned repo snapshots (`prompt_contract_version` in `distill_result.json` records which ran).
+- `styles/<name>.md` — user-editable style overlays. Available: `coding_agent`, `knowledge_base`, `diy_project`, `human_tutorial`, `claude_skill`. `human_tutorial` (human-reader tone) and `claude_skill` (self-sufficient agent skill bundle) are explicit-only — `auto` never routes to them.
 - `.cursor/skills/video-distill-router` — meta skill for choosing between video workflows.
-- `.cursor/skills/youtube-coding-agent`, `.cursor/skills/youtube-diy-project`, `.cursor/skills/youtube-knowledge-base`, `.cursor/skills/youtube-human-tutorial` — output workflow skills that mirror the style overlays. Keep skills and `styles/` in sync when editing either.
+- `.cursor/skills/youtube-coding-agent`, `.cursor/skills/youtube-diy-project`, `.cursor/skills/youtube-knowledge-base`, `.cursor/skills/youtube-human-tutorial`, `.cursor/skills/youtube-claude-skill` — output workflow skills that mirror the style overlays. Keep skills and `styles/` in sync when editing either.
 
 ## Vendored
 
@@ -56,7 +63,10 @@ bash scripts/dod_check.sh                                 # full end-to-end gate
 
 uv run python run.py "<url-or-path>" <style>              # one-shot extract + distill
 uv run python extract.py "<url-or-path>"                  # phase 1 only
+uv run python reference_follower.py <title-dir>           # phase 1.5: links → repo snapshots @SHA / docs
 uv run python distill.py <title-dir> <style> --model X    # phase 2; --dry-run-payload to skip LLM call
+uv run python distill.py <title-dir> claude_skill         # phase 2 + reconciliation + skills/<slug>/ bundle
+uv run python review_loop.py <title-dir>                  # phase 3: downstream-hat review loop
 uv run python distill.py <title-dir> auto --dry-run-payload   # route to a style without a live LLM call
 uv run python models.py doctor --profile <name>           # validate a model profile
 uv run python clean.py --delete-video --older-than 30d --apply   # disk cleanup
