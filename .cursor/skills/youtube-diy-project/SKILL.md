@@ -18,9 +18,10 @@ Produce build-ready instructions with:
 
 - Project Summary: what is being built and why.
 - Project Info: difficulty, time estimate, and cost estimate if mentioned.
-- Materials List or Ingredients: exact quantities, dimensions, brands, part numbers, and optional substitutes.
+- Materials List or Ingredients (bill of materials): exact quantities, dimensions, specs/ratings, brands, part numbers, optional substitutes, and the timestamp where each item is mentioned. No sourcing or purchasing research — only what the video states.
 - Tools Required: specific sizes/types and alternatives.
-- Safety Notes: PPE, hazards, and warnings.
+- Theory of Operation: how the finished build works, the role of each major component, and why key values matter (when the video explains or demonstrates it).
+- Cautions: PPE, hazards, operational warnings, and mistakes the maker warns against.
 - Instructions: numbered steps with exact measurements, tips, and watch-for notes.
 - Variations and Resources when mentioned.
 - Open Questions: unstated measurements, skipped steps, unspecified materials ("None identified" if complete).

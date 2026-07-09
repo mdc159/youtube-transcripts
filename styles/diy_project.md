@@ -22,27 +22,36 @@ Produce a structured markdown document with:
 ### 3. Materials List / BOM
 *Include this section only if materials are mentioned. Omit entirely if not applicable.*
 
-| Item | Quantity | Specifications | Required/Optional |
-|------|----------|----------------|-------------------|
-| Material name | Amount | Size, part number, specs | Required / Optional |
+| Item | Quantity | Spec / Rating | Required/Optional | Mentioned at |
+|------|----------|---------------|-------------------|--------------|
+| Material name | Amount | Size, part number, voltage/load rating, specs | Required / Optional | `t=MM:SS` |
 
-- Include exact measurements, dimensions, and specifications as stated
+- Include exact measurements, dimensions, specs, and ratings as stated
 - Note brand names and part numbers when given
+- Timestamp each item where it is first mentioned or shown
 - List substitutes or alternatives if mentioned
 - Group by category if helpful (e.g., "Lumber", "Hardware", "Electronics")
+- Do NOT research sourcing, pricing, or purchasing — record only what the video states
 
 ### 4. Tools Required
 Bulleted list of tools and equipment needed:
 - Tool name (specific type/size if mentioned)
 - Note if specialized tools have alternatives
 
-### 5. Safety Notes
-*Include only if safety warnings are mentioned. Omit if none.*
-- Personal protective equipment needed
-- Hazards to be aware of
-- Safety precautions mentioned
+### 5. Theory of Operation
+*Include when the video explains (or demonstrates) how/why the finished thing works. Omit only if the project is purely assembly with no mechanism.*
+- How the finished build functions, in the maker's own terms
+- The role each major component/subsystem plays
+- Key values and why they matter (e.g., "the 10kΩ resistor sets the trigger threshold")
 
-### 6. Instructions
+### 6. Cautions
+*Include only if warnings are mentioned. Omit if none.*
+- Personal protective equipment needed
+- Hazards to be aware of (electrical, structural, chemical, tool-related)
+- Safety precautions and operational cautions the maker states
+- Mistakes the maker warns against or demonstrates recovering from
+
+### 7. Instructions
 Numbered steps:
 
 1. **Step title or action**
@@ -53,19 +62,19 @@ Numbered steps:
 
 Continue for all steps. Include sub-steps where the video shows detailed processes.
 
-### 7. Variations
+### 8. Variations
 *Include only if alternatives are discussed. Omit if none.*
 - Alternative approaches mentioned
 - Modifications for different skill levels
 - Customization options discussed
 
-### 8. Resources
+### 9. Resources
 *Include only if referenced. Omit if none.*
 - Plans, templates, or downloads mentioned
 - Other videos or tutorials referenced
 - Suppliers or sources for materials
 
-### 9. Open Questions
+### 10. Open Questions
 Anything a builder would still need to figure out: unstated measurements, skipped steps, materials shown but never specified. Always include this section; write "None identified" if the instructions are complete.
 
 ## Rules
