@@ -257,3 +257,27 @@ def test_main_max_fetches_zero_skips_network(tmp_path, monkeypatch):
     assert rc == 0
     refs = json.loads((out_dir / "references.json").read_text())
     assert refs["references"][0]["status"] == "skipped"
+
+
+def test_shortlink_resolution_reclassifies(tmp_path, monkeypatch):
+    out_dir = tmp_path / "Short"
+    out_dir.mkdir()
+    (out_dir / "Short_formatted_transcript.txt").write_text("0.0|no links\n")
+    (out_dir / "Short_clean_text.txt").write_text("no links")
+    _seed = Manifest.load_or_create(
+        out_dir, source_id="yt:short123456", source_url="https://youtu.be/short123456",
+        title="Short", duration_seconds=1.0)
+    _seed.save()
+    monkeypatch.setattr(
+        rf, "_fetch_source_meta",
+        lambda *a, **k: {"fetched_at": "2026-01-01T00:00:00Z",
+                         "description": "assets: https://bit.ly/abc123",
+                         "upload_date": None, "channel": None, "comments": []})
+    monkeypatch.setattr(rf, "resolve_shortlink",
+                        lambda url: "https://example.com/assets/pack.zip")
+    rc = rf.main([str(out_dir), "--max-fetches", "0"])
+    assert rc == 0
+    refs = json.loads((out_dir / "references.json").read_text())
+    rec = refs["references"][0]
+    assert rec["kind"] == "asset_download"
+    assert rec["resolved_url"] == "https://example.com/assets/pack.zip"

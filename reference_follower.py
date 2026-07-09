@@ -70,6 +70,12 @@ _ASSET_HOSTS = (
     "sketchfab.com", "itch.io", "mediafire.com", "we.tl", "wetransfer.com",
 )
 
+# Link shorteners are opaque to classification — resolve them first.
+_SHORTENER_HOSTS = (
+    "bit.ly", "tinyurl.com", "goo.gl", "t.co", "buff.ly", "ow.ly",
+    "rebrand.ly", "cutt.ly", "shorturl.at", "rb.gy", "s.id", "geni.us",
+)
+
 # Snapshot selection: README + build/setup files (fnmatch patterns, lowercase).
 _BUILD_SETUP_PATTERNS = (
     "readme*", "license*", "contributing*", "install*", "setup*", "changelog*",
@@ -128,6 +134,19 @@ def classify_url(url: str) -> str:
         return "docs"
 
     return "other"
+
+
+def resolve_shortlink(url: str) -> str | None:
+    """Follow a shortener's redirects to the destination URL (None on failure)."""
+    import requests
+
+    try:
+        r = requests.head(url, allow_redirects=True, timeout=15,
+                          headers={"User-Agent": "youtube-transcripts/refs"})
+        final = str(r.url)
+        return final if normalize_url(final) != normalize_url(url) else None
+    except requests.RequestException:
+        return None
 
 
 def parse_github_repo(url: str) -> tuple[str, str, str | None]:
@@ -444,11 +463,22 @@ def main(argv: list[str] | None = None) -> int:
     candidates = collect_candidates(out_dir, source_meta)
     print(f"[refs] harvested {len(candidates)} unique URLs")
 
+    # Resolve shorteners so classification sees the real destination.
+    for rec in candidates.values():
+        host = urlparse(rec["url"]).netloc.lower()
+        if host in _SHORTENER_HOSTS:
+            final = resolve_shortlink(rec["url"])
+            if final:
+                rec["resolved_url"] = final
+                rec["kind"] = classify_url(final)
+                print(f"[refs] resolved {rec['url']} → {final[:80]} ({rec['kind']})")
+
     tokens = _tutorial_tokens(out_dir)
     fetches_used = 0
     records = []
     for rec in candidates.values():
         kind = rec["kind"]
+        target = rec.get("resolved_url") or rec["url"]
         try:
             if kind == "github_repo":
                 if fetches_used >= args.max_fetches:
@@ -456,7 +486,7 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     fetches_used += 1
                     rec["detail"] = snapshot_repo(
-                        rec["url"], refs_root,
+                        target, refs_root,
                         max_repo_mb=args.max_repo_mb, tutorial_tokens=tokens)
                     rec["status"] = "snapshotted"
                     print(f"[refs] snapshotted {rec['detail']['owner']}/{rec['detail']['repo']}"
@@ -467,9 +497,9 @@ def main(argv: list[str] | None = None) -> int:
                     rec["status"], rec["detail"] = "skipped", {"reason": "max_fetches reached"}
                 else:
                     fetches_used += 1
-                    rec["detail"] = fetch_doc(rec["url"], refs_root)
+                    rec["detail"] = fetch_doc(target, refs_root)
                     rec["status"] = "fetched"
-                    print(f"[refs] fetched doc {rec['url']}")
+                    print(f"[refs] fetched doc {target}")
             else:
                 rec["status"], rec["detail"] = "recorded", {}
         except Exception as exc:  # noqa: BLE001 - per-reference isolation
