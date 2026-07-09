@@ -248,6 +248,20 @@ def main(argv: list[str] | None = None) -> int:
     md_path.write_text(md)
     (out_dir / f"{out_dir.name}_{style_name}.distill_result.json").write_text(json.dumps(parsed_full, indent=2))
 
+    # claude_skill emits a self-sufficient bundle alongside the standard pair.
+    bundle_dir = None
+    if style_name == "claude_skill":
+        from skill_bundle import write_skill_bundle  # local import keeps import-time cost low
+
+        bundle_dir = write_skill_bundle(
+            out_dir,
+            skill_md=msg if parsed is None else md,
+            distill_result=parsed_full,
+            manifest_data=manifest.data,
+            unresolved_citations=[c.raw for c in val.unresolved],
+        )
+        print(f"[distill] skill bundle written to {bundle_dir}")
+
     # Optional post-processing: inline frame embeds, YouTube deep-links,
     # contact-sheet gallery, code appendix, Mermaid diagrams, ref tables.
     enrich_on = args.enrich
@@ -272,6 +286,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  Markdown:  {abs_md}")
     print(f"  JSON:      {abs_json}")
     print(f"  Frames:    {abs_md.parent / 'frames'}/")
+    if bundle_dir is not None:
+        print(f"  Skill:     {bundle_dir.resolve()}/")
     print("=" * 72)
 
     # Citation validator gate
