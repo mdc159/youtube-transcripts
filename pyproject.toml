@@ -16,6 +16,7 @@ dependencies = [
     "imagehash>=4.3",
     "rapidfuzz>=3.5",
     "requests>=2.31",
+    "html2text>=2024.2",
 ]
 
 [dependency-groups]
