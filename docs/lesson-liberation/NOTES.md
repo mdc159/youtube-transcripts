@@ -49,6 +49,37 @@ Get an end-to-end skeleton emitting a skill bundle early; then deepen each stage
 existing manifest tree so idempotency + provenance stay unified. `skills/<slug>/`
 bundle is emitted by the `claude_skill` style (final package).
 
+### D8 — Long videos: transcript-first extraction + targeted grabs (2026-07-09)
+The base frame pipeline caps at 999 frames / 99-minute filenames
+(`frame_NNN_t-MM-SS`). Rather than surgery on that format, the workflow goes
+transcript-only for >98min sources and the **review loop's targeted ffmpeg
+grabs** (cited by `t=`, stored in `frames_targeted/`) serve as the visual
+channel — evidence is fetched exactly where the reviewer found a gap, instead
+of pre-sampling ~1000 frames of a 10h course. Citation timestamp grammar was
+widened to `H:MM:SS`/`MMM:SS` for long videos.
+
+### D9 — Artifacts persist outside Archon worktrees (2026-07-09)
+Archon runs each workflow in an isolated worktree that gets cleaned up; a
+multi-hour extraction must survive. All workflow nodes export
+`YT_GENERATED_DATA_DIR=$HOME/.lesson-liberation/Generated_Data` (also set in
+`~/.archon/.env`, alongside OPENROUTER_API_KEY for worktree runs — repo .env
+is gitignored and absent in worktrees). Entry points additionally self-load
+the repo .env via env_bootstrap.py.
+
+### D10 — C0 resolved as per-phase flags (2026-07-09)
+Per-phase model selection = existing profile seam + flags: `distill --model`,
+`review_loop --review-model` (cheap gap detection) / `--synth-model` (strong
+re-synthesis). No new config layer.
+
+## Answered
+
+### Q2 — No linked GitHub repo on the target video ✓
+The UE5.8 course description links Patreon/merch/sponsors/related videos plus
+4 bit.ly shortlinks (likely asset packs). No `github_repo`; reconciliation
+correctly stays inactive (contract v1). Shortener resolution was added to the
+follower; note this sandbox blocks DNS to bit.ly, so resolution activates on
+unrestricted runs.
+
 ## Open questions (non-blocking)
 
 ### Q1 — API key + model/budget policy for the live run
