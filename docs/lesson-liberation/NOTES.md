@@ -97,3 +97,26 @@ harvesting the description during C1.
 ### Q3 — Which project "owns" the Archon run
 Workflow lives in the repo (D3). Confirm whether operator wants it registered in
 the running Archon server/Web UI for monitoring, or CLI-only.
+
+## Acceptance run — UE5.8 for Architects (2026-07-09)
+
+Full pipeline executed live: extract (transcript-only, 10.4h, 12,393 segments)
+→ reference-follow (10 links, no repo) → distill claude_skill (gemini-3-flash,
+~215K-token payload) → review loop (2 iterations, frame grabs disabled in
+sandbox).
+
+Result: bundle shipped **status=incomplete** with 4 residual blocking gaps —
+all asset-availability findings (instructor's Rhino model, UV-checker texture,
+PBR texture set, UI_HUAD widget layout). These are TRUE gaps: the course's
+project files are behind Patreon-gated shortlinks; no amount of escalation can
+conjure them. The reviewer correctly refused to pass a package a fresh agent
+couldn't execute verbatim, and the pipeline shipped it flagged rather than
+silently truncated — exactly the specified behavior. The skill remains
+applicable to a user's own CAD model (workflow, values, and techniques are
+fully captured: 10,000 Lux sun, IOR 1.0 glass, 2m box mapping, complex-as-
+simple collision, tag-addressed light switches, 5.7→5.8 hit-lighting fix).
+
+Distiller citation hallucination observed (13 seg IDs beyond range, caught by
+validator) — future work: feed the validator's unresolved list back through a
+correction pass, and/or chunked map-reduce distillation for >2h sources to
+deepen coverage per lesson.
