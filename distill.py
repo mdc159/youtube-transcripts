@@ -81,6 +81,8 @@ def _compose_style_with_audience(style_md: str, *, audience_note: str | None) ->
 
 
 def main(argv: list[str] | None = None) -> int:
+    import env_bootstrap
+    env_bootstrap.load()
     args = _parse_args(sys.argv[1:] if argv is None else argv)
 
     repo_root = Path(__file__).resolve().parent

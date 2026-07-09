@@ -413,6 +413,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
+    import env_bootstrap
+    env_bootstrap.load()
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     out_dir = _resolve_out_dir(args.title)
     manifest_path = out_dir / MANIFEST_FILENAME
