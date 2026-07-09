@@ -99,6 +99,8 @@ def write_skill_bundle(
     distill_result: dict,
     manifest_data: dict,
     unresolved_citations: list[str] | None = None,
+    review_iterations: list[dict] | None = None,
+    status: str = "distilled",
 ) -> Path:
     """Write the bundle; returns the bundle directory. Overwrites prior bundle
     for the same slug (a re-distill supersedes it)."""
@@ -173,8 +175,8 @@ def write_skill_bundle(
         "transcript_quality": (manifest_data.get("extract") or {}).get("transcript_quality"),
         "quality": distill_result.get("quality"),
         "repo_pointers": repo_pointers,
-        "review_iterations": [],       # appended by the downstream-hat review loop
-        "status": "distilled",         # flipped by the review loop: complete|incomplete
+        "review_iterations": list(review_iterations or []),  # appended by the review loop
+        "status": status,              # distilled → complete | incomplete (review loop)
         "unresolved_gaps": list(unresolved_citations or []),
         "assets_packaged": [p.name for p in cited],
     }

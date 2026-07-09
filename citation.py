@@ -10,7 +10,9 @@ _SEG = re.compile(r"seg#(\d+)")
 _FRAME_FULL = re.compile(r"frame_\d{3}_t-\d{2}-\d{2}")
 _FRAME_SHORT = re.compile(r"\bframe_(\d{3})\b(?!_t)")
 _CLUSTER = re.compile(r"cluster_id=([a-zA-Z0-9_]+)")
-_TIMESTAMP = re.compile(r"\bt=\d{2}:\d{2}(?:[–-]\d{2}:\d{2})?")
+# MM:SS (legacy), MMM:SS, or H:MM:SS / HH:MM:SS — long-form videos exceed 99 min.
+_TS_PART = r"\d{1,3}:\d{2}(?::\d{2})?"
+_TIMESTAMP = re.compile(rf"\bt={_TS_PART}(?:[–-]{_TS_PART})?")
 # repo:path/to/file#L10-L40@SHA — line range optional, SHA 7-40 hex chars.
 _REPO = re.compile(r"repo:([\w][\w./-]*?)(?:#L(\d+)(?:-L(\d+))?)?@([0-9a-fA-F]{7,40})")
 
