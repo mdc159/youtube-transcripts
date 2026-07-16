@@ -28,6 +28,7 @@ class Profile:
     api_key_env: str
     max_images: int
     max_image_bytes: int
+    reasoning_effort: str | None = None  # minimal|low|medium|high; None = model default
 
 
 @dataclass
@@ -61,6 +62,7 @@ def resolve(cli: Optional[str], models_yaml: Path) -> Profile:
         api_key_env=p["api_key_env"],
         max_images=int(p.get("max_images", 16)),
         max_image_bytes=int(p.get("max_image_bytes", 5_242_880)),
+        reasoning_effort=p.get("reasoning_effort"),
     )
 
 

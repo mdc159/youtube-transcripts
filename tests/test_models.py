@@ -11,7 +11,7 @@ from yt_distill.core.models import doctor, DoctorResult
 def test_resolve_default(monkeypatch, repo_root):
     monkeypatch.delenv("DISTILL_MODEL", raising=False)
     p = models.resolve(cli=None, models_yaml=repo_root / "models.yaml")
-    assert p.name == "gemini-3-flash"
+    assert p.name == "gemini-3.5-flash"
 
 
 def test_resolve_env_overrides_default(monkeypatch, repo_root):
@@ -70,3 +70,23 @@ def test_doctor_text_failure_reports(openai_mock, monkeypatch, tmp_path, repo_ro
     res = doctor(p, models_yaml=repo_root / "models.yaml", probe_image=False)
     assert res.ok is False
     assert "boom" in res.failure_reason
+
+
+def test_default_profile_is_gemini_35_flash(monkeypatch, repo_root):
+    monkeypatch.delenv("DISTILL_MODEL", raising=False)
+    prof = models.resolve(cli=None, models_yaml=repo_root / "models.yaml")
+    assert prof.model == "google/gemini-3.5-flash"
+    assert prof.vision is True
+    assert prof.api_key_env == "OPENROUTER_API_KEY"
+
+
+def test_reasoning_effort_defaults_to_none(repo_root):
+    prof = models.resolve(cli="gemini-3-flash", models_yaml=repo_root / "models.yaml")
+    assert prof.reasoning_effort is None
+
+
+def test_reasoning_effort_parsed_when_present(repo_root):
+    prof = models.resolve(
+        cli="gemini-3.5-flash-high", models_yaml=repo_root / "models.yaml"
+    )
+    assert prof.reasoning_effort == "high"

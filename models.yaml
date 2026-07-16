@@ -1,6 +1,25 @@
-default: gemini-3-flash
+default: gemini-3.5-flash
 
 profiles:
+  gemini-3.5-flash:
+    base_url: https://openrouter.ai/api/v1
+    model: google/gemini-3.5-flash
+    vision: true
+    reasoning: true
+    api_key_env: OPENROUTER_API_KEY
+    max_images: 32
+    max_image_bytes: 5242880
+
+  gemini-3.5-flash-high:
+    base_url: https://openrouter.ai/api/v1
+    model: google/gemini-3.5-flash
+    vision: true
+    reasoning: true
+    reasoning_effort: high
+    api_key_env: OPENROUTER_API_KEY
+    max_images: 32
+    max_image_bytes: 5242880
+
   gemini-3-flash:
     base_url: https://openrouter.ai/api/v1
     model: google/gemini-3-flash-preview
