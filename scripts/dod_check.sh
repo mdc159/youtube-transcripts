@@ -24,12 +24,6 @@ sys.exit(distill.main(['test_video', 'knowledge_base', '--dry-run-payload']))
 "
 test -f "$TMP/test_video/payload.json"
 
-echo "=== DoD: legacy download_transcript.py ==="
-# Soft check: legacy CLI must still load and run end-to-end on a real URL when
-# the network is available. Offline behaviour is covered by
-# tests/test_download_transcript_legacy.py.
-YT_GENERATED_DATA_DIR=$TMP uv run python download_transcript.py "https://www.youtube.com/watch?v=KE39P4qBjDk" || true
-
 echo "=== DoD: resumability ==="
 YT_GENERATED_DATA_DIR=$TMP uv run python extract.py tests/fixtures/test_video.mp4 --max-frames 6
 rm -f "$TMP"/test_video/frames/*.jpg | head -1
