@@ -19,6 +19,9 @@ dependencies = [
     "html2text>=2024.2",
 ]
 
+[project.scripts]
+yt-distill = "yt_distill.cli:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",
