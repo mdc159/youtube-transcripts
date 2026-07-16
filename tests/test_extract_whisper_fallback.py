@@ -10,7 +10,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-import extract
+from yt_distill.pipeline import extract
 from yt_distill.core.manifest import Manifest
 from yt_distill.stages.transcript import TranscriptResult
 
@@ -40,7 +40,7 @@ def _manifest(out_dir: Path, *, duration: float = 60.0) -> Manifest:
     )
 
 
-@patch("extract.fetch_transcript")
+@patch("yt_distill.pipeline.extract.fetch_transcript")
 def test_no_fallback_when_tiers_succeed(mock_fetch, tmp_path):
     out_dir = tmp_path / "vid"
     out_dir.mkdir()
@@ -54,8 +54,8 @@ def test_no_fallback_when_tiers_succeed(mock_fetch, tmp_path):
     assert mock_fetch.call_count == 1
 
 
-@patch("extract._whisper_credentials_available", return_value=False)
-@patch("extract.fetch_transcript")
+@patch("yt_distill.pipeline.extract._whisper_credentials_available", return_value=False)
+@patch("yt_distill.pipeline.extract.fetch_transcript")
 def test_no_fallback_when_no_whisper_creds(mock_fetch, _creds, tmp_path):
     out_dir = tmp_path / "vid"
     out_dir.mkdir()
@@ -66,8 +66,8 @@ def test_no_fallback_when_no_whisper_creds(mock_fetch, _creds, tmp_path):
     assert mock_fetch.call_count == 1
 
 
-@patch("extract._whisper_credentials_available", return_value=True)
-@patch("extract.fetch_transcript")
+@patch("yt_distill.pipeline.extract._whisper_credentials_available", return_value=True)
+@patch("yt_distill.pipeline.extract.fetch_transcript")
 def test_no_fallback_when_no_frames_flag_set(mock_fetch, _creds, tmp_path):
     """If --no-frames was passed, we have no permission to download a video."""
     out_dir = tmp_path / "vid"
@@ -83,10 +83,10 @@ def test_no_fallback_when_no_frames_flag_set(mock_fetch, _creds, tmp_path):
     assert mock_fetch.call_count == 1
 
 
-@patch("extract._extract_audio_for_whisper")
-@patch("extract._ensure_video_downloaded")
-@patch("extract._whisper_credentials_available", return_value=True)
-@patch("extract.fetch_transcript")
+@patch("yt_distill.pipeline.extract._extract_audio_for_whisper")
+@patch("yt_distill.pipeline.extract._ensure_video_downloaded")
+@patch("yt_distill.pipeline.extract._whisper_credentials_available", return_value=True)
+@patch("yt_distill.pipeline.extract.fetch_transcript")
 def test_falls_back_to_whisper_when_tiers_fail(
     mock_fetch, _creds, mock_ensure_video, mock_extract_audio, tmp_path
 ):

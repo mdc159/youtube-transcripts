@@ -5,6 +5,7 @@ import sys
 from urllib.parse import urlparse, parse_qs
 
 from yt_distill.stages.transcript import fetch_transcript
+from yt_distill.pipeline import run
 
 
 def extract_video_id(url_or_id):
@@ -189,11 +190,8 @@ if __name__ == "__main__":
 
     if style:
         # Delegate to run.py (extract → distill) for the new pipeline
-        run_script = os.path.join(project_root, "run.py")
-        if os.path.isfile(run_script):
-            print(f"[download_transcript] delegating to run.py for style={style!r}")
-            r = subprocess.run(["uv", "run", "python", run_script, sys.argv[1], style], cwd=project_root)
-            sys.exit(r.returncode)
+        print(f"[download_transcript] delegating to run.py for style={style!r}")
+        sys.exit(run.main([sys.argv[1], style]))
 
     # 1. Get Title and Create Directory (always under Generated_Data)
     title = get_safe_title(video_id)

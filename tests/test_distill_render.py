@@ -1,4 +1,4 @@
-from distill_render import render_markdown
+from yt_distill.output.render import render_markdown
 
 
 def test_render_includes_required_sections():

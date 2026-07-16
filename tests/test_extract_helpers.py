@@ -1,7 +1,7 @@
 """Unit tests for extract.py pure helpers."""
 from __future__ import annotations
 
-import extract
+from yt_distill.pipeline import extract
 
 
 def test_safe_title_normal():

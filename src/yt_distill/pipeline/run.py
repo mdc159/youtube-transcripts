@@ -6,8 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-import distill
-import extract
+from yt_distill.pipeline import distill, extract
 
 
 def main(argv=None):

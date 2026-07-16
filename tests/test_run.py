@@ -1,6 +1,6 @@
 import pytest
 
-import run
+from yt_distill.pipeline import run
 
 
 def test_help_returns_zero(capsys):

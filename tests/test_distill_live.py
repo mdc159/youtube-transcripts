@@ -2,10 +2,10 @@ import json
 from unittest.mock import patch, MagicMock
 from pathlib import Path
 import pytest
-import distill
+from yt_distill.pipeline import distill
 
 
-@patch("distill.OpenAI")
+@patch("yt_distill.pipeline.distill.OpenAI")
 def test_live_distill_writes_outputs(openai_mock, tmp_path, fixtures_dir, monkeypatch):
     # Set up an extract result by writing the artifacts we need by hand.
     od = tmp_path / "T"
@@ -45,7 +45,7 @@ def test_live_distill_writes_outputs(openai_mock, tmp_path, fixtures_dir, monkey
     assert (od / "T_knowledge_base.distill_result.json").is_file()
 
 
-@patch("distill.OpenAI")
+@patch("yt_distill.pipeline.distill.OpenAI")
 def test_distill_fails_on_unresolved_citations(openai_mock, tmp_path, monkeypatch):
     od = tmp_path / "T"
     od.mkdir()

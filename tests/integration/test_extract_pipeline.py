@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-import extract
+from yt_distill.pipeline import extract
 
 
 @pytest.mark.integration

@@ -42,7 +42,7 @@ from yt_distill.core.enrichment import parse_formatted_transcript
 from yt_distill.core.manifest import Manifest, MANIFEST_FILENAME
 from yt_distill.core.models import resolve
 from yt_distill.core.reconcile import load_snapshots
-from skill_bundle import slugify, write_skill_bundle
+from yt_distill.output.skill_bundle import slugify, write_skill_bundle
 
 MAX_REPO_FILE_LINES = 200
 MAX_TRANSCRIPT_WINDOWS = 6
@@ -333,7 +333,7 @@ def main(argv: list[str] | None = None) -> int:
     env_bootstrap.load()
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     out_dir = _resolve_out_dir(args.title)
-    repo_root = Path(__file__).resolve().parent
+    repo_root = Path(__file__).resolve().parents[3]
 
     manifest_path = out_dir / MANIFEST_FILENAME
     if not manifest_path.is_file():

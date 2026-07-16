@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 import pytest
-import distill, extract
+from yt_distill.pipeline import distill, extract
 
 
 @pytest.mark.integration
@@ -12,7 +12,7 @@ def test_dry_run_payload_flow(tmp_path, fixtures_dir, monkeypatch):
     extract.main([str(src), "--max-frames", "6"])
     od = next(tmp_path.iterdir())
     # Skip the doctor by mocking it
-    import distill as _d
+    from yt_distill.pipeline import distill as _d
     monkeypatch.setattr(_d, "doctor", lambda *a, **k: type("R", (), {"ok": True, "failure_reason": ""})())
     rc = distill.main([od.name, "knowledge_base", "--dry-run-payload"])
     assert rc == 0

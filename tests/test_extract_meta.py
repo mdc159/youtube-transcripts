@@ -1,4 +1,4 @@
-from extract import _grade_ocr, _grade_frame_coverage
+from yt_distill.pipeline.extract import _grade_ocr, _grade_frame_coverage
 
 
 def test_grade_ocr_buckets():

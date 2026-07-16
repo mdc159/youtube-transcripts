@@ -1,4 +1,4 @@
-import distill
+from yt_distill.pipeline import distill
 from yt_distill.core.enrichment import TranscriptSegment
 from yt_distill.stages.frame_ocr import FrameClass, FrameRecord
 

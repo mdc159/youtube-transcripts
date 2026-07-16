@@ -4,7 +4,7 @@ Regression: when the LLM returns full markdown (its actual mode under the
 contract) the renderer used to wrap it in another `## Summary` heading and
 leak `## Summary` into the frontmatter `summary:` field.
 """
-from distill_render import render_markdown, render_passthrough
+from yt_distill.output.render import render_markdown, render_passthrough
 
 
 _MODEL_MARKDOWN = """## Summary

@@ -17,7 +17,7 @@ from yt_distill.stages.frame_select import detect_scene_changes, select_frames, 
 from yt_distill.core.enrichment import parse_formatted_transcript, enrich_transcript, write_enriched_transcript
 from yt_distill.core.payload import build_payload, PayloadBuildError
 from yt_distill.core.citation import validate_citations, extract_citations, ResolutionContext
-from distill_render import render_markdown, render_passthrough
+from yt_distill.output.render import render_markdown, render_passthrough
 from yt_distill.core.video_profile import VideoProfile, build_video_profile, format_route_proposal
 
 
@@ -85,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     env_bootstrap.load()
     args = _parse_args(sys.argv[1:] if argv is None else argv)
 
-    repo_root = Path(__file__).resolve().parent
+    repo_root = Path(__file__).resolve().parents[3]
     out_dir = _resolve_out_dir(args.title)
     style_path = None
     if args.style != "auto":
@@ -169,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
 
     contract_version = 2 if recon is not None else 1
     # Build payload
-    contract = (Path(__file__).resolve().parent / "prompts" / f"distill_contract_v{contract_version}.md").read_text()
+    contract = (repo_root / "prompts" / f"distill_contract_v{contract_version}.md").read_text()
     style = _compose_style_with_audience(
         style_path.read_text(),
         audience_note=getattr(args, "audience_note", None),
@@ -280,7 +280,7 @@ def main(argv: list[str] | None = None) -> int:
     # claude_skill emits a self-sufficient bundle alongside the standard pair.
     bundle_dir = None
     if style_name == "claude_skill":
-        from skill_bundle import write_skill_bundle  # local import keeps import-time cost low
+        from yt_distill.output.skill_bundle import write_skill_bundle  # local import keeps import-time cost low
 
         bundle_dir = write_skill_bundle(
             out_dir,

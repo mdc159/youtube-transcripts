@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-import distill
+from yt_distill.pipeline import distill
 
 
 GOLDEN = Path(__file__).resolve().parent.parent / "fixtures" / "golden"

@@ -1,5 +1,5 @@
 import pytest
-import extract
+from yt_distill.pipeline import extract
 
 
 def test_parse_args_minimal():

@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-import review_loop as rl
+from yt_distill.pipeline import review as rl
 from yt_distill.core.manifest import Manifest
-from skill_bundle import write_skill_bundle
+from yt_distill.output.skill_bundle import write_skill_bundle
 
 
 # ---------------------------------------------------------------------------

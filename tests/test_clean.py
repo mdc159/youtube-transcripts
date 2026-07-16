@@ -1,7 +1,7 @@
 from pathlib import Path
 import json
 import time
-import clean
+from yt_distill import clean
 
 
 def _setup(root: Path, age_days: int = 0):

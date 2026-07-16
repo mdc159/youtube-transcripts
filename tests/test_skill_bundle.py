@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from skill_bundle import (
+from yt_distill.output.skill_bundle import (
     _extract_trigger_description,
     slugify,
     write_skill_bundle,
