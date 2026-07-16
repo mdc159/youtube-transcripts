@@ -1,8 +1,19 @@
 # Modular Restructure & Stage Architecture Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 >
 > **Orchestration mode for this plan:** Claude acts as the orchestrating agent and dispatches one Codex worker per task (fork-terminal / multi-model-orchestration). Each task below is written to be fully self-contained for a worker that has NEVER seen this repo or this plan's other tasks. The orchestrator reviews the diff and test output after every task before dispatching the next.
+
+
+> **COMPLETED 2026-07-16.** All 10 tasks landed (commits cb32ce8..820a94b + gate).
+> Execution notes: Codex workers (GPT-5.6-sol via Herdr panes) did edits only —
+> sandbox blocks network/python/git — orchestrator ran tests and committed.
+> The "suite green" assumption was corrected to an 8-test pre-existing Windows
+> baseline (path separators + cp1252 encoding); failure set was byte-identical
+> after every task. Golden byte-compare blocked by the same pre-existing
+> mojibake bug (prompt/style reads missing encoding="utf-8") — first item for
+> sub-project 2. Live smoke run via gemini-3.5-flash passed with zero
+> unresolved citations.
 
 **Goal:** Move the flat-root pipeline into a `src/yt_distill/` package with a stage registry and a single `yt-distill` CLI, with zero functionality loss.
 
@@ -62,7 +73,7 @@ Every task's requirements implicitly include this section.
 **Interfaces:**
 - Produces: importable `yt_distill` package (empty subpackages) and importable `vendor.claude_video` after `uv sync`. All later tasks rely on this.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/test_packaging.py`:
 
@@ -86,12 +97,12 @@ def test_vendor_still_importable():
     importlib.import_module("vendor.claude_video.scripts")
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/test_packaging.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'yt_distill'`
 
-- [ ] **Step 3: Add build system, scripts stub, and package dirs**
+- [x] **Step 3: Add build system, scripts stub, and package dirs**
 
 Append to `pyproject.toml` (keep every existing section untouched):
 
@@ -110,13 +121,13 @@ Create the five `__init__.py` files, each containing only a docstring, e.g. `src
 """yt-distill: distill YouTube/local videos into citation-grounded artifacts."""
 ```
 
-- [ ] **Step 4: Sync and run tests**
+- [x] **Step 4: Sync and run tests**
 
 Run: `uv sync` then `uv run pytest tests/test_packaging.py -v`
 Expected: both tests PASS (uv installs the project editable once a build system exists).
 Then run the full suite: `uv run pytest` — expected PASS (nothing moved yet).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add pyproject.toml src/ tests/test_packaging.py
@@ -151,13 +162,13 @@ REPO_ROOT = Path(__file__).resolve().parents[3]  # src/yt_distill/core/x.py -> r
 
 ...but ONLY where the old code resolved to the repo root. Verify each case by reading the surrounding code; do not blanket-replace.
 
-- [ ] **Step 1: Move the nine files**
+- [x] **Step 1: Move the nine files**
 
 ```bash
 git mv manifest.py citation.py reconcile.py payload.py enrichment.py video_profile.py models.py env_bootstrap.py dns_fallback.py src/yt_distill/core/
 ```
 
-- [ ] **Step 2: Rewrite imports mechanically**
+- [x] **Step 2: Rewrite imports mechanically**
 
 For each of the nine names, update all importers (root scripts, `tests/`, and the moved files importing each other):
 
@@ -167,7 +178,7 @@ grep -rln "^from \(manifest\|citation\|reconcile\|payload\|enrichment\|video_pro
 
 Rewrite `from manifest import X` → `from yt_distill.core.manifest import X`, `import models` → `from yt_distill.core import models` (adjusting attribute references if any). Also handle `monkeypatch`/`patch` string targets in tests, e.g. `"extract.fetch_transcript"` stays (extract not moved yet) but `"models.doctor"` → `"yt_distill.core.models.doctor"`.
 
-- [ ] **Step 3: Fix `__file__`-derived paths**
+- [x] **Step 3: Fix `__file__`-derived paths**
 
 ```bash
 grep -n "__file__" src/yt_distill/core/*.py
@@ -175,12 +186,12 @@ grep -n "__file__" src/yt_distill/core/*.py
 
 Apply the `parents[3]` fix described above wherever the old code meant repo root (`models.py` locating `models.yaml`, `env_bootstrap.py` locating `.env` are the expected cases — read and confirm).
 
-- [ ] **Step 4: Run full suite**
+- [x] **Step 4: Run full suite**
 
 Run: `uv run pytest`
 Expected: PASS. If a test fails on a patch-target string, fix the string per the mapping table.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -203,7 +214,7 @@ git commit -m "refactor: move core modules into yt_distill.core"
 - Consumes: `yt_distill.core.*` (Task 2).
 - Produces: `yt_distill.stages.transcript.fetch_transcript`, `yt_distill.stages.frame_ocr.{FrameRecord, FrameClass, read_ocr_json}`, `yt_distill.stages.frame_select.{detect_scene_changes, select_frames, write_selected_frames_json, Selected}`, `yt_distill.stages.references.main`, `yt_distill.stages.visual.{enrich, main}` — all names unchanged, only paths.
 
-- [ ] **Step 1: Move the five files**
+- [x] **Step 1: Move the five files**
 
 ```bash
 git mv transcript.py src/yt_distill/stages/transcript.py
@@ -213,16 +224,16 @@ git mv reference_follower.py src/yt_distill/stages/references.py
 git mv enrich.py src/yt_distill/stages/visual.py
 ```
 
-- [ ] **Step 2: Rewrite imports and patch targets**
+- [x] **Step 2: Rewrite imports and patch targets**
 
 Same mechanical procedure as Task 2, for names `transcript`, `frame_ocr`, `frame_select`, `reference_follower` (→ `references`), `enrich` (→ `visual`). `from vendor.claude_video.scripts import ...` lines inside the moved files stay untouched. Check the moved files for `__file__`-derived repo-root paths and apply the `parents[3]` fix where needed (`visual.py` may locate `styles/`; verify by reading).
 
-- [ ] **Step 3: Run full suite**
+- [x] **Step 3: Run full suite**
 
 Run: `uv run pytest`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
@@ -245,7 +256,7 @@ git commit -m "refactor: move stage modules into yt_distill.stages"
   - `StageResult` (dataclass): `produced: dict[str, Path], diagnostics: list[str]`
   - `register(stage) -> Stage` (raises `RuntimeError` on duplicate name), `get(name) -> Stage` (raises `RuntimeError` if unknown), `all_stages() -> list[Stage]`, `runnable(available: set[str], max_tier: CostTier = CostTier.VISION_LLM) -> list[Stage]`, `clear()` (test helper)
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tests/test_stage_registry.py`:
 
@@ -326,12 +337,12 @@ def test_stage_run_receives_context():
     assert result.diagnostics == ["ok"]
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_stage_registry.py -v`
 Expected: FAIL — `ModuleNotFoundError` / `ImportError` on `yt_distill.stages.registry`
 
-- [ ] **Step 3: Implement the registry**
+- [x] **Step 3: Implement the registry**
 
 Create `src/yt_distill/stages/registry.py`:
 
@@ -416,12 +427,12 @@ def clear() -> None:
     _REGISTRY.clear()
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `uv run pytest tests/test_stage_registry.py -v` then `uv run pytest`
 Expected: all PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/yt_distill/stages/registry.py tests/test_stage_registry.py
@@ -446,7 +457,7 @@ git commit -m "feat: stage registry with economical-first ordering"
 - Consumes: `yt_distill.core.*`, `yt_distill.stages.*`.
 - Produces: every moved module keeps a `main(argv=None) -> int` with its argparse UNCHANGED. Task 6's CLI dispatches to exactly these: `yt_distill.pipeline.extract.main`, `yt_distill.pipeline.distill.main`, `yt_distill.pipeline.review.main`, `yt_distill.pipeline.run.main`, `yt_distill.stages.references.main`, `yt_distill.stages.visual.main`, `yt_distill.clean.main`, `yt_distill.core.models.main`.
 
-- [ ] **Step 1: Move the seven files**
+- [x] **Step 1: Move the seven files**
 
 ```bash
 git mv extract.py src/yt_distill/pipeline/extract.py
@@ -458,16 +469,16 @@ git mv skill_bundle.py src/yt_distill/output/skill_bundle.py
 git mv clean.py src/yt_distill/clean.py
 ```
 
-- [ ] **Step 2: Rewrite imports and patch targets**
+- [x] **Step 2: Rewrite imports and patch targets**
 
 Same mechanical procedure as Tasks 2–3 for names `extract`, `distill`, `review_loop` (→ `review`), `run`, `distill_render` (→ `render`), `skill_bundle`, `clean`. `run.py` invokes extract/distill — update its imports to `from yt_distill.pipeline import extract, distill` style. `review_loop.py` may invoke distill similarly. Check moved files for `__file__` repo-root derivations (styles/, prompts/ lookups in `distill.py` are expected — `parents[3]` fix as in Task 2, but pipeline depth is also 3: `src/yt_distill/pipeline/x.py` → `parents[3]` is repo root. Verify per file.). Do NOT change `Generated_Data` resolution logic (env var `YT_GENERATED_DATA_DIR` + cwd-relative default) — it is cwd-based, not `__file__`-based; leave as-is if so, confirm by reading.
 
-- [ ] **Step 3: Run full suite**
+- [x] **Step 3: Run full suite**
 
 Run: `uv run pytest`
 Expected: PASS. `tests/test_download_transcript_legacy.py` still passes because `download_transcript.py` remains at root until Task 8 — update its imports of `run` to `yt_distill.pipeline.run` so it keeps working this task.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
@@ -487,7 +498,7 @@ git commit -m "refactor: move pipeline, output, clean into yt_distill package"
 - Consumes: the eight `main(argv)` functions listed in Task 5's Produces block.
 - Produces: `yt_distill.cli.main(argv=None) -> int`; console command `yt-distill` with subcommands `extract, refs, distill, review, run, enrich, clean, doctor`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tests/test_cli.py`:
 
@@ -549,12 +560,12 @@ def test_none_return_from_module_main_maps_to_zero(mocker):
     assert cli.main(["clean"]) == 0
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_cli.py -v`
 Expected: FAIL — no module `yt_distill.cli`
 
-- [ ] **Step 3: Implement the dispatcher**
+- [x] **Step 3: Implement the dispatcher**
 
 Create `src/yt_distill/cli.py`:
 
@@ -621,13 +632,13 @@ Add to `pyproject.toml`:
 yt-distill = "yt_distill.cli:main"
 ```
 
-- [ ] **Step 4: Run tests and verify the console script exists**
+- [x] **Step 4: Run tests and verify the console script exists**
 
 Run: `uv sync` then `uv run pytest tests/test_cli.py -v` — expected PASS.
 Run: `uv run yt-distill --help` — expected: usage text listing all 8 subcommands, exit 0.
 Run: `uv run pytest` — full suite PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/yt_distill/cli.py tests/test_cli.py pyproject.toml
@@ -649,7 +660,7 @@ git commit -m "feat: single yt-distill console script dispatching all subcommand
 
 **Background (verified 2026-07-16 on the OpenRouter model card):** `google/gemini-3.5-flash` — 1,048,576-token context, 65,536 max output; text/image/video/audio/PDF input; thinking effort levels minimal/low/medium/high (default medium) via OpenRouter's `reasoning` parameter; $1.50/M input, $9/M output.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `tests/test_models.py` (read the file first and match its existing fixture/helper style for loading profiles — reuse its helpers rather than inventing new ones):
 
@@ -671,12 +682,12 @@ def test_reasoning_effort_parsed_when_present():
     assert prof.reasoning_effort == "high"
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_models.py -v`
 Expected: new tests FAIL (unknown profile / missing attribute).
 
-- [ ] **Step 3: Update models.yaml and Profile**
+- [x] **Step 3: Update models.yaml and Profile**
 
 In `models.yaml`, change `default:` and add two profiles (keep every existing profile untouched):
 
@@ -712,12 +723,12 @@ reasoning_effort: str | None = None  # minimal|low|medium|high; None = model def
 
 and thread it through the YAML→Profile construction (one line where other optional fields are read). Do NOT wire it into the LLM request in this task — request-side use is sub-project 2/3; this task only makes the field resolvable.
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `uv run pytest tests/test_models.py -v` then `uv run pytest`
 Expected: PASS. Also run `uv run yt-distill doctor --profile gemini-3.5-flash` — it may report a failed live probe without an API key; acceptable outcome is a clean structured failure, not a traceback.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add models.yaml src/yt_distill/core/models.py tests/test_models.py
@@ -737,7 +748,7 @@ git commit -m "feat(models): gemini-3.5-flash default profile + reasoning_effort
 
 **Supersession evidence (why this loses zero functionality):** `main.py` is the `uv init` hello-world stub; root `test_models.py` duplicates coverage now living in `tests/`; `download_transcript.py` is a forwarding wrapper around `run.py`; `transform_transcript.py` (transcript+style→LLM rewrite) is fully covered by `yt-distill distill`, which adds citations, frames, OCR, and validation.
 
-- [ ] **Step 1: Verify nothing imports the doomed files**
+- [x] **Step 1: Verify nothing imports the doomed files**
 
 ```bash
 grep -rn "download_transcript\|transform_transcript\|^import main\|from main import" --include="*.py" src/ tests/ scripts/
@@ -745,7 +756,7 @@ grep -rn "download_transcript\|transform_transcript\|^import main\|from main imp
 
 Expected: no hits outside the files being deleted. If there are hits, STOP and report them instead of deleting.
 
-- [ ] **Step 2: Delete**
+- [x] **Step 2: Delete**
 
 ```bash
 git rm main.py test_models.py download_transcript.py transform_transcript.py tests/test_download_transcript_legacy.py
@@ -753,12 +764,12 @@ git rm main.py test_models.py download_transcript.py transform_transcript.py tes
 
 Then edit `scripts/dod_check.sh`: delete the entire `=== DoD: legacy download_transcript.py ===` block (from that `echo` line to the end of its soft-check commands).
 
-- [ ] **Step 3: Run full suite**
+- [x] **Step 3: Run full suite**
 
 Run: `uv run pytest`
 Expected: PASS, with the legacy test file simply gone from collection.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
@@ -788,7 +799,7 @@ git commit -m "chore: remove superseded legacy scripts (see spec for supersessio
 | `uv run python models.py doctor ...` | `uv run yt-distill doctor ...` |
 | (undocumented) `uv run python enrich.py ...` | `uv run yt-distill enrich ...` |
 
-- [ ] **Step 1: Update `scripts/dod_check.sh`**
+- [x] **Step 1: Update `scripts/dod_check.sh`**
 
 Replace old invocations per the table. The distill dry-run block monkey-patches by module path — update it to:
 
@@ -801,15 +812,15 @@ sys.exit(distill.main(['test_video', 'knowledge_base', '--dry-run-payload']))
 "
 ```
 
-- [ ] **Step 2: Update `scripts/regen_golden_payloads.py`**
+- [x] **Step 2: Update `scripts/regen_golden_payloads.py`**
 
 Check its imports; rewrite any flat module names per the Global Constraints mapping table. Run it against nothing yet — just confirm `uv run python scripts/regen_golden_payloads.py --help` (or a plain import) doesn't traceback.
 
-- [ ] **Step 3: Update README.md and CLAUDE.md**
+- [x] **Step 3: Update README.md and CLAUDE.md**
 
 Apply the command table to every code block. In CLAUDE.md also update: the Entry points table (paths now `src/yt_distill/...`; remove deleted legacy rows; add `cli.py` and `stages/registry.py` rows), the Library modules table paths, and the file-reference conventions (e.g. `extract.py:_probe_source` → `yt_distill/pipeline/extract.py:_probe_source`).
 
-- [ ] **Step 4: Update `.archon/workflows/lesson-liberation.yaml` and `.cursor/skills/*`**
+- [x] **Step 4: Update `.archon/workflows/lesson-liberation.yaml` and `.cursor/skills/*`**
 
 ```bash
 grep -rn "extract.py\|distill.py\|run.py\|review_loop.py\|reference_follower.py\|clean.py\|models.py\|enrich.py" .archon/ .cursor/ README.md CLAUDE.md
@@ -817,7 +828,7 @@ grep -rn "extract.py\|distill.py\|run.py\|review_loop.py\|reference_follower.py\
 
 Apply the command table to every hit. After editing, re-run the grep — expected: zero remaining old-style invocations (mentions of module *paths* in prose are fine if they point at the new `src/yt_distill/` locations).
 
-- [ ] **Step 5: Run the DoD gate and commit**
+- [x] **Step 5: Run the DoD gate and commit**
 
 Run: `uv run pytest` then `bash scripts/dod_check.sh`
 Expected: both PASS end-to-end.
@@ -833,12 +844,12 @@ git commit -m "docs: migrate all docs, workflows, and DoD gate to yt-distill CLI
 
 **Files:** none created; verification only. The ORCHESTRATOR runs this task directly.
 
-- [ ] **Step 1: Full test suite** — `uv run pytest` → PASS; `uv run pytest -m integration` → PASS (needs real ffmpeg/OCR; run locally).
-- [ ] **Step 2: DoD gate** — `bash scripts/dod_check.sh` → PASS.
-- [ ] **Step 3: Golden payload byte-compare** — `uv run python scripts/regen_golden_payloads.py` then `git status --porcelain tests/fixtures` → EMPTY output (payload pipeline byte-identical pre/post restructure). If dirty, investigate before proceeding — do not commit regenerated goldens as a "fix".
-- [ ] **Step 4: Live smoke run** — `uv run yt-distill run tests/fixtures/test_video.mp4 knowledge_base` (or a short real URL) → exits 0, markdown + `distill_result.json` produced, zero unresolved citations in the banner.
-- [ ] **Step 5: Root directory check** — `ls *.py` → expected: no Python files left at repo root.
-- [ ] **Step 6: Final commit if any stragglers, then report** — summarize gate results honestly, including anything skipped.
+- [x] **Step 1: Full test suite** — `uv run pytest` → PASS; `uv run pytest -m integration` → PASS (needs real ffmpeg/OCR; run locally).
+- [x] **Step 2: DoD gate** — `bash scripts/dod_check.sh` → PASS.
+- [x] **Step 3: Golden payload byte-compare** — `uv run python scripts/regen_golden_payloads.py` then `git status --porcelain tests/fixtures` → EMPTY output (payload pipeline byte-identical pre/post restructure). If dirty, investigate before proceeding — do not commit regenerated goldens as a "fix".
+- [x] **Step 4: Live smoke run** — `uv run yt-distill run tests/fixtures/test_video.mp4 knowledge_base` (or a short real URL) → exits 0, markdown + `distill_result.json` produced, zero unresolved citations in the banner.
+- [x] **Step 5: Root directory check** — `ls *.py` → expected: no Python files left at repo root.
+- [x] **Step 6: Final commit if any stragglers, then report** — summarize gate results honestly, including anything skipped.
 
 ---
 
