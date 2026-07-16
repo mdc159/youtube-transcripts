@@ -51,7 +51,8 @@ src/yt_distill/
   stages/             # THE modular core
     registry.py       #   Stage dataclass + registration + tier ordering
     transcript.py     #   4-tier transcript chain (from transcript.py)
-    frames.py         #   frame_select.py + frame_ocr.py
+    frame_ocr.py      #   from frame_ocr.py
+    frame_select.py   #   from frame_select.py
     references.py     #   reference_follower.py
     visual.py         #   enrich.py tiers as registered stages
   pipeline/           # orchestrators (thin: sequence stages, own I/O)
@@ -103,9 +104,12 @@ class Stage:
 - **Adding a new enrichment tool later** = one new module in `stages/`
   registering one `Stage`. No orchestrator surgery.
 
-Existing orchestrator logic is *wrapped* into stages, not rewritten. Where a
-current module mixes orchestration and work (e.g. `extract.py`), the work
-moves to a stage and the orchestrator becomes a stage sequence.
+Existing orchestrator logic is *wrapped* into stages, not rewritten. Scoping:
+this sub-project delivers the registry itself (tested, with the contract
+above) and relocates the stage modules; registering the built-in capabilities
+and re-sequencing the orchestrators through the registry lands in
+sub-project 3, when the first consumers (escalation control, new enrichment
+tools) actually need it. Building wrappers nothing calls yet is YAGNI.
 
 ## CLI
 
