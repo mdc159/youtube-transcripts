@@ -10,15 +10,15 @@ from pathlib import Path
 
 from openai import OpenAI
 
-from manifest import Manifest, MANIFEST_FILENAME
-from models import resolve, doctor, Profile
+from yt_distill.core.manifest import Manifest, MANIFEST_FILENAME
+from yt_distill.core.models import resolve, doctor, Profile
 from frame_ocr import read_ocr_json, FrameClass
 from frame_select import detect_scene_changes, select_frames, write_selected_frames_json
-from enrichment import parse_formatted_transcript, enrich_transcript, write_enriched_transcript
-from payload import build_payload, PayloadBuildError
-from citation import validate_citations, extract_citations, ResolutionContext
+from yt_distill.core.enrichment import parse_formatted_transcript, enrich_transcript, write_enriched_transcript
+from yt_distill.core.payload import build_payload, PayloadBuildError
+from yt_distill.core.citation import validate_citations, extract_citations, ResolutionContext
 from distill_render import render_markdown, render_passthrough
-from video_profile import VideoProfile, build_video_profile, format_route_proposal
+from yt_distill.core.video_profile import VideoProfile, build_video_profile, format_route_proposal
 
 
 _ENRICH_DEFAULT_ON_STYLES = {"human_tutorial"}
@@ -81,7 +81,7 @@ def _compose_style_with_audience(style_md: str, *, audience_note: str | None) ->
 
 
 def main(argv: list[str] | None = None) -> int:
-    import env_bootstrap
+    from yt_distill.core import env_bootstrap
     env_bootstrap.load()
     args = _parse_args(sys.argv[1:] if argv is None else argv)
 
@@ -152,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
     # repo:path#Lx-Ly@SHA citation kind + conflict-flagging rules).
     recon = None
     try:
-        from reconcile import reconcile as _reconcile  # local import keeps import-time cost low
+        from yt_distill.core.reconcile import reconcile as _reconcile  # local import keeps import-time cost low
 
         source_meta_path = out_dir / "refs" / "source_meta.json"
         upload_date = None

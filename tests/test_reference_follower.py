@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 import reference_follower as rf
-from manifest import Manifest
+from yt_distill.core.manifest import Manifest
 
 
 # ---------------------------------------------------------------------------

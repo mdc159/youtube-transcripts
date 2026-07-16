@@ -11,7 +11,7 @@ import extract
 
 
 def main(argv=None):
-    import env_bootstrap
+    from yt_distill.core import env_bootstrap
     env_bootstrap.load()
     p = argparse.ArgumentParser(description="One-shot: extract then distill.")
     p.add_argument("source")

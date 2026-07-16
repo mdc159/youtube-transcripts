@@ -11,7 +11,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 import extract
-from manifest import Manifest
+from yt_distill.core.manifest import Manifest
 from transcript import TranscriptResult
 
 

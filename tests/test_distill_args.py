@@ -1,5 +1,5 @@
 import distill
-from enrichment import TranscriptSegment
+from yt_distill.core.enrichment import TranscriptSegment
 from frame_ocr import FrameClass, FrameRecord
 
 

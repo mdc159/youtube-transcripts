@@ -20,7 +20,7 @@ import re
 import shutil
 from pathlib import Path
 
-from citation import extract_citations
+from yt_distill.core.citation import extract_citations
 
 BUNDLE_SCHEMA_VERSION = 1
 

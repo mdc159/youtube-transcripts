@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from manifest import derive_source_id, Manifest
+from yt_distill.core.manifest import derive_source_id, Manifest
 from transcript import fetch_transcript
 from frame_ocr import (
     FrameClass,
@@ -41,7 +41,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
-    import env_bootstrap
+    from yt_distill.core import env_bootstrap
     env_bootstrap.load()
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     source_id = derive_source_id(args.source, start=args.start, end=args.end)

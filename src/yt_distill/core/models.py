@@ -15,6 +15,8 @@ import yaml
 
 from openai import OpenAI
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
 
 @dataclass
 class Profile:
@@ -122,7 +124,7 @@ def doctor(
     image_ok: Optional[bool] = None
     if profile.vision and probe_image:
         img_path = fixture_image or (
-            Path(__file__).resolve().parent / "tests/fixtures/tiny_image.jpg"
+            REPO_ROOT / "tests/fixtures/tiny_image.jpg"
         )
         try:
             b64 = base64.b64encode(img_path.read_bytes()).decode()
@@ -198,7 +200,7 @@ def main(argv=None):
     d.add_argument("--no-image-probe", action="store_true")
     args = p.parse_args(argv)
     if args.cmd == "doctor":
-        models_yaml = Path(__file__).resolve().parent / "models.yaml"
+        models_yaml = REPO_ROOT / "models.yaml"
         prof = resolve(cli=args.profile, models_yaml=models_yaml)
         res = doctor(
             prof,

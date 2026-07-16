@@ -1,10 +1,10 @@
 import base64
 from pathlib import Path
 import pytest
-from payload import build_payload, PayloadBuildError
+from yt_distill.core.payload import build_payload, PayloadBuildError
 from frame_select import Selected
 from frame_ocr import FrameClass
-from models import Profile
+from yt_distill.core.models import Profile
 
 
 def _profile(vision=True):

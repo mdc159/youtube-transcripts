@@ -4,9 +4,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from citation import ResolutionContext, extract_citations, validate_citations
+from yt_distill.core.citation import ResolutionContext, extract_citations, validate_citations
 from frame_ocr import FrameClass, FrameRecord
-import reconcile as rc
+from yt_distill.core import reconcile as rc
 
 
 # ---------------------------------------------------------------------------

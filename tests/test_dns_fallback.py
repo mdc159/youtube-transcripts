@@ -5,7 +5,7 @@ import socket
 
 import pytest
 
-import dns_fallback as df
+from yt_distill.core import dns_fallback as df
 
 
 @pytest.fixture(autouse=True)

@@ -1,5 +1,5 @@
 import pytest
-from citation import extract_citations, validate_citations, ResolutionContext
+from yt_distill.core.citation import extract_citations, validate_citations, ResolutionContext
 
 
 def test_extract_all_citation_forms():

@@ -552,7 +552,7 @@ def main(argv: list[str] | None = None) -> int:
 
     profile = None
     if not args.no_llm:
-        from models import resolve
+        from yt_distill.core.models import resolve
 
         repo_root = Path(__file__).resolve().parent
         profile = resolve(cli=args.model, models_yaml=repo_root / "models.yaml")

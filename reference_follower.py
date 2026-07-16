@@ -30,8 +30,8 @@ import tempfile
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
-from enrichment import parse_formatted_transcript
-from manifest import Manifest, MANIFEST_FILENAME
+from yt_distill.core.enrichment import parse_formatted_transcript
+from yt_distill.core.manifest import Manifest, MANIFEST_FILENAME
 
 REFERENCES_FILENAME = "references.json"
 REFS_DIRNAME = "refs"
@@ -432,7 +432,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
-    import env_bootstrap
+    from yt_distill.core import env_bootstrap
     env_bootstrap.load()
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     out_dir = _resolve_out_dir(args.title)

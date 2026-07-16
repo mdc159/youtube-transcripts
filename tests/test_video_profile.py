@@ -1,5 +1,5 @@
 from frame_ocr import FrameClass, FrameRecord
-from video_profile import build_video_profile, format_route_proposal
+from yt_distill.core.video_profile import build_video_profile, format_route_proposal
 
 
 def _rec(idx: int, text: str, klass: FrameClass) -> FrameRecord:

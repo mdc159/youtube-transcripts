@@ -1,7 +1,7 @@
 # tests/test_manifest.py
 import json
 import pytest
-from manifest import derive_source_id, Manifest, MANIFEST_FILENAME
+from yt_distill.core.manifest import derive_source_id, Manifest, MANIFEST_FILENAME
 
 
 def test_youtube_url_to_source_id():

@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 import review_loop as rl
-from manifest import Manifest
+from yt_distill.core.manifest import Manifest
 from skill_bundle import write_skill_bundle
 
 

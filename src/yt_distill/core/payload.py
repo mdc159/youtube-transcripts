@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Sequence
 
 from frame_select import Selected
-from models import Profile
+from yt_distill.core.models import Profile
 
 
 class PayloadBuildError(RuntimeError):
