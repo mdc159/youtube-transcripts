@@ -16,10 +16,12 @@ User-facing details live in `README.md`. Architectural rationale is in `docs/sup
 | `reference_follower.py` | Phase 1.5: harvest URLs (description/comments/transcript/OCR) → classify → snapshot repos pinned to SHA / fetch docs. Budgets: `--max-repo-mb`, `--max-fetches` |
 | `distill.py` | Phase 2 orchestrator: artifacts → enrich → frame select → reconcile (when repo snapshots exist) → LLM → markdown + JSON (+ `skills/<slug>/` bundle for `claude_skill`) |
 | `review_loop.py` | Phase 3 quality gate: fresh-context reviewer sees only the bundle → gaps → targeted escalation → re-synthesis; cap `--max-iterations` (3) then ships `incomplete` |
+| `enrich.py` | Phase 2.5 (standalone, not auto-wired): post-process distilled markdown to surface visual evidence — Tier 1 inline frame images / contact-sheet gallery / YouTube deep-links / verbatim code appendix (no LLM), Tier 2 Mermaid pipeline + reference tables + mindmap (one LLM call each). `enrich(out_dir, style_name=...)` is idempotent; `--no-llm` for Tier 1 only |
 | `run.py` | Convenience wrapper: `extract → distill` |
 | `clean.py` | Storage management; dry-run by default |
 | `models.py` | Profile resolution + `doctor` capability checks; also a CLI subcommand |
 | `download_transcript.py` | Legacy entry point, kept for backward compat. Delegates to `run.py` when a style is given |
+| `transform_transcript.py` | Legacy standalone transformer: applies a style overlay to a transcript via OpenRouter directly (`OPENROUTER_API_KEY`). Predates the `distill.py` contract pipeline |
 | `.archon/workflows/` | Archon workflow (`lesson-liberation.yaml`) wrapping extract → refs → distill → review |
 | `.cursor/skills/` | Project-local agent skills for routing and output workflows |
 
