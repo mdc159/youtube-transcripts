@@ -12,8 +12,8 @@ from openai import OpenAI
 
 from yt_distill.core.manifest import Manifest, MANIFEST_FILENAME
 from yt_distill.core.models import resolve, doctor, Profile
-from frame_ocr import read_ocr_json, FrameClass
-from frame_select import detect_scene_changes, select_frames, write_selected_frames_json
+from yt_distill.stages.frame_ocr import read_ocr_json, FrameClass
+from yt_distill.stages.frame_select import detect_scene_changes, select_frames, write_selected_frames_json
 from yt_distill.core.enrichment import parse_formatted_transcript, enrich_transcript, write_enriched_transcript
 from yt_distill.core.payload import build_payload, PayloadBuildError
 from yt_distill.core.citation import validate_citations, extract_citations, ResolutionContext
@@ -298,7 +298,7 @@ def main(argv: list[str] | None = None) -> int:
         enrich_on = style_name in _ENRICH_DEFAULT_ON_STYLES
     if enrich_on:
         try:
-            from enrich import enrich as _enrich  # local import keeps import-time cost low
+            from yt_distill.stages.visual import enrich as _enrich  # local import keeps import-time cost low
 
             print(f"[enrich] post-processing {style_name} markdown")
             _enrich(out_dir, style_name=style_name, profile=profile)

@@ -554,7 +554,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.no_llm:
         from yt_distill.core.models import resolve
 
-        repo_root = Path(__file__).resolve().parent
+        repo_root = Path(__file__).resolve().parents[3]
         profile = resolve(cli=args.model, models_yaml=repo_root / "models.yaml")
         print(f"[enrich] profile={profile.name} model={profile.model}")
 

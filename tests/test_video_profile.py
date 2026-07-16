@@ -1,4 +1,4 @@
-from frame_ocr import FrameClass, FrameRecord
+from yt_distill.stages.frame_ocr import FrameClass, FrameRecord
 from yt_distill.core.video_profile import build_video_profile, format_route_proposal
 
 

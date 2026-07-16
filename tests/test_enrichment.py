@@ -1,5 +1,5 @@
 from yt_distill.core.enrichment import enrich_transcript, TranscriptSegment
-from frame_ocr import FrameRecord, FrameClass
+from yt_distill.stages.frame_ocr import FrameRecord, FrameClass
 
 
 def _seg(i, start, end, text):

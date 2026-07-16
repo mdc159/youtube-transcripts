@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from yt_distill.core.citation import ResolutionContext, extract_citations, validate_citations
-from frame_ocr import FrameClass, FrameRecord
+from yt_distill.stages.frame_ocr import FrameClass, FrameRecord
 from yt_distill.core import reconcile as rc
 
 

@@ -50,7 +50,7 @@ def detect_scene_changes(paths: Sequence[Path | str], threshold_factor: float = 
     return [ChangePoint(index=i + 1, distance=d) for i, d in enumerate(distances) if d > threshold]
 
 
-from frame_ocr import FrameRecord, FrameClass  # noqa: E402  (after class def)
+from yt_distill.stages.frame_ocr import FrameRecord, FrameClass  # noqa: E402  (after class def)
 
 
 @dataclass

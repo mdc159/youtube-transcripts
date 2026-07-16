@@ -4,7 +4,7 @@ import subprocess
 import sys
 from urllib.parse import urlparse, parse_qs
 
-from transcript import fetch_transcript
+from yt_distill.stages.transcript import fetch_transcript
 
 
 def extract_video_id(url_or_id):

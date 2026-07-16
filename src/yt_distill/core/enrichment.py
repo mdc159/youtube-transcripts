@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from frame_ocr import FrameRecord, FrameClass
+from yt_distill.stages.frame_ocr import FrameRecord, FrameClass
 
 
 @dataclass

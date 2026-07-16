@@ -1,6 +1,6 @@
 import distill
 from yt_distill.core.enrichment import TranscriptSegment
-from frame_ocr import FrameClass, FrameRecord
+from yt_distill.stages.frame_ocr import FrameClass, FrameRecord
 
 
 def test_parse_args_minimal():

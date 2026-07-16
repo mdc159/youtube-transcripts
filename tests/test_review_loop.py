@@ -193,7 +193,7 @@ def test_escalate_targeted_grab(artifact, monkeypatch):
 
     monkeypatch.setattr(rl, "_ensure_video", lambda out, url: "/fake/video.mp4")
     monkeypatch.setattr(rl, "_grab_frame", fake_grab)
-    import frame_ocr
+    from yt_distill.stages import frame_ocr
     monkeypatch.setattr(frame_ocr, "ocr_frame", lambda p: FakeOcr())
 
     gaps = [{"where": "L1", "what_is_missing": "value",

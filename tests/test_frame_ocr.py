@@ -1,6 +1,6 @@
 from pathlib import Path
 import pytest
-from frame_ocr import ocr_frame, OcrResult, OcrLine, CONFIDENCE_GATE
+from yt_distill.stages.frame_ocr import ocr_frame, OcrResult, OcrLine, CONFIDENCE_GATE
 
 
 def test_ocr_frame_returns_text(fixtures_dir):
@@ -18,7 +18,7 @@ def test_ocr_frame_confidence_gate_marks_lines(fixtures_dir):
     assert all(hasattr(l, "above_gate") for l in res.lines)
 
 
-from frame_ocr import classify_frame, FrameClass
+from yt_distill.stages.frame_ocr import classify_frame, FrameClass
 
 
 def test_classify_code(fixtures_dir):
@@ -53,7 +53,7 @@ def test_classify_low_confidence_falls_back_to_other():
     assert final_class == FrameClass.OTHER
 
 
-from frame_ocr import dedup_code_frames, FrameRecord
+from yt_distill.stages.frame_ocr import dedup_code_frames, FrameRecord
 
 
 def _rec(idx: int, ts: float, text: str, klass: FrameClass) -> "FrameRecord":
@@ -110,7 +110,7 @@ def test_dedup_normalizes_comments_and_whitespace():
 
 
 import json
-from frame_ocr import write_ocr_json, read_ocr_json
+from yt_distill.stages.frame_ocr import write_ocr_json, read_ocr_json
 
 
 def test_ocr_json_roundtrip(tmp_path):

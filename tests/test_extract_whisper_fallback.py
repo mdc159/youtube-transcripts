@@ -12,7 +12,7 @@ import pytest
 
 import extract
 from yt_distill.core.manifest import Manifest
-from transcript import TranscriptResult
+from yt_distill.stages.transcript import TranscriptResult
 
 
 def _args(source: str, *, no_frames: bool = False, cookies_browser: str | None = None):

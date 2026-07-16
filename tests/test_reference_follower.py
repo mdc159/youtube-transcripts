@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-import reference_follower as rf
+from yt_distill.stages import references as rf
 from yt_distill.core.manifest import Manifest
 
 

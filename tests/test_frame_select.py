@@ -1,7 +1,7 @@
 import json
 
 from PIL import Image
-from frame_select import (
+from yt_distill.stages.frame_select import (
     ChangePoint,
     Selected,
     SelectionResult,
@@ -9,7 +9,7 @@ from frame_select import (
     select_frames,
     write_selected_frames_json,
 )
-from frame_ocr import FrameRecord, FrameClass
+from yt_distill.stages.frame_ocr import FrameRecord, FrameClass
 
 
 def _solid(path, color):

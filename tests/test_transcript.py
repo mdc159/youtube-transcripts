@@ -1,16 +1,16 @@
 from unittest.mock import patch
 import pytest
-from transcript import fetch_transcript, TranscriptResult
+from yt_distill.stages.transcript import fetch_transcript, TranscriptResult
 
 
 def _entries():
     return [(0.0, "hello"), (1.5, "world")]
 
 
-@patch("transcript._fetch_via_whisper")
-@patch("transcript._fetch_via_ytdlp")
-@patch("transcript._fetch_via_pytube")
-@patch("transcript._fetch_via_transcript_api")
+@patch("yt_distill.stages.transcript._fetch_via_whisper")
+@patch("yt_distill.stages.transcript._fetch_via_ytdlp")
+@patch("yt_distill.stages.transcript._fetch_via_pytube")
+@patch("yt_distill.stages.transcript._fetch_via_transcript_api")
 def test_first_method_wins(api, pyt, ytdlp, whisp):
     api.return_value = _entries()
     res = fetch_transcript("vid")
@@ -21,10 +21,10 @@ def test_first_method_wins(api, pyt, ytdlp, whisp):
     assert whisp.call_count == 0
 
 
-@patch("transcript._fetch_via_whisper")
-@patch("transcript._fetch_via_ytdlp")
-@patch("transcript._fetch_via_pytube")
-@patch("transcript._fetch_via_transcript_api")
+@patch("yt_distill.stages.transcript._fetch_via_whisper")
+@patch("yt_distill.stages.transcript._fetch_via_ytdlp")
+@patch("yt_distill.stages.transcript._fetch_via_pytube")
+@patch("yt_distill.stages.transcript._fetch_via_transcript_api")
 def test_falls_through_to_whisper(api, pyt, ytdlp, whisp):
     api.side_effect = Exception("no captions")
     pyt.side_effect = Exception("no captions")
@@ -35,10 +35,10 @@ def test_falls_through_to_whisper(api, pyt, ytdlp, whisp):
     assert res.entries == _entries()
 
 
-@patch("transcript._fetch_via_whisper")
-@patch("transcript._fetch_via_ytdlp")
-@patch("transcript._fetch_via_pytube")
-@patch("transcript._fetch_via_transcript_api")
+@patch("yt_distill.stages.transcript._fetch_via_whisper")
+@patch("yt_distill.stages.transcript._fetch_via_ytdlp")
+@patch("yt_distill.stages.transcript._fetch_via_pytube")
+@patch("yt_distill.stages.transcript._fetch_via_transcript_api")
 def test_all_fail_returns_none(api, pyt, ytdlp, whisp):
     api.side_effect = Exception("x")
     pyt.side_effect = Exception("x")

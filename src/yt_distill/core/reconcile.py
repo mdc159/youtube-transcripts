@@ -24,7 +24,7 @@ from pathlib import Path
 
 from rapidfuzz import fuzz
 
-from frame_ocr import FrameClass, FrameRecord
+from yt_distill.stages.frame_ocr import FrameClass, FrameRecord
 
 RECONCILIATION_FILENAME = "reconciliation.json"
 SCHEMA_VERSION = 1

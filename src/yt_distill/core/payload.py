@@ -5,7 +5,7 @@ import base64
 from pathlib import Path
 from typing import Sequence
 
-from frame_select import Selected
+from yt_distill.stages.frame_select import Selected
 from yt_distill.core.models import Profile
 
 

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-import enrich
+from yt_distill.stages import visual as enrich
 
 
 # --- 1C: youtube deep-links --------------------------------------------------

@@ -2,8 +2,8 @@ import base64
 from pathlib import Path
 import pytest
 from yt_distill.core.payload import build_payload, PayloadBuildError
-from frame_select import Selected
-from frame_ocr import FrameClass
+from yt_distill.stages.frame_select import Selected
+from yt_distill.stages.frame_ocr import FrameClass
 from yt_distill.core.models import Profile
 
 

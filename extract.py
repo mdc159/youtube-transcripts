@@ -13,8 +13,8 @@ import sys
 from pathlib import Path
 
 from yt_distill.core.manifest import derive_source_id, Manifest
-from transcript import fetch_transcript
-from frame_ocr import (
+from yt_distill.stages.transcript import fetch_transcript
+from yt_distill.stages.frame_ocr import (
     FrameClass,
     FrameRecord,
     classify_frame,
@@ -78,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Compute and write quality grades
     if (out_dir / "ocr.json").exists():
-        from frame_ocr import read_ocr_json, FrameClass
+        from yt_distill.stages.frame_ocr import read_ocr_json, FrameClass
         recs = read_ocr_json(out_dir / "ocr.json")
         mean_conf = (sum(r.ocr_confidence for r in recs) / len(recs)) if recs else None
         non_code = sum(1 for r in recs if r.frame_class != FrameClass.CODE)

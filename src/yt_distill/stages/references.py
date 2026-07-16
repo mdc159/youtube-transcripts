@@ -262,7 +262,7 @@ def collect_candidates(out_dir: Path, source_meta: dict) -> dict[str, dict]:
 
     ocr_path = out_dir / "ocr.json"
     if ocr_path.exists():
-        from frame_ocr import read_ocr_json
+        from yt_distill.stages.frame_ocr import read_ocr_json
         for frame in read_ocr_json(ocr_path):
             for url in harvest_urls(frame.ocr_text):
                 _add(url, Path(frame.path).stem, frame.ocr_text)
@@ -286,7 +286,7 @@ def _tutorial_tokens(out_dir: Path) -> set[str]:
         text_parts.append(transcript.read_text())
     ocr_path = out_dir / "ocr.json"
     if ocr_path.exists():
-        from frame_ocr import read_ocr_json
+        from yt_distill.stages.frame_ocr import read_ocr_json
         text_parts.extend(f.ocr_text for f in read_ocr_json(ocr_path))
     blob = "\n".join(text_parts).lower()
     # Tokens that look like filenames or dotted module paths.

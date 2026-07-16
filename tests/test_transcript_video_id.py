@@ -3,7 +3,7 @@
 Regression coverage for the bug where the full URL was passed straight to
 youtube-transcript-api, which then concatenated it onto its own URL template.
 """
-from transcript import _extract_video_id
+from yt_distill.stages.transcript import _extract_video_id
 
 
 def test_extracts_id_from_youtu_be_short_url():

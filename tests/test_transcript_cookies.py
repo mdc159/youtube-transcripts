@@ -1,7 +1,7 @@
 """Tests that --cookies-from-browser is propagated into the yt-dlp subtitle tier."""
 from unittest.mock import patch, MagicMock
 
-from transcript import _fetch_via_ytdlp, fetch_transcript
+from yt_distill.stages.transcript import _fetch_via_ytdlp, fetch_transcript
 
 
 def _fake_run_no_subs():
@@ -13,7 +13,7 @@ def _fake_run_no_subs():
     return result
 
 
-@patch("transcript.subprocess.run")
+@patch("yt_distill.stages.transcript.subprocess.run")
 def test_ytdlp_includes_cookies_when_set(mock_run, tmp_path, monkeypatch):
     mock_run.return_value = _fake_run_no_subs()
     monkeypatch.chdir(tmp_path)
@@ -30,7 +30,7 @@ def test_ytdlp_includes_cookies_when_set(mock_run, tmp_path, monkeypatch):
     assert argv[idx + 1] == "chrome"
 
 
-@patch("transcript.subprocess.run")
+@patch("yt_distill.stages.transcript.subprocess.run")
 def test_ytdlp_omits_cookies_when_none(mock_run, tmp_path, monkeypatch):
     mock_run.return_value = _fake_run_no_subs()
     monkeypatch.chdir(tmp_path)
@@ -45,9 +45,9 @@ def test_ytdlp_omits_cookies_when_none(mock_run, tmp_path, monkeypatch):
     assert "--cookies-from-browser" not in argv
 
 
-@patch("transcript._fetch_via_ytdlp")
-@patch("transcript._fetch_via_pytube")
-@patch("transcript._fetch_via_transcript_api")
+@patch("yt_distill.stages.transcript._fetch_via_ytdlp")
+@patch("yt_distill.stages.transcript._fetch_via_pytube")
+@patch("yt_distill.stages.transcript._fetch_via_transcript_api")
 def test_fetch_transcript_threads_cookies_to_ytdlp_tier(api, pyt, ytdlp):
     """fetch_transcript(cookies_browser=...) must reach _fetch_via_ytdlp."""
     api.side_effect = Exception("blocked")

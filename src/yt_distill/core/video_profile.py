@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from frame_ocr import FrameClass, FrameRecord
+from yt_distill.stages.frame_ocr import FrameClass, FrameRecord
 
 STYLE_CODING = "coding_agent"
 STYLE_DIY = "diy_project"

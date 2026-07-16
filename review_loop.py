@@ -224,7 +224,7 @@ def escalate(gaps: list[dict], out_dir: Path, *, source_url: str,
                 dest = out_dir / "frames_targeted" / f"tgrab_{int(seconds):06d}.jpg"
                 if not dest.is_file():
                     _grab_frame(video_path, seconds, dest)
-                from frame_ocr import ocr_frame
+                from yt_distill.stages.frame_ocr import ocr_frame
                 ocr = ocr_frame(str(dest))
                 stats.frame_grabs += 1
                 blocks.append(
@@ -396,7 +396,7 @@ def main(argv: list[str] | None = None) -> int:
         snapshots = load_snapshots(out_dir)
         tpath = out_dir / f"{out_dir.name}_formatted_transcript.txt"
         segs = parse_formatted_transcript(tpath) if tpath.is_file() else []
-        from frame_ocr import read_ocr_json
+        from yt_distill.stages.frame_ocr import read_ocr_json
         ocr_path = out_dir / "ocr.json"
         frames = read_ocr_json(ocr_path) if ocr_path.is_file() else []
         ctx = ResolutionContext(
