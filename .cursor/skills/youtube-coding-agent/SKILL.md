@@ -7,8 +7,8 @@ description: Convert developer tutorial videos into citation-grounded implementa
 
 ## Workflow
 
-1. Ensure extraction artifacts exist. If needed, run `uv run python extract.py "<source>"`.
-2. Distill with `uv run python distill.py <title-dir> coding_agent`.
+1. Ensure extraction artifacts exist. If needed, run `uv run yt-distill extract "<source>"`.
+2. Distill with `uv run yt-distill distill <title-dir> coding_agent`.
 3. Preserve exact commands, file paths, package names, APIs, and code snippets from transcript or OCR.
 4. Mark inferred commands with `# inferred`; do not fabricate flags, paths, versions, or setup steps.
 5. Prefer code-frame OCR and code clusters when extracting snippets, but use selected frame images when UI context, indentation, terminal output, or filenames matter.

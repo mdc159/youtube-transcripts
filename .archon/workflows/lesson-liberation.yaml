@@ -1,7 +1,8 @@
 # Lesson Liberation — video → self-sufficient Claude Code skill package.
 #
 # Deterministic phase structure with validation gates between phases; the LLM
-# supplies judgment WITHIN phases only (inside distill.py / review_loop.py).
+# supplies judgment WITHIN phases only (inside src/yt_distill/pipeline/distill.py
+# and src/yt_distill/pipeline/review.py).
 # Every phase is independently re-runnable off the cached manifest — re-running
 # the workflow skips completed work (extract/reference-follow are idempotent).
 #
@@ -39,7 +40,7 @@ nodes:
         echo "[workflow] duration ${DUR}s > 98min: transcript-only extraction (targeted grabs cover visuals)"
         FLAGS="--no-frames"
       fi
-      uv run python extract.py "$URL" $FLAGS
+      uv run yt-distill extract "$URL" $FLAGS
     timeout: 3600000
 
   # ── Gate + handoff: resolve the artifact dir name (newest under the data root).
@@ -60,7 +61,7 @@ nodes:
     bash: |
       set -e
       export YT_GENERATED_DATA_DIR="${YT_GENERATED_DATA_DIR:-$HOME/.lesson-liberation/Generated_Data}"
-      uv run python reference_follower.py "$resolve-title.output"
+      uv run yt-distill refs "$resolve-title.output"
     timeout: 1800000
 
   # ── Phase 2: distill through the claude_skill style. Reconciliation runs
@@ -71,7 +72,7 @@ nodes:
     bash: |
       set -e
       export YT_GENERATED_DATA_DIR="${YT_GENERATED_DATA_DIR:-$HOME/.lesson-liberation/Generated_Data}"
-      uv run python distill.py "$resolve-title.output" claude_skill
+      uv run yt-distill distill "$resolve-title.output" claude_skill
     timeout: 1800000
 
   # ── Gate: the bundle must exist and be structurally sound before review.
@@ -93,7 +94,7 @@ nodes:
     bash: |
       set -e
       export YT_GENERATED_DATA_DIR="${YT_GENERATED_DATA_DIR:-$HOME/.lesson-liberation/Generated_Data}"
-      uv run python review_loop.py "$resolve-title.output" --max-iterations 3
+      uv run yt-distill review "$resolve-title.output" --max-iterations 3
     timeout: 3600000
 
   # ── Phase 4: package report (deterministic; never truncates gap info).

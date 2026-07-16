@@ -7,8 +7,8 @@ description: Convert developer or maker tutorial videos into clear, human-readab
 
 ## Workflow
 
-1. Ensure extraction artifacts exist. If needed, run `uv run python extract.py "<source>"`.
-2. Distill with `uv run python distill.py <title-dir> human_tutorial`.
+1. Ensure extraction artifacts exist. If needed, run `uv run yt-distill extract "<source>"`.
+2. Distill with `uv run yt-distill distill <title-dir> human_tutorial`.
 3. Prioritize making the output conversational, clear, and actionable for a human reader.
 4. Preserve exact commands, file paths, and code snippets from the transcript or OCR.
 5. Translate visual actions (like navigating a UI) into clear text instructions.

@@ -11,14 +11,14 @@ Choose the right video distillation workflow before spending tokens on a full LL
 
 ## Workflow
 
-1. If artifacts do not exist, run extraction with `uv run python extract.py "<source>"`.
+1. If artifacts do not exist, run extraction with `uv run yt-distill extract "<source>"`.
 2. Build or inspect the lightweight profile from transcript text, `ocr.json`, frame classes, code clusters, measurements, commands, materials, and conceptual terms.
 3. Select one workflow:
    - `youtube-coding-agent` for developer tutorials, code, commands, APIs, repos, terminals, IDEs, or UI/dev tooling.
    - `youtube-diy-project` for maker, cooking, craft, electronics, woodworking, repair, materials, measurements, safety, tools, or physical build steps.
    - `youtube-knowledge-base` for talks, interviews, architecture overviews, conceptual explanations, strategy, principles, and broad reference notes.
 4. If confidence is low or the top two workflows are close, present the recommendation and alternatives before proceeding.
-5. Run distillation with the chosen style: `uv run python distill.py <title-dir> <style>`.
+5. Run distillation with the chosen style: `uv run yt-distill distill <title-dir> <style>`.
 
 ## Routing Rules
 

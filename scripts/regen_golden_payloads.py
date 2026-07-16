@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-import distill  # noqa: E402
+from yt_distill.pipeline import distill  # noqa: E402
 
 GOLDEN = ROOT / "tests" / "fixtures" / "golden"
 SCENARIOS = ["coding_video", "slide_talk", "ui_demo", "local_file"]

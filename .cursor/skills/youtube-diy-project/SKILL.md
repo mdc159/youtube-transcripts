@@ -7,8 +7,8 @@ description: Convert DIY, maker, electronics, woodworking, repair, cooking, craf
 
 ## Workflow
 
-1. Ensure extraction artifacts exist. If needed, run `uv run python extract.py "<source>"`.
-2. Distill with `uv run python distill.py <title-dir> diy_project`.
+1. Ensure extraction artifacts exist. If needed, run `uv run yt-distill extract "<source>"`.
+2. Distill with `uv run yt-distill distill <title-dir> diy_project`.
 3. Prioritize visual evidence around scene changes, materials lists, measurements, tools, before/after states, and safety demonstrations.
 4. Use transcript citations for spoken instructions and frame citations for visible parts, dimensions, UI readouts, labels, or assembly states.
 

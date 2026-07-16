@@ -7,9 +7,9 @@ description: Distill a long-form tutorial video into a self-sufficient Claude Co
 
 ## Workflow
 
-1. Ensure extraction artifacts exist. If needed, run `uv run python extract.py "<source>"`.
-2. Harvest linked sources: `uv run python reference_follower.py <title-dir>` (clones linked repos pinned to SHA, fetches docs).
-3. Distill with `uv run python distill.py <title-dir> claude_skill` — writes the standard note pair plus a bundle at `Generated_Data/<title>/skills/<slug>/`.
+1. Ensure extraction artifacts exist. If needed, run `uv run yt-distill extract "<source>"`.
+2. Harvest linked sources: `uv run yt-distill refs <title-dir>` (clones linked repos pinned to SHA, fetches docs).
+3. Distill with `uv run yt-distill distill <title-dir> claude_skill` — writes the standard note pair plus a bundle at `Generated_Data/<title>/skills/<slug>/`.
 4. The bundle is the deliverable: `SKILL.md` + `assets/` (cited frames) + `reference/` (repo pointers + snapshots + docs) + `provenance.json`.
 5. Write for a consuming agent that has ONLY the bundle — no video, no transcript, no follow-up questions. Anything not in the bundle does not exist for them.
 

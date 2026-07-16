@@ -7,8 +7,8 @@ description: Convert talks, interviews, conceptual videos, architecture overview
 
 ## Workflow
 
-1. Ensure extraction artifacts exist. If needed, run `uv run python extract.py "<source>"`.
-2. Distill with `uv run python distill.py <title-dir> knowledge_base`.
+1. Ensure extraction artifacts exist. If needed, run `uv run yt-distill extract "<source>"`.
+2. Distill with `uv run yt-distill distill <title-dir> knowledge_base`.
 3. Prioritize transcript structure, slide text, diagrams, named concepts, quotes, patterns, tradeoffs, and referenced resources.
 4. Use visual evidence sparingly unless slides, diagrams, or UI screenshots carry information the transcript does not.
 
