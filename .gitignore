@@ -15,3 +15,4 @@ Generated_Data/
 # Audit toolkit local state
 .audit-local/
 audit
+.uv-cache/
