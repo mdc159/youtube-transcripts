@@ -75,3 +75,9 @@ Format: **Symptom → Root cause → Fix → Lesson.**
 ### 11. Ledger + honest gates kept everything recoverable
 Every task: worker report → orchestrator re-verifies → diff review → commit with rationale. Plan checkboxes + completion note sealed at the end; deviations (baseline correction, sandbox protocol, deferred stage-wiring) recorded in the plan itself rather than papered over.
 - **Lesson:** when the plan meets reality and loses, amend the plan visibly — the ledger is only useful if it's true.
+
+### 12. Idempotency never worked for the default output dir (masked by tests)
+- **Symptom:** gate step 5 — re-running extract re-did all 100 frames + OCR instead of skipping; earlier "resumability" checks had always passed.
+- **Root cause:** `Manifest.file_intact` computed `out_dir / entry["path"]` while writers stored CWD-relative paths → the join produced a nonexistent doubled path → intact-check always False. Every prior test used an ABSOLUTE temp out_dir, where the join discards `out_dir` and accidentally works — the bug only fires in the real-world default (`Generated_Data/`, cwd-relative).
+- **Fix:** record paths relative to out_dir (posix) at the write boundary; `file_intact` keeps the same join; legacy manifests (cwd-relative/backslash) get a read-time fallback. Verified live: re-run prints both skip lines in seconds.
+- **Lesson:** a test environment that differs from real invocation (absolute temp dirs vs relative default) can mask a bug precisely BECAUSE it's cleaner. Gates must include at least one run shaped exactly like real usage — that's what caught this after years of green "resumability" checks.
