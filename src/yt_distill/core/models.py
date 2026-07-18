@@ -13,7 +13,7 @@ from typing import Optional
 
 import yaml
 
-from openai import OpenAI
+from yt_distill.core import llm
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -44,7 +44,7 @@ def _load_yaml(path: Path) -> dict:
     return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
 
-def resolve(cli: Optional[str], models_yaml: Path) -> Profile:
+def resolve(cli: Optional[str], models_yaml: Path = REPO_ROOT / "models.yaml") -> Profile:
     cfg = _load_yaml(models_yaml)
     name = cli or os.environ.get("DISTILL_MODEL") or cfg.get("default")
     if not name:
@@ -107,7 +107,7 @@ def doctor(
             failure_reason=f"environment variable {profile.api_key_env} not set (api key missing)",
         )
 
-    client = OpenAI(base_url=profile.base_url, api_key=api_key)
+    client = llm.make_client(profile)
 
     # 1. Text probe
     try:

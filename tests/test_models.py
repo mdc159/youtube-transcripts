@@ -38,11 +38,11 @@ def _ok_response(content="hello"):
     return m
 
 
-@patch("yt_distill.core.models.OpenAI")
-def test_doctor_ok_text_only(openai_mock, monkeypatch, tmp_path, repo_root):
+@patch("yt_distill.core.models.llm.make_client")
+def test_doctor_ok_text_only(make_client_mock, monkeypatch, tmp_path, repo_root):
     monkeypatch.setattr("yt_distill.core.models._cache_dir", lambda: tmp_path)
     monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
-    client = openai_mock.return_value
+    client = make_client_mock.return_value
     client.chat.completions.create.return_value = _ok_response("hi")
     p = models.resolve(cli="claude-sonnet-4-6", models_yaml=repo_root / "models.yaml")
     res = doctor(p, models_yaml=repo_root / "models.yaml", probe_image=False)
@@ -50,8 +50,8 @@ def test_doctor_ok_text_only(openai_mock, monkeypatch, tmp_path, repo_root):
     assert res.text_probe is True
 
 
-@patch("yt_distill.core.models.OpenAI")
-def test_doctor_missing_key(openai_mock, monkeypatch, tmp_path, repo_root):
+@patch("yt_distill.core.models.llm.make_client")
+def test_doctor_missing_key(make_client_mock, monkeypatch, tmp_path, repo_root):
     monkeypatch.setattr("yt_distill.core.models._cache_dir", lambda: tmp_path)
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     p = models.resolve(cli="gemini-3-flash", models_yaml=repo_root / "models.yaml")
@@ -60,11 +60,11 @@ def test_doctor_missing_key(openai_mock, monkeypatch, tmp_path, repo_root):
     assert "key" in res.failure_reason.lower()
 
 
-@patch("yt_distill.core.models.OpenAI")
-def test_doctor_text_failure_reports(openai_mock, monkeypatch, tmp_path, repo_root):
+@patch("yt_distill.core.models.llm.make_client")
+def test_doctor_text_failure_reports(make_client_mock, monkeypatch, tmp_path, repo_root):
     monkeypatch.setattr("yt_distill.core.models._cache_dir", lambda: tmp_path)
     monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
-    client = openai_mock.return_value
+    client = make_client_mock.return_value
     client.chat.completions.create.side_effect = RuntimeError("boom")
     p = models.resolve(cli="gemini-3-flash", models_yaml=repo_root / "models.yaml")
     res = doctor(p, models_yaml=repo_root / "models.yaml", probe_image=False)

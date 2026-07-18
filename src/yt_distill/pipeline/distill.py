@@ -8,8 +8,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from openai import OpenAI
-
+from yt_distill.core import llm
 from yt_distill.core.manifest import Manifest, MANIFEST_FILENAME
 from yt_distill.core.models import resolve, doctor, Profile
 from yt_distill.stages.frame_ocr import read_ocr_json, FrameClass
@@ -207,15 +206,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     # Live distillation
-    api_key = os.environ.get(profile.api_key_env, "")
-    if not api_key:
-        print(f"missing API key {profile.api_key_env}", file=sys.stderr)
-        return 1
-    client = OpenAI(base_url=profile.base_url, api_key=api_key)
     create_kwargs = dict(model=profile.model, messages=[{"role": "user", "content": content}])
     if profile.reasoning:
         create_kwargs["extra_body"] = {"reasoning": {"enabled": True}}
-    response = client.chat.completions.create(**create_kwargs)
+    response = llm.chat_completion(profile, **create_kwargs)
 
     msg = response.choices[0].message.content or ""
     if not msg.strip():

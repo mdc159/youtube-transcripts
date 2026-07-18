@@ -5,8 +5,8 @@ import pytest
 from yt_distill.pipeline import distill
 
 
-@patch("yt_distill.pipeline.distill.OpenAI")
-def test_live_distill_writes_outputs(openai_mock, tmp_path, fixtures_dir, monkeypatch):
+@patch("yt_distill.pipeline.distill.llm.chat_completion")
+def test_live_distill_writes_outputs(chat_completion_mock, tmp_path, fixtures_dir, monkeypatch):
     # Set up an extract result by writing the artifacts we need by hand.
     od = tmp_path / "T"
     od.mkdir()
@@ -33,8 +33,7 @@ def test_live_distill_writes_outputs(openai_mock, tmp_path, fixtures_dir, monkey
         "open_questions": [], "visual_evidence_used": [],
         "warnings": [],
     })
-    client = openai_mock.return_value
-    client.chat.completions.create.return_value = MagicMock(
+    chat_completion_mock.return_value = MagicMock(
         choices=[MagicMock(message=MagicMock(content=fake))],
         usage=MagicMock(prompt_tokens=1, completion_tokens=1),
     )
@@ -45,8 +44,8 @@ def test_live_distill_writes_outputs(openai_mock, tmp_path, fixtures_dir, monkey
     assert (od / "T_knowledge_base.distill_result.json").is_file()
 
 
-@patch("yt_distill.pipeline.distill.OpenAI")
-def test_distill_fails_on_unresolved_citations(openai_mock, tmp_path, monkeypatch):
+@patch("yt_distill.pipeline.distill.llm.chat_completion")
+def test_distill_fails_on_unresolved_citations(chat_completion_mock, tmp_path, monkeypatch):
     od = tmp_path / "T"
     od.mkdir()
     (od / "T_formatted_transcript.txt").write_text("0.0|hi\n")
@@ -60,7 +59,7 @@ def test_distill_fails_on_unresolved_citations(openai_mock, tmp_path, monkeypatc
         "key_points": [], "steps": [], "code_blocks": [],
         "tools_mentioned": [], "open_questions": [], "visual_evidence_used": [], "warnings": [],
     })
-    openai_mock.return_value.chat.completions.create.return_value = MagicMock(
+    chat_completion_mock.return_value = MagicMock(
         choices=[MagicMock(message=MagicMock(content=fake))],
         usage=MagicMock(prompt_tokens=1, completion_tokens=1),
     )

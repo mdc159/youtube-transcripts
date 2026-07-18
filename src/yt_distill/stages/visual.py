@@ -303,14 +303,10 @@ Core Concepts section:
 
 def _call_llm(profile, prompt: str) -> str:
     """Single-turn text-only call. Mocked in tests."""
-    import os
-    from openai import OpenAI
+    from yt_distill.core import llm
 
-    api_key = os.environ.get(profile.api_key_env, "")
-    if not api_key:
-        raise RuntimeError(f"missing API key {profile.api_key_env}")
-    client = OpenAI(base_url=profile.base_url, api_key=api_key)
-    resp = client.chat.completions.create(
+    resp = llm.chat_completion(
+        profile,
         model=profile.model,
         messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
     )
