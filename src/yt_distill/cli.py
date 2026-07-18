@@ -6,7 +6,12 @@ module's existing `main(argv)` so every historical flag keeps working.
 from __future__ import annotations
 
 import importlib
+import os
+import re
 import sys
+from pathlib import Path
+
+from yt_distill.core.errors import YtDistillError
 
 # subcommand -> (module, attr, argv prefix to prepend)
 _COMMANDS: dict[str, tuple[str, str, list[str]]] = {
@@ -26,6 +31,29 @@ _USAGE = (
     + "\n".join(f"  {name}" for name in _COMMANDS)
     + "\n\nRun `yt-distill <command> --help` for command-specific flags.\n"
 )
+
+_URL_SHAPE = re.compile(r"^https?://|^youtu\.be/|youtube\.com/")
+
+
+def _validate_inputs(cmd: str, args: list[str]) -> None:
+    if not args or any(arg in ("-h", "--help") for arg in args):
+        return
+    value = next((arg for arg in args if not arg.startswith("-")), None)
+    if value is None:
+        return
+
+    if cmd in ("extract", "run"):
+        if not Path(value).is_file() and not _URL_SHAPE.search(value):
+            raise YtDistillError(
+                f"source not found and not a URL: {value} — pass an existing file or a http(s)/YouTube URL")
+    elif cmd in ("distill", "review", "refs", "enrich"):
+        candidate = Path(value)
+        if not candidate.is_absolute():
+            base = Path(os.environ.get("YT_GENERATED_DATA_DIR") or "Generated_Data")
+            candidate = (base / candidate).resolve()
+        if not (candidate / "artifact_manifest.json").is_file():
+            raise YtDistillError(
+                f"no artifact_manifest.json in {candidate} — run 'yt-distill extract' first")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -47,9 +75,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"yt-distill: unknown command: {cmd}\n\n{_USAGE}", end="", file=sys.stderr)
         return 2
     module_name, attr, prefix = entry
-    module = importlib.import_module(module_name)
-    from yt_distill.core.errors import YtDistillError
     try:
+        _validate_inputs(cmd, rest)
+        module = importlib.import_module(module_name)
         rc = getattr(module, attr)(prefix + rest)
     except YtDistillError as exc:
         print(f"yt-distill {cmd}: {exc}", file=sys.stderr)

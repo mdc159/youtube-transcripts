@@ -37,6 +37,7 @@ def test_help_lists_all_subcommands(capsys):
     ],
 )
 def test_dispatch_forwards_argv_verbatim(cmd, target, forwarded, mocker):
+    mocker.patch("yt_distill.cli._validate_inputs")
     m = mocker.patch(target, return_value=0)
     rc = cli.main([cmd, *forwarded])
     assert rc == 0
@@ -53,3 +54,21 @@ def test_doctor_prepends_subcommand_for_models_main(mocker):
 def test_none_return_from_module_main_maps_to_zero(mocker):
     mocker.patch("yt_distill.clean.main", return_value=None)
     assert cli.main(["clean"]) == 0
+
+
+def test_extract_rejects_nonexistent_source(capsys):
+    rc = cli.main(["extract", "no_such_file.mp4"])
+    assert rc == 1
+    assert "not found" in capsys.readouterr().err.lower()
+
+
+def test_extract_accepts_url_shapes(mocker):
+    m = mocker.patch("yt_distill.pipeline.extract.main", return_value=0)
+    assert cli.main(["extract", "https://youtu.be/EnXKysJNz_8"]) == 0
+    m.assert_called_once()
+
+
+def test_distill_rejects_missing_title_dir(capsys):
+    rc = cli.main(["distill", "definitely_missing_dir", "coding_agent"])
+    assert rc == 1
+    assert "artifact" in capsys.readouterr().err.lower()
