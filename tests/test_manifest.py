@@ -1,5 +1,7 @@
 # tests/test_manifest.py
 import json
+from pathlib import Path
+
 import pytest
 from yt_distill.core.manifest import derive_source_id, Manifest, MANIFEST_FILENAME
 
@@ -75,3 +77,22 @@ def test_manifest_intact_for_directory(tmp_path):
     assert m.file_intact("extract", "frames_dir") is True
     (frames_dir / "f3.jpg").write_bytes(b"c")  # frame count drift
     assert m.file_intact("extract", "frames_dir") is False
+
+
+def test_manifest_intact_for_cwd_relative_output_dir(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    out_dir = Path("Generated_Data/T")
+    m = Manifest.load_or_create(
+        out_dir, source_id="yt:abc", source_url="u", title="T", duration_seconds=1.0)
+
+    transcript = out_dir / "T_formatted_transcript.txt"
+    transcript.write_bytes(b"hello")
+    frames_dir = out_dir / "frames"
+    frames_dir.mkdir()
+    (frames_dir / "f1.jpg").write_bytes(b"a")
+
+    m.record_file("extract", "formatted_transcript", transcript)
+    m.record_file("extract", "frames_dir", frames_dir)
+
+    assert m.file_intact("extract", "formatted_transcript") is True
+    assert m.file_intact("extract", "frames_dir") is True

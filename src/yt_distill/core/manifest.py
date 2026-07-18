@@ -117,10 +117,14 @@ class Manifest:
 
     def record_file(self, section: str, key: str, path: Path) -> None:
         path = Path(path)
-        rel = path.relative_to(self.out_dir) if path.is_absolute() and self.out_dir in path.parents else path
-        entry = {"path": str(rel), "sha256": _sha256(path) if path.is_file() else None}
-        if path.is_dir():
-            entry["frame_count"] = sum(1 for _ in path.iterdir() if _.is_file())
+        full_path = path.resolve()
+        try:
+            rel = full_path.relative_to(self.out_dir.resolve()).as_posix()
+        except ValueError:
+            rel = path.as_posix()
+        entry = {"path": rel, "sha256": _sha256(full_path) if full_path.is_file() else None}
+        if full_path.is_dir():
+            entry["frame_count"] = sum(1 for _ in full_path.iterdir() if _.is_file())
         if section in ("extract", "references"):
             if self.data.get(section) is None:
                 self.data[section] = {}
@@ -132,11 +136,23 @@ class Manifest:
         entry = (self.data.get(section) or {}).get("files", {}).get(key)
         if not entry:
             return False
-        full = self.out_dir / entry["path"]
-        if not full.exists():
+        stored_path = entry.get("path")
+        if not isinstance(stored_path, str):
             return False
-        if full.is_file():
-            return entry.get("sha256") == _sha256(full)
-        if full.is_dir():
-            return entry.get("frame_count") == sum(1 for _ in full.iterdir() if _.is_file())
-        return False
+        normalized = stored_path.replace("\\", "/")
+        candidates = (
+            self.out_dir / normalized,
+            Path(stored_path),
+            Path(normalized),
+        )
+        try:
+            full = next((candidate for candidate in candidates if candidate.exists()), None)
+            if full is None:
+                return False
+            if full.is_file():
+                return entry.get("sha256") == _sha256(full)
+            if full.is_dir():
+                return entry.get("frame_count") == sum(1 for _ in full.iterdir() if _.is_file())
+            return False
+        except (OSError, TypeError, ValueError):
+            return False
