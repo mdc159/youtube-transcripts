@@ -88,7 +88,7 @@ def _cited_frame_files(skill_md: str, out_dir: Path) -> list[Path]:
 def _load_references(out_dir: Path) -> dict:
     path = out_dir / "references.json"
     if path.is_file():
-        return json.loads(path.read_text())
+        return json.loads(path.read_text(encoding="utf-8"))
     return {}
 
 
@@ -114,7 +114,7 @@ def write_skill_bundle(
 
     # SKILL.md — deterministic frontmatter over the distilled body.
     description = _extract_trigger_description(skill_md)
-    (bundle / "SKILL.md").write_text(_frontmatter(slug, description) + skill_md.strip() + "\n")
+    (bundle / "SKILL.md").write_text(_frontmatter(slug, description) + skill_md.strip() + "\n", encoding="utf-8")
 
     # assets/ — only frames the note cites.
     cited = _cited_frame_files(skill_md, out_dir)
@@ -156,11 +156,11 @@ def write_skill_bundle(
             "all_references": [
                 {k: r.get(k) for k in ("url", "kind", "status")} for r in ref_entries
             ],
-        }, indent=2, sort_keys=True))
+        }, indent=2, sort_keys=True), encoding="utf-8")
 
     # provenance.json — staleness detection + downstream audit trail.
     source_meta_path = out_dir / "refs" / "source_meta.json"
-    source_meta = json.loads(source_meta_path.read_text()) if source_meta_path.is_file() else {}
+    source_meta = json.loads(source_meta_path.read_text(encoding="utf-8")) if source_meta_path.is_file() else {}
     provenance = {
         "schema_version": BUNDLE_SCHEMA_VERSION,
         "source_id": manifest_data.get("source_id"),
@@ -180,6 +180,6 @@ def write_skill_bundle(
         "unresolved_gaps": list(unresolved_citations or []),
         "assets_packaged": [p.name for p in cited],
     }
-    (bundle / "provenance.json").write_text(json.dumps(provenance, indent=2, sort_keys=True))
+    (bundle / "provenance.json").write_text(json.dumps(provenance, indent=2, sort_keys=True), encoding="utf-8")
 
     return bundle

@@ -184,11 +184,11 @@ def write_ocr_json(path: Path | str, *, video_title: str, duration_seconds: floa
             for f in frames
         ],
     }
-    Path(path).write_text(_json.dumps(data, indent=2, sort_keys=True))
+    Path(path).write_text(_json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
 
 
 def read_ocr_json(path: Path | str) -> list[FrameRecord]:
-    raw = _json.loads(Path(path).read_text())
+    raw = _json.loads(Path(path).read_text(encoding="utf-8"))
     return [
         FrameRecord(
             path=f["path"],

@@ -40,8 +40,8 @@ def main() -> int:
             if rc != 0:
                 print(f"distill returned {rc} for {scenario}", file=sys.stderr)
                 return rc
-            payload = json.loads((stage / "Test" / "payload.json").read_text())
-            (GOLDEN / scenario / "payload.golden.json").write_text(json.dumps(payload, indent=2))
+            payload = json.loads((stage / "Test" / "payload.json").read_text(encoding="utf-8"))
+            (GOLDEN / scenario / "payload.golden.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
             print(f"refreshed {scenario}")
     return 0
 

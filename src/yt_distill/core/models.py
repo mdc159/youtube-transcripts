@@ -41,7 +41,7 @@ class DoctorResult:
 
 
 def _load_yaml(path: Path) -> dict:
-    return yaml.safe_load(Path(path).read_text())
+    return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
 
 def resolve(cli: Optional[str], models_yaml: Path) -> Profile:
@@ -78,7 +78,7 @@ def _cache_key(profile: Profile) -> str:
 
 
 def _save_doctor(cache_path: Path, result: DoctorResult) -> DoctorResult:
-    cache_path.write_text(json.dumps({"timestamp": time.time(), "result": result.__dict__}))
+    cache_path.write_text(json.dumps({"timestamp": time.time(), "result": result.__dict__}), encoding="utf-8")
     return result
 
 
@@ -94,7 +94,7 @@ def doctor(
     cache_path = _cache_dir() / _cache_key(profile)
     if cache_path.exists():
         try:
-            cached = json.loads(cache_path.read_text())
+            cached = json.loads(cache_path.read_text(encoding="utf-8"))
             if time.time() - cached["timestamp"] < cache_ttl_seconds:
                 return DoctorResult(**cached["result"])
         except Exception:  # noqa: BLE001

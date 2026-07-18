@@ -80,7 +80,7 @@ class Manifest:
         out_dir.mkdir(parents=True, exist_ok=True)
         path = out_dir / MANIFEST_FILENAME
         if path.exists():
-            data = json.loads(path.read_text())
+            data = json.loads(path.read_text(encoding="utf-8"))
             if data.get("source_id") != source_id:
                 raise ValueError(f"manifest source_id mismatch: stored {data.get('source_id')!r} != {source_id!r}")
             return cls(out_dir, data)
@@ -98,7 +98,7 @@ class Manifest:
 
     def save(self) -> None:
         path = self.out_dir / MANIFEST_FILENAME
-        path.write_text(json.dumps(self.data, indent=2, sort_keys=True))
+        path.write_text(json.dumps(self.data, indent=2, sort_keys=True), encoding="utf-8")
 
     def set_extract(self, payload: dict) -> None:
         payload = dict(payload)

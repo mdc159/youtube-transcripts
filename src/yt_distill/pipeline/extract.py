@@ -230,14 +230,14 @@ def _do_transcript(args, out_dir: Path, manifest: Manifest) -> None:
     formatted = Path(str(base) + "_formatted_transcript.txt")
     clean = Path(str(base) + "_clean_text.txt")
     if res is None:
-        formatted.write_text("# transcript_unavailable\n")
-        clean.write_text("# transcript_unavailable\n")
+        formatted.write_text("# transcript_unavailable\n", encoding="utf-8")
+        clean.write_text("# transcript_unavailable\n", encoding="utf-8")
         manifest.set_extract(
             {"transcript_source": "none", "transcript_quality": "none", "files": {}}
         )
         return
-    formatted.write_text("\n".join(f"{ts}|{txt}" for ts, txt in res.entries) + "\n")
-    clean.write_text(_format_clean(res.entries))
+    formatted.write_text("\n".join(f"{ts}|{txt}" for ts, txt in res.entries) + "\n", encoding="utf-8")
+    clean.write_text(_format_clean(res.entries), encoding="utf-8")
     manifest.set_extract(
         {
             "transcript_source": res.source,
@@ -495,7 +495,7 @@ def _write_extract_meta(out_dir: Path, manifest: Manifest, mean_ocr_conf: float 
         "vision_frame_coverage": _grade_frame_coverage(non_code_count, duration_seconds=manifest.data["duration_seconds"]),
         "frame_budget_used": (manifest.data["extract"] or {}).get("frame_budget_used"),
     }
-    (out_dir / "extract_meta.json").write_text(_json.dumps(meta, indent=2, sort_keys=True))
+    (out_dir / "extract_meta.json").write_text(_json.dumps(meta, indent=2, sort_keys=True), encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -91,13 +91,13 @@ is executable without guessing, return {"verdict": "pass", "blocking_gaps": [],
 
 
 def _bundle_text(bundle: Path) -> str:
-    parts = [f"# SKILL.md\n\n{(bundle / 'SKILL.md').read_text()}"]
+    parts = [f"# SKILL.md\n\n{(bundle / 'SKILL.md').read_text(encoding='utf-8')}"]
     prov = bundle / "provenance.json"
     if prov.is_file():
-        parts.append(f"# provenance.json\n\n{prov.read_text()}")
+        parts.append(f"# provenance.json\n\n{prov.read_text(encoding='utf-8')}")
     sources = bundle / "reference" / "sources.json"
     if sources.is_file():
-        parts.append(f"# reference/sources.json\n\n{sources.read_text()}")
+        parts.append(f"# reference/sources.json\n\n{sources.read_text(encoding='utf-8')}")
     assets = bundle / "assets"
     if assets.is_dir():
         names = "\n".join(f"- {p.name}" for p in sorted(assets.iterdir()))
@@ -338,7 +338,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest_path = out_dir / MANIFEST_FILENAME
     if not manifest_path.is_file():
         raise RuntimeError(f"no {MANIFEST_FILENAME} in {out_dir}; run extract.py first")
-    manifest = Manifest(out_dir, json.loads(manifest_path.read_text()))
+    manifest = Manifest(out_dir, json.loads(manifest_path.read_text(encoding="utf-8")))
 
     slug = slugify(manifest.data.get("title") or out_dir.name)
     bundle = out_dir / "skills" / slug
@@ -349,11 +349,11 @@ def main(argv: list[str] | None = None) -> int:
     synth_profile = resolve(cli=args.synth_model, models_yaml=repo_root / "models.yaml")
     print(f"[review] reviewer={review_profile.name} synthesizer={synth_profile.name}")
 
-    provenance = json.loads((bundle / "provenance.json").read_text())
+    provenance = json.loads((bundle / "provenance.json").read_text(encoding="utf-8"))
     history: list[dict] = provenance.get("review_iterations", [])
     source_url = manifest.data.get("source_url") or ""
     distill_result_path = next(iter(sorted(out_dir.glob("*_claude_skill.distill_result.json"))), None)
-    distill_result = json.loads(distill_result_path.read_text()) if distill_result_path else {}
+    distill_result = json.loads(distill_result_path.read_text(encoding="utf-8")) if distill_result_path else {}
 
     final_status = "incomplete"
     residual_gaps: list[dict] = []
@@ -386,7 +386,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[review] escalation: {stats.frame_grabs} frame grab(s), "
               f"{stats.repo_files} repo pull(s), {stats.transcript_windows} transcript window(s)")
 
-        current_md = (bundle / "SKILL.md").read_text()
+        current_md = (bundle / "SKILL.md").read_text(encoding="utf-8")
         # Strip our frontmatter before handing to the synthesizer; the bundle
         # writer re-attaches it deterministically.
         body = re.sub(r"\A---\n.*?\n---\n\n?", "", current_md, flags=re.DOTALL)
@@ -433,11 +433,11 @@ def main(argv: list[str] | None = None) -> int:
               f"shipping INCOMPLETE", file=sys.stderr)
 
     # Final provenance stamp (status + residual gaps + full history).
-    provenance = json.loads((bundle / "provenance.json").read_text())
+    provenance = json.loads((bundle / "provenance.json").read_text(encoding="utf-8"))
     provenance["status"] = final_status
     provenance["review_iterations"] = history
     provenance["residual_gaps"] = residual_gaps
-    (bundle / "provenance.json").write_text(json.dumps(provenance, indent=2, sort_keys=True))
+    (bundle / "provenance.json").write_text(json.dumps(provenance, indent=2, sort_keys=True), encoding="utf-8")
 
     manifest.add_distill_run({
         "phase": "review_loop", "style": "claude_skill",

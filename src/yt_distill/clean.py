@@ -69,7 +69,7 @@ def _passes_filter(path: Path, age_cutoff, source_id_filter, title_filter) -> bo
             man = parent / "artifact_manifest.json"
             if man.is_file():
                 try:
-                    if json.loads(man.read_text()).get("source_id") != source_id_filter:
+                    if json.loads(man.read_text(encoding="utf-8")).get("source_id") != source_id_filter:
                         return False
                 except Exception:
                     return False

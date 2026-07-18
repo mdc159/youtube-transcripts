@@ -207,7 +207,7 @@ def _load_or_fetch_source_meta(out_dir: Path, source_url: str, *, with_comments:
     meta_path = out_dir / REFS_DIRNAME / SOURCE_META_FILENAME
     if meta_path.exists() and not force:
         print("[refs] source_meta: reusing cached")
-        return json.loads(meta_path.read_text())
+        return json.loads(meta_path.read_text(encoding="utf-8"))
     if not source_url.startswith(("http://", "https://")):
         print("[refs] source_meta: local source, no description/comments")
         meta = {"fetched_at": _utc_now(), "description": "", "upload_date": None,
@@ -223,7 +223,7 @@ def _load_or_fetch_source_meta(out_dir: Path, source_url: str, *, with_comments:
             meta = {"fetched_at": _utc_now(), "description": "", "upload_date": None,
                     "channel": None, "comments": [], "fetch_error": str(exc)[:500]}
     meta_path.parent.mkdir(parents=True, exist_ok=True)
-    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True))
+    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True), encoding="utf-8")
     return meta
 
 
@@ -283,7 +283,7 @@ def _tutorial_tokens(out_dir: Path) -> set[str]:
     text_parts: list[str] = []
     transcript = out_dir / f"{out_dir.name}_clean_text.txt"
     if transcript.exists():
-        text_parts.append(transcript.read_text())
+        text_parts.append(transcript.read_text(encoding="utf-8"))
     ocr_path = out_dir / "ocr.json"
     if ocr_path.exists():
         from yt_distill.stages.frame_ocr import read_ocr_json
@@ -361,7 +361,7 @@ def snapshot_repo(url: str, dest_root: Path, *, max_repo_mb: int,
         }
         snap_dir.mkdir(parents=True, exist_ok=True)
         (snap_dir / "provenance.json").write_text(json.dumps(
-            {**detail, "file_index": file_index}, indent=2, sort_keys=True))
+            {**detail, "file_index": file_index}, indent=2, sort_keys=True), encoding="utf-8")
         return detail
 
 
@@ -398,7 +398,7 @@ def fetch_doc(url: str, dest_root: Path) -> dict:
     dest = dest_root / "docs" / f"{digest}_{slug}.md"
     dest.parent.mkdir(parents=True, exist_ok=True)
     header = f"<!-- source: {url}\n     fetched_at: {_utc_now()} -->\n\n"
-    dest.write_text(header + body)
+    dest.write_text(header + body, encoding="utf-8")
     return {"path": f"{REFS_DIRNAME}/docs/{dest.name}", "bytes": dest.stat().st_size,
             "fetched_at": _utc_now()}
 
@@ -440,7 +440,7 @@ def main(argv: list[str] | None = None) -> int:
     if not manifest_path.exists():
         raise RuntimeError(f"no {MANIFEST_FILENAME} in {out_dir}; run extract.py first")
 
-    data = json.loads(manifest_path.read_text())
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest = Manifest(out_dir, data)
     source_url = data.get("source_url") or ""
 
@@ -521,7 +521,7 @@ def main(argv: list[str] | None = None) -> int:
                     "fetches_used": fetches_used},
         "references": sorted(records, key=lambda r: r["normalized_url"]),
     }
-    references_path.write_text(json.dumps(payload, indent=2, sort_keys=True))
+    references_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
     manifest.set_references({"harvested_at": payload["harvested_at"],
                              "reference_count": len(records), "files": {}})

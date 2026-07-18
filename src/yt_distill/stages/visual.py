@@ -423,7 +423,7 @@ def enrich(
     if not md_path.is_file():
         raise FileNotFoundError(md_path)
 
-    md = md_path.read_text()
+    md = md_path.read_text(encoding="utf-8")
     md = _strip_existing_enrichment(md)
     md = _strip_existing_inline_embeds(md)
 
@@ -431,14 +431,14 @@ def enrich(
     meta_path = out_dir / "extract_meta.json"
     source_url = ""
     if meta_path.is_file():
-        meta = json.loads(meta_path.read_text())
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
         source_url = meta.get("source_url", "") or ""
 
     ocr_path = out_dir / "ocr.json"
-    ocr = json.loads(ocr_path.read_text()) if ocr_path.is_file() else {"frames": []}
+    ocr = json.loads(ocr_path.read_text(encoding="utf-8")) if ocr_path.is_file() else {"frames": []}
 
     sel_path = out_dir / "selected_frames.json"
-    selected = json.loads(sel_path.read_text()) if sel_path.is_file() else {"selected": []}
+    selected = json.loads(sel_path.read_text(encoding="utf-8")) if sel_path.is_file() else {"selected": []}
 
     # Tier 1A: inline frame embeds (modifies body) before deep-links so
     # backticked frame IDs aren't disturbed by link rewriting.
@@ -495,7 +495,7 @@ def enrich(
         appendix = "\n".join(appendix_parts).strip() + "\n"
         md = md.rstrip() + "\n\n" + _ENRICH_BEGIN + "\n" + appendix + _ENRICH_END + "\n"
 
-    md_path.write_text(md)
+    md_path.write_text(md, encoding="utf-8")
     return md_path
 
 

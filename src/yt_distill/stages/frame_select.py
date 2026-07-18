@@ -205,4 +205,4 @@ def write_selected_frames_json(path: Path | str, sel: SelectionResult) -> None:
             for s in sel.selected
         ],
     }
-    Path(path).write_text(json.dumps(data, indent=2, sort_keys=True))
+    Path(path).write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")

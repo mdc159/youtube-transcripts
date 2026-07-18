@@ -20,7 +20,7 @@ class TranscriptSegment:
 def parse_formatted_transcript(path: Path | str) -> list[TranscriptSegment]:
     """Parse `*_formatted_transcript.txt` (start|text per line). End = next start."""
     raw: list[tuple[float, str]] = []
-    for line in Path(path).read_text().splitlines():
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
         if "|" not in line:
             continue
         ts_str, text = line.split("|", 1)
@@ -100,4 +100,4 @@ def _block_for(f: FrameRecord, segments: list[TranscriptSegment], seen_clusters:
 
 
 def write_enriched_transcript(path: Path | str, content: str) -> None:
-    Path(path).write_text(content)
+    Path(path).write_text(content, encoding="utf-8")

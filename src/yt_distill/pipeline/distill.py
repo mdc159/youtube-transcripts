@@ -157,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         source_meta_path = out_dir / "refs" / "source_meta.json"
         upload_date = None
         if source_meta_path.is_file():
-            upload_date = json.loads(source_meta_path.read_text()).get("upload_date")
+            upload_date = json.loads(source_meta_path.read_text(encoding="utf-8")).get("upload_date")
         recon = _reconcile(out_dir, frames=frames, video_upload_date=upload_date)
     except Exception as exc:  # noqa: BLE001 - reconciliation is additive evidence
         print(f"[reconcile] failed: {exc}", file=sys.stderr)
@@ -169,9 +169,9 @@ def main(argv: list[str] | None = None) -> int:
 
     contract_version = 2 if recon is not None else 1
     # Build payload
-    contract = (repo_root / "prompts" / f"distill_contract_v{contract_version}.md").read_text()
+    contract = (repo_root / "prompts" / f"distill_contract_v{contract_version}.md").read_text(encoding="utf-8")
     style = _compose_style_with_audience(
-        style_path.read_text(),
+        style_path.read_text(encoding="utf-8"),
         audience_note=getattr(args, "audience_note", None),
     )
     if getattr(args, "audience_note", None):
@@ -202,7 +202,7 @@ def main(argv: list[str] | None = None) -> int:
                 img_idx += 1
             else:
                 elided.append(c)
-        (out_dir / "payload.json").write_text(json.dumps(elided, indent=2))
+        (out_dir / "payload.json").write_text(json.dumps(elided, indent=2), encoding="utf-8")
         print(f"[distill] dry-run payload written to {out_dir / 'payload.json'}")
         return 0
 
@@ -227,7 +227,7 @@ def main(argv: list[str] | None = None) -> int:
     #   - a JSON object the model produced (preferred), or
     #   - the markdown directly, which we wrap.
     parsed = _try_parse_json_object(msg)
-    manifest_data = json.loads(manifest_path.read_text())
+    manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest = Manifest(out_dir=out_dir, data=manifest_data)
     cit_ctx = ResolutionContext(
         segment_ids={s.seg_id for s in segments},
@@ -274,8 +274,8 @@ def main(argv: list[str] | None = None) -> int:
     else:
         md = render_markdown(parsed_full, style_name=style_name, today_iso=today_iso)
     md_path = out_dir / f"{out_dir.name}_{style_name}.md"
-    md_path.write_text(md)
-    (out_dir / f"{out_dir.name}_{style_name}.distill_result.json").write_text(json.dumps(parsed_full, indent=2))
+    md_path.write_text(md, encoding="utf-8")
+    (out_dir / f"{out_dir.name}_{style_name}.distill_result.json").write_text(json.dumps(parsed_full, indent=2), encoding="utf-8")
 
     # claude_skill emits a self-sufficient bundle alongside the standard pair.
     bundle_dir = None

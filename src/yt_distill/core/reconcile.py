@@ -106,7 +106,7 @@ def load_snapshots(out_dir: Path) -> list[RepoSnapshot]:
     refs_path = out_dir / "references.json"
     if not refs_path.is_file():
         return []
-    data = json.loads(refs_path.read_text())
+    data = json.loads(refs_path.read_text(encoding="utf-8"))
     snaps: list[RepoSnapshot] = []
     for rec in data.get("references", []):
         if rec.get("kind") != "github_repo" or rec.get("status") != "snapshotted":
@@ -116,7 +116,7 @@ def load_snapshots(out_dir: Path) -> list[RepoSnapshot]:
         prov_path = snap_dir / "provenance.json"
         file_index: list[str] = []
         if prov_path.is_file():
-            file_index = json.loads(prov_path.read_text()).get("file_index", [])
+            file_index = json.loads(prov_path.read_text(encoding="utf-8")).get("file_index", [])
         snaps.append(RepoSnapshot(
             owner=detail.get("owner", ""),
             repo=detail.get("repo", ""),
@@ -311,4 +311,4 @@ def _write_reconciliation_json(out_dir: Path, result: ReconcileResult) -> None:
         "unmatched_clusters": result.unmatched_clusters,
     }
     (out_dir / RECONCILIATION_FILENAME).write_text(
-        json.dumps(payload, indent=2, sort_keys=True))
+        json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
