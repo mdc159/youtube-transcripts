@@ -324,7 +324,7 @@ def snapshot_repo(url: str, dest_root: Path, *, max_repo_mb: int,
         selected: dict[str, str] = {}  # rel path → why
         import fnmatch
         for p in all_files:
-            rel = str(p.relative_to(tmp_repo))
+            rel = p.relative_to(tmp_repo).as_posix()
             name = p.name.lower()
             if any(fnmatch.fnmatch(name, pat) for pat in _BUILD_SETUP_PATTERNS):
                 selected.setdefault(rel, "build_setup")
@@ -332,7 +332,7 @@ def snapshot_repo(url: str, dest_root: Path, *, max_repo_mb: int,
                 selected.setdefault(rel, "referenced_in_tutorial")
         if referenced:
             for p in all_files:
-                rel = str(p.relative_to(tmp_repo))
+                rel = p.relative_to(tmp_repo).as_posix()
                 if rel == referenced or rel.startswith(referenced.rstrip("/") + "/"):
                     selected.setdefault(rel, "linked_directly")
 
@@ -347,7 +347,7 @@ def snapshot_repo(url: str, dest_root: Path, *, max_repo_mb: int,
             shutil.copy2(src, dst)
             copied.append({"path": rel, "why": why})
 
-        file_index = sorted(str(p.relative_to(tmp_repo)) for p in all_files)
+        file_index = sorted(p.relative_to(tmp_repo).as_posix() for p in all_files)
         detail = {
             "owner": owner,
             "repo": repo,

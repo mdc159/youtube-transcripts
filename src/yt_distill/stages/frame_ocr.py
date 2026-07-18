@@ -172,7 +172,7 @@ def write_ocr_json(path: Path | str, *, video_title: str, duration_seconds: floa
         "video": {"title": video_title, "duration_seconds": duration_seconds},
         "frames": [
             {
-                "path": f.path,
+                "path": Path(f.path).as_posix(),
                 "timestamp_seconds": f.timestamp_seconds,
                 "ocr_text": f.ocr_text,
                 "ocr_confidence": f.ocr_confidence,

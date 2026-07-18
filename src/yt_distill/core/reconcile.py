@@ -141,7 +141,7 @@ def _snapshot_files(snap: RepoSnapshot) -> dict[str, list[str]]:
             text = p.read_text(errors="strict")
         except (UnicodeDecodeError, OSError):
             continue
-        out[str(p.relative_to(root))] = text.splitlines()
+        out[p.relative_to(root).as_posix()] = text.splitlines()
     return out
 
 
