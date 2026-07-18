@@ -20,6 +20,15 @@ profiles:
     max_images: 32
     max_image_bytes: 5242880
 
+  kimi-k3:
+    base_url: https://openrouter.ai/api/v1
+    model: moonshotai/kimi-k3
+    vision: true
+    reasoning: true
+    api_key_env: OPENROUTER_API_KEY
+    max_images: 16
+    max_image_bytes: 5242880
+
   gemini-3-flash:
     base_url: https://openrouter.ai/api/v1
     model: google/gemini-3-flash-preview

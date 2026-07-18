@@ -162,6 +162,7 @@ Unresolved citations (referencing a frame, segment, or repo file that doesn't ex
 |---|---|---|---|
 | `gemini-3.5-flash` (default) | OpenRouter (`google/gemini-3.5-flash`) | yes | yes |
 | `gemini-3.5-flash-high` | OpenRouter (`google/gemini-3.5-flash`, reasoning_effort=high) | yes | yes |
+| `kimi-k3` | OpenRouter (`moonshotai/kimi-k3`) | yes | yes |
 | `gemini-3-flash` | OpenRouter (`google/gemini-3-flash-preview`) | yes | yes |
 | `gemini-3-pro` | OpenRouter (`google/gemini-3-pro-preview`) | yes | yes |
 | `claude-sonnet-4-6` | OpenRouter (`anthropic/claude-sonnet-4.6`) | yes | no |
