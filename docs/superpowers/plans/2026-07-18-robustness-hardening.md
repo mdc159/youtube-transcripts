@@ -1,8 +1,17 @@
 # Robustness Hardening Implementation Plan (Sub-project 2)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 >
 > **Orchestration mode:** Claude orchestrates via the `herdr-fleet` interactive pattern — boot a `codex` pane (GPT-5.6-sol), wait idle, submit ONE task, supervise with short wait+read rounds, answer `blocked` prompts. Workers may run tests if their sandbox permits (orchestrator answers approval prompts); the orchestrator ALWAYS re-verifies and commits. Spec: `docs/superpowers/specs/2026-07-18-robustness-hardening-design.md`.
+
+
+> **COMPLETED 2026-07-18.** All 6 tasks + gate landed. Headline achieved: Windows
+> baseline 8 -> 0; goldens byte-identical; dod_check fully green; live run on
+> https://youtu.be/EnXKysJNz_8 -> coding_agent (auto, 0.73), 0 unresolved
+> citations (126 segs, 43 frames). Bonus: gate's real-usage re-run exposed and
+> fixed a years-masked idempotency bug (manifest paths; lessons-learned #12).
+> Interactive herdr-fleet workers (GPT-5.6-sol) ran all edits + tests; ~3-6 min
+> per task, zero blocked escalations.
 
 **Goal:** Eliminate the 8-test Windows baseline (P1), add retry resilience to every external call (P2), and make failures typed and legible (P3) — zero functionality loss.
 
@@ -31,17 +40,17 @@
 **Interfaces:**
 - Consumes: nothing. Produces: no API changes — byte-level behavior only.
 
-- [ ] **Step 1: Enumerate every unencoded text I/O site**
+- [x] **Step 1: Enumerate every unencoded text I/O site**
 
 ```bash
 grep -rnE "\.read_text\(\)|\.write_text\(|(^|[^_a-z])open\(" --include="*.py" src/ scripts/ | grep -v "encoding=" | grep -vE "'rb'|\"rb\"|'wb'|\"wb\"|'ab'|\"ab\""
 ```
 
-- [ ] **Step 2: Fix every site**
+- [x] **Step 2: Fix every site**
 
 Rules: `p.read_text()` → `p.read_text(encoding="utf-8")`; `p.write_text(x)` → `p.write_text(x, encoding="utf-8")`; text-mode `open(...)` gains `encoding="utf-8"`. Binary modes stay untouched. Do not alter any other argument or reflow code.
 
-- [ ] **Step 3: Console reconfigure in cli.py**
+- [x] **Step 3: Console reconfigure in cli.py**
 
 Insert at the top of `main()` in `src/yt_distill/cli.py`:
 
@@ -52,18 +61,18 @@ Insert at the top of `main()` in `src/yt_distill/cli.py`:
             stream.reconfigure(encoding="utf-8", errors="replace")
 ```
 
-- [ ] **Step 4: Verify — the encoding baseline flips green**
+- [x] **Step 4: Verify — the encoding baseline flips green**
 
 Run: `uv run pytest tests/integration/test_golden.py tests/test_distill_live.py -q`
 Expected: golden ×4 PASS; distill_live PASS (its failure was the ⚠ print — if it still fails, the remaining cause is Task 2's path work; report, don't chase).
 Then full suite: expected failures shrink to ONLY the 3 path-separator tests (reconcile ×2, reference_follower).
 
-- [ ] **Step 5: Golden byte-compare**
+- [x] **Step 5: Golden byte-compare**
 
 Run: `uv run python scripts/regen_golden_payloads.py && git status --porcelain tests/fixtures`
 Expected: EMPTY (Windows now regenerates goldens byte-identically). Restore any `media_cache/` noise.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A && git commit -m "fix: utf-8 encoding on all text I/O + console reconfigure (P1a, P1b)"
@@ -82,7 +91,7 @@ git add -A && git commit -m "fix: utf-8 encoding on all text I/O + console recon
 **Interfaces:**
 - Produces: all artifact-embedded relative paths use `/` regardless of OS. Filesystem access still uses `Path` natively.
 
-- [ ] **Step 1: Find the leak sites**
+- [x] **Step 1: Find the leak sites**
 
 ```bash
 grep -rnE "relative_to|os\.path\.rel|rglob|glob|str\(.*path" --include="*.py" src/yt_distill/core/reconcile.py src/yt_distill/stages/references.py | head -30
@@ -90,17 +99,17 @@ grep -rnE "relative_to|os\.path\.rel|rglob|glob|str\(.*path" --include="*.py" sr
 
 Read each hit: wherever a relative path is stringified INTO an artifact dict/JSON/citation (not used to open a file), wrap with `.as_posix()` — e.g. `str(p.relative_to(root))` → `p.relative_to(root).as_posix()`.
 
-- [ ] **Step 2: Verify the three path tests**
+- [x] **Step 2: Verify the three path tests**
 
 Run: `uv run pytest tests/test_reconcile.py tests/test_reference_follower.py -q`
 Expected: ALL PASS.
 
-- [ ] **Step 3: Full suite — the baseline is dead**
+- [x] **Step 3: Full suite — the baseline is dead**
 
 Run: `uv run pytest -q`
 Expected: **0 failed**. This is the P1 exit criterion; if anything still fails, STOP and report.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "fix: POSIX separators for artifact-embedded paths (P1c, P1d)"
@@ -118,7 +127,7 @@ git add -A && git commit -m "fix: POSIX separators for artifact-embedded paths (
 **Interfaces:**
 - Produces (Tasks 4–6 and sub-project 3 rely on these exact names): `YtDistillError(RuntimeError)`; subclasses `TranscriptError, ExtractError, DistillError, CitationError, RefFollowError, LLMError, ModelConfigError` — all in `yt_distill.core.errors`.
 
-- [ ] **Step 1: Write failing tests** — `tests/test_errors.py`:
+- [x] **Step 1: Write failing tests** — `tests/test_errors.py`:
 
 ```python
 """Typed error hierarchy: catchable as RuntimeError, distinguishable by type."""
@@ -154,9 +163,9 @@ def test_cli_lets_unexpected_exceptions_raise(mocker):
         cli.main(["clean"])
 ```
 
-- [ ] **Step 2: Run to verify failure** — `uv run pytest tests/test_errors.py -q` → FAIL (no module `errors`).
+- [x] **Step 2: Run to verify failure** — `uv run pytest tests/test_errors.py -q` → FAIL (no module `errors`).
 
-- [ ] **Step 3: Implement** — `src/yt_distill/core/errors.py`:
+- [x] **Step 3: Implement** — `src/yt_distill/core/errors.py`:
 
 ```python
 """Typed error hierarchy.
@@ -194,9 +203,9 @@ In `src/yt_distill/cli.py`, wrap the dispatch call:
     return 0 if rc is None else int(rc)
 ```
 
-- [ ] **Step 4: Verify** — `uv run pytest tests/test_errors.py tests/test_cli.py -q` → PASS; full suite 0 failed.
+- [x] **Step 4: Verify** — `uv run pytest tests/test_errors.py tests/test_cli.py -q` → PASS; full suite 0 failed.
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "feat: typed error hierarchy + CLI mapping (P3)"`
+- [x] **Step 5: Commit** — `git add -A && git commit -m "feat: typed error hierarchy + CLI mapping (P3)"`
 
 ---
 
@@ -211,7 +220,7 @@ In `src/yt_distill/cli.py`, wrap the dispatch call:
 - Consumes: `Profile` (has `base_url`, `api_key_env`, `model`, `reasoning_effort`), `errors.LLMError`, `errors.ModelConfigError`.
 - Produces: `make_client(profile) -> OpenAI`; `chat_completion(profile, *, client=None, max_attempts=3, **create_kwargs) -> response`. `create_kwargs` pass through verbatim (messages, max_tokens, etc.); `model` is filled from the profile if absent; `reasoning_effort` adds `extra_body={"reasoning": {"effort": ...}}` merged over any caller-provided extra_body.
 
-- [ ] **Step 1: Write failing tests** — `tests/test_llm.py`:
+- [x] **Step 1: Write failing tests** — `tests/test_llm.py`:
 
 ```python
 """Central LLM client: retry policy + reasoning_effort wiring."""
@@ -298,9 +307,9 @@ def test_no_reasoning_effort_no_extra_body_key():
     assert "reasoning" not in (c.kwargs.get("extra_body") or {})
 ```
 
-- [ ] **Step 2: Verify failure** — `uv run pytest tests/test_llm.py -q` → FAIL (no module `llm`).
+- [x] **Step 2: Verify failure** — `uv run pytest tests/test_llm.py -q` → FAIL (no module `llm`).
 
-- [ ] **Step 3: Implement** — `src/yt_distill/core/llm.py`:
+- [x] **Step 3: Implement** — `src/yt_distill/core/llm.py`:
 
 ```python
 """Central LLM client: one place for client construction, retries, and
@@ -364,11 +373,11 @@ def chat_completion(profile, *, client=None, max_attempts: int = 3, **create_kwa
         f"LLM call failed after {max_attempts} attempts ({type(last).__name__}): {last}") from last
 ```
 
-- [ ] **Step 4: Rewire the three call sites.** In `pipeline/distill.py` and `stages/visual.py`: build kwargs as today, call `llm.chat_completion(profile, **kwargs)` (delete local `OpenAI(...)` + api-key checks — `make_client` owns those; keep their surrounding error handling). In `core/models.py` doctor: use `llm.make_client(profile)` for construction but keep DIRECT `client.chat.completions.create` calls — probes must observe raw failures, not retry.
+- [x] **Step 4: Rewire the three call sites.** In `pipeline/distill.py` and `stages/visual.py`: build kwargs as today, call `llm.chat_completion(profile, **kwargs)` (delete local `OpenAI(...)` + api-key checks — `make_client` owns those; keep their surrounding error handling). In `core/models.py` doctor: use `llm.make_client(profile)` for construction but keep DIRECT `client.chat.completions.create` calls — probes must observe raw failures, not retry.
 
-- [ ] **Step 5: Verify** — `uv run pytest tests/test_llm.py -q` PASS, then full suite 0 failed, then live: `uv run yt-distill doctor --profile gemini-3.5-flash-high` → ok=True (now actually sending effort).
+- [x] **Step 5: Verify** — `uv run pytest tests/test_llm.py -q` PASS, then full suite 0 failed, then live: `uv run yt-distill doctor --profile gemini-3.5-flash-high` → ok=True (now actually sending effort).
 
-- [ ] **Step 6: Commit** — `git add -A && git commit -m "feat: central LLM client with backoff retries + reasoning_effort (P2a, P2c)"`
+- [x] **Step 6: Commit** — `git add -A && git commit -m "feat: central LLM client with backoff retries + reasoning_effort (P2a, P2c)"`
 
 ---
 
@@ -381,7 +390,7 @@ def chat_completion(profile, *, client=None, max_attempts: int = 3, **create_kwa
 **Interfaces:**
 - Produces: module-level `_session() -> requests.Session` used for all GET fetches in references.py.
 
-- [ ] **Step 1: Append failing test** to `tests/test_reference_follower.py` (match its import style):
+- [x] **Step 1: Append failing test** to `tests/test_reference_follower.py` (match its import style):
 
 ```python
 def test_fetch_session_retries_on_5xx():
@@ -393,7 +402,7 @@ def test_fetch_session_retries_on_5xx():
     assert 502 in r.status_forcelist and 429 in r.status_forcelist
 ```
 
-- [ ] **Step 2: Implement.** In `references.py` add:
+- [x] **Step 2: Implement.** In `references.py` add:
 
 ```python
 import requests
@@ -413,8 +422,8 @@ def _session() -> requests.Session:
 
 Replace every `requests.get(...)` in the module with a shared `_session().get(...)` (construct once at call boundary or module level — read the code and match its structure).
 
-- [ ] **Step 3: Verify** — targeted test PASS; full suite 0 failed.
-- [ ] **Step 4: Commit** — `git add -A && git commit -m "feat: retrying HTTP session for reference fetches (P2b)"`
+- [x] **Step 3: Verify** — targeted test PASS; full suite 0 failed.
+- [x] **Step 4: Commit** — `git add -A && git commit -m "feat: retrying HTTP session for reference fetches (P2b)"`
 
 ---
 
@@ -427,7 +436,7 @@ Replace every `requests.get(...)` in the module with a shared `_session().get(..
 **Interfaces:**
 - Consumes: `errors.YtDistillError`. Produces: validation before dispatch for `extract`/`run` (source) and `distill`/`review`/`refs`/`enrich` (title dir).
 
-- [ ] **Step 1: Append failing tests** to `tests/test_cli.py`:
+- [x] **Step 1: Append failing tests** to `tests/test_cli.py`:
 
 ```python
 def test_extract_rejects_nonexistent_source(capsys):
@@ -448,18 +457,18 @@ def test_distill_rejects_missing_title_dir(capsys):
     assert "artifact" in capsys.readouterr().err.lower()
 ```
 
-- [ ] **Step 2: Implement.** In `cli.py` before dispatch: for `extract`/`run`, the first non-flag arg must be an existing file OR match `^https?://|^youtu\.be/|youtube\.com/`; else raise `YtDistillError(f"source not found and not a URL: {src} — pass an existing file or a http(s)/YouTube URL")`. For `distill`/`review`/`refs`/`enrich`, resolve the title dir the same way the pipeline does (`YT_GENERATED_DATA_DIR` env or `Generated_Data/`, absolute paths as-is) and require `artifact_manifest.json` inside; else raise `YtDistillError(f"no artifact_manifest.json in {dir} — run 'yt-distill extract' first")`. Only validate when the arg is present and not `-h`/`--help`; never duplicate the subcommand's own argparse errors.
+- [x] **Step 2: Implement.** In `cli.py` before dispatch: for `extract`/`run`, the first non-flag arg must be an existing file OR match `^https?://|^youtu\.be/|youtube\.com/`; else raise `YtDistillError(f"source not found and not a URL: {src} — pass an existing file or a http(s)/YouTube URL")`. For `distill`/`review`/`refs`/`enrich`, resolve the title dir the same way the pipeline does (`YT_GENERATED_DATA_DIR` env or `Generated_Data/`, absolute paths as-is) and require `artifact_manifest.json` inside; else raise `YtDistillError(f"no artifact_manifest.json in {dir} — run 'yt-distill extract' first")`. Only validate when the arg is present and not `-h`/`--help`; never duplicate the subcommand's own argparse errors.
 
-- [ ] **Step 3: Verify** — `uv run pytest tests/test_cli.py -q` PASS; full suite 0 failed.
-- [ ] **Step 4: Commit** — `git add -A && git commit -m "feat: CLI input validation with actionable messages (P3)"`
+- [x] **Step 3: Verify** — `uv run pytest tests/test_cli.py -q` PASS; full suite 0 failed.
+- [x] **Step 4: Commit** — `git add -A && git commit -m "feat: CLI input validation with actionable messages (P3)"`
 
 ---
 
 ### Task 7: Final verification gate (ORCHESTRATOR-RUN)
 
-- [ ] **Step 1:** `uv run pytest` → **0 failed** (P1 headline). `uv run pytest -m integration` → 0 failed.
-- [ ] **Step 2:** `uv run python scripts/regen_golden_payloads.py` → `git status --porcelain tests/fixtures` EMPTY.
-- [ ] **Step 3:** `bash scripts/dod_check.sh` → fully green, end to end, on Windows (first time ever).
-- [ ] **Step 4 — live artifact for external evaluation:** `uv run yt-distill run "https://youtu.be/EnXKysJNz_8" auto` (persistent default output — NO temp dir). Verify exit 0, zero unresolved citations. **Report the exact `Generated_Data/<title>/` path and final markdown filename to Mike** — a separate agent evaluates it.
-- [ ] **Step 5 — idempotency:** re-run the same command; extract phase must skip completed work (manifest hashes).
-- [ ] **Step 6:** honest gate report; update plan ledger + Obsidian mirror; Honcho conclusion.
+- [x] **Step 1:** `uv run pytest` → **0 failed** (P1 headline). `uv run pytest -m integration` → 0 failed.
+- [x] **Step 2:** `uv run python scripts/regen_golden_payloads.py` → `git status --porcelain tests/fixtures` EMPTY.
+- [x] **Step 3:** `bash scripts/dod_check.sh` → fully green, end to end, on Windows (first time ever).
+- [x] **Step 4 — live artifact for external evaluation:** `uv run yt-distill run "https://youtu.be/EnXKysJNz_8" auto` (persistent default output — NO temp dir). Verify exit 0, zero unresolved citations. **Report the exact `Generated_Data/<title>/` path and final markdown filename to Mike** — a separate agent evaluates it.
+- [x] **Step 5 — idempotency:** re-run the same command; extract phase must skip completed work (manifest hashes).
+- [x] **Step 6:** honest gate report; update plan ledger + Obsidian mirror; Honcho conclusion.
