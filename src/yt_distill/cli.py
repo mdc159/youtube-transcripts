@@ -48,7 +48,12 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     module_name, attr, prefix = entry
     module = importlib.import_module(module_name)
-    rc = getattr(module, attr)(prefix + rest)
+    from yt_distill.core.errors import YtDistillError
+    try:
+        rc = getattr(module, attr)(prefix + rest)
+    except YtDistillError as exc:
+        print(f"yt-distill {cmd}: {exc}", file=sys.stderr)
+        return 1
     return 0 if rc is None else int(rc)
 
 
