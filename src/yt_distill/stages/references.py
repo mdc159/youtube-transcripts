@@ -30,6 +30,10 @@ import tempfile
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
+
 from yt_distill.core.enrichment import parse_formatted_transcript
 from yt_distill.core.manifest import Manifest, MANIFEST_FILENAME
 
@@ -37,6 +41,16 @@ REFERENCES_FILENAME = "references.json"
 REFS_DIRNAME = "refs"
 SOURCE_META_FILENAME = "source_meta.json"
 SCHEMA_VERSION = 1
+
+
+def _session() -> requests.Session:
+    retry = Retry(total=3, backoff_factor=0.5,
+                  status_forcelist=(408, 425, 429, 500, 502, 503, 504),
+                  allowed_methods=("GET", "HEAD"), respect_retry_after_header=True)
+    s = requests.Session()
+    s.mount("https://", HTTPAdapter(max_retries=retry))
+    s.mount("http://", HTTPAdapter(max_retries=retry))
+    return s
 
 # ---------------------------------------------------------------------------
 # URL harvesting
@@ -138,11 +152,9 @@ def classify_url(url: str) -> str:
 
 def resolve_shortlink(url: str) -> str | None:
     """Follow a shortener's redirects to the destination URL (None on failure)."""
-    import requests
-
     try:
-        r = requests.head(url, allow_redirects=True, timeout=15,
-                          headers={"User-Agent": "youtube-transcripts/refs"})
+        r = _session().head(url, allow_redirects=True, timeout=15,
+                            headers={"User-Agent": "youtube-transcripts/refs"})
         final = str(r.url)
         return final if normalize_url(final) != normalize_url(url) else None
     except requests.RequestException:
@@ -373,9 +385,7 @@ def fetch_doc(url: str, dest_root: Path) -> dict:
     """Fetch a docs page → markdown-ish text under refs/docs/."""
     import hashlib
 
-    import requests
-
-    r = requests.get(url, timeout=60, headers={"User-Agent": "youtube-transcripts/refs"})
+    r = _session().get(url, timeout=60, headers={"User-Agent": "youtube-transcripts/refs"})
     r.raise_for_status()
     content_type = r.headers.get("content-type", "")
     body = r.text

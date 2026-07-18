@@ -281,3 +281,12 @@ def test_shortlink_resolution_reclassifies(tmp_path, monkeypatch):
     rec = refs["references"][0]
     assert rec["kind"] == "asset_download"
     assert rec["resolved_url"] == "https://example.com/assets/pack.zip"
+
+
+def test_fetch_session_retries_on_5xx():
+    from yt_distill.stages import references
+    s = references._session()
+    adapter = s.get_adapter("https://example.com")
+    r = adapter.max_retries
+    assert r.total >= 3 and r.backoff_factor > 0
+    assert 502 in r.status_forcelist and 429 in r.status_forcelist
