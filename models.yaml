@@ -57,10 +57,10 @@ profiles:
     max_image_bytes: 5242880
 
   gpt-4o:
-    base_url: https://api.openai.com/v1
-    model: gpt-4o
+    base_url: https://openrouter.ai/api/v1
+    model: openai/gpt-4o
     vision: true
     reasoning: false
-    api_key_env: OPENAI_API_KEY
+    api_key_env: OPENROUTER_API_KEY
     max_images: 10
-    max_image_bytes: 20971520
+    max_image_bytes: 5242880
