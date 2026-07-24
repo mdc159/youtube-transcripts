@@ -12,11 +12,13 @@ from pathlib import Path
 def _repo_root() -> Path:
     # Walk up from this file: works for both src-layout editable installs
     # (repo/src/yt_distill/...) and .venv installs (repo/.venv/...), since
-    # pyproject.toml marks the repo root in both. parents[N] arithmetic
-    # resolved to the wrong directory for src-layout editables.
+    # pyproject.toml marks the repo root in both. The old parents[N]
+    # arithmetic resolved to the wrong directory for .venv installs.
     for parent in Path(__file__).resolve().parents:
         if (parent / "pyproject.toml").exists():
             return parent
+        if parent.name == "site-packages":
+            break  # global install: no repo root above; don't mis-root on a stray pyproject
     return Path(__file__).resolve().parents[3]
 
 
