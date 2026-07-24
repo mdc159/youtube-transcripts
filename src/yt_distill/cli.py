@@ -62,6 +62,10 @@ def main(argv: list[str] | None = None) -> int:
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
 
+    from yt_distill.core import env_bootstrap
+
+    env_bootstrap.load()  # .env for every subcommand, not just distill
+
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] in ("-h", "--help"):
         print(_USAGE, end="")
