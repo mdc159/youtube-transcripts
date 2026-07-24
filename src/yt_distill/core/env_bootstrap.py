@@ -9,7 +9,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+def _repo_root() -> Path:
+    # Walk up from this file: works for both src-layout editable installs
+    # (repo/src/yt_distill/...) and .venv installs (repo/.venv/...), since
+    # pyproject.toml marks the repo root in both. parents[N] arithmetic
+    # resolved to the wrong directory for src-layout editables.
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    return Path(__file__).resolve().parents[3]
+
+
+REPO_ROOT = _repo_root()
 
 
 def load() -> None:
